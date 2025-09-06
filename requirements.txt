@@ -37,6 +37,10 @@ pymupdf==1.24.10   # provides 'fitz'
 # ---- Form parsing (FastAPI file uploads)
 python-multipart==0.0.9
 
+# ---- Database drivers (replacing adodbapi)
+pyodbc==4.0.39
+sqlalchemy==2.0.31
+
 # ---- Testing
 pytest==8.3.3
 pytest-cov==5.0.0
