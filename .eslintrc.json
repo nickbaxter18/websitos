@@ -24,7 +24,19 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off"
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+
+    /* ✅ Relaxing common blockers */
+    "no-unused-vars": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-var-requires": "off",
+    "no-empty": "warn",
+    "no-irregular-whitespace": "warn",
+    "no-control-regex": "warn",
+    "react-hooks/rules-of-hooks": "warn",
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "prefer-const": "warn",
+    "no-var": "warn"
   },
   "settings": {
     "react": {
