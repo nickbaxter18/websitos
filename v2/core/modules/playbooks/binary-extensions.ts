@@ -1,5 +1,5 @@
 
-export const Binary-Extensions = {
+export const BinaryExtensions = {
   id: "binary-extensions",
   function: "binary-extensions",
   dependencies: [],

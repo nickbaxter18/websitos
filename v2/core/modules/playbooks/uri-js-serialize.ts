@@ -1,5 +1,5 @@
 
-export const Uri-Js-Serialize = {
+export const UriJsSerialize = {
   id: "uri-js-serialize",
   function: "uri-js-serialize",
   dependencies: [],

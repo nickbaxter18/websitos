@@ -1,5 +1,5 @@
 
-export const Uri-Js-Parse = {
+export const UriJsParse = {
   id: "uri-js-parse",
   function: "uri-js-parse",
   dependencies: [],

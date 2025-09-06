@@ -1,5 +1,5 @@
 
-export const Tsdoc-Metadata = {
+export const TsdocMetadata = {
   id: "tsdoc-metadata",
   function: "tsdoc-metadata",
   dependencies: [],

@@ -1,5 +1,5 @@
 
-export const Package-Lock = {
+export const PackageLock = {
   id: "package-lock",
   function: "package-lock",
   dependencies: [],

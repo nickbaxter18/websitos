@@ -1,5 +1,5 @@
 
-export const Jtd-Schema = {
+export const JtdSchema = {
   id: "jtd-schema",
   function: "jtd-schema",
   dependencies: [],

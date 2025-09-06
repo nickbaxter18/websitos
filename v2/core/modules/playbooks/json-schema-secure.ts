@@ -1,5 +1,5 @@
 
-export const Json-Schema-Secure = {
+export const JsonSchemaSecure = {
   id: "json-schema-secure",
   function: "json-schema-secure",
   dependencies: [],

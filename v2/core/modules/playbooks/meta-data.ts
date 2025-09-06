@@ -1,5 +1,5 @@
 
-export const Meta-Data = {
+export const MetaData = {
   id: "meta-data",
   function: "meta-data",
   dependencies: [],

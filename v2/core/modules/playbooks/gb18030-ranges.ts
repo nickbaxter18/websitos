@@ -1,5 +1,5 @@
 
-export const Gb18030-Ranges = {
+export const Gb18030Ranges = {
   id: "gb18030-ranges",
   function: "gb18030-ranges",
   dependencies: [],

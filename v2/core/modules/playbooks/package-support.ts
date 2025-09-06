@@ -1,5 +1,5 @@
 
-export const Package-Support = {
+export const PackageSupport = {
   id: "package-support",
   function: "package-support",
   dependencies: [],

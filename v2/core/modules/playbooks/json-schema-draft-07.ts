@@ -1,5 +1,5 @@
 
-export const Json-Schema-Draft-07 = {
+export const JsonSchemaDraft07 = {
   id: "json-schema-draft-07",
   function: "json-schema-draft-07",
   dependencies: [],

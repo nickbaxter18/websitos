@@ -1,5 +1,5 @@
 
-export const Format-Annotation = {
+export const FormatAnnotation = {
   id: "format-annotation",
   function: "format-annotation",
   dependencies: [],

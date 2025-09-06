@@ -1,5 +1,5 @@
 
-export const Gbk-Added = {
+export const GbkAdded = {
   id: "gbk-added",
   function: "gbk-added",
   dependencies: [],

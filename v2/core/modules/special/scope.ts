@@ -62,7 +62,7 @@ export type UsedScopeValues = {
   [Prefix in string]?: Map<ValueScopeName, UsedValueState | undefined>
 }
 
-export const varKinds = {
+export const VarKinds = {
   const: new Name("const"),
   let: new Name("let"),
   var: new Name("var"),
