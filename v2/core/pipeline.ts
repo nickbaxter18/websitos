@@ -52,11 +52,11 @@ function sublimityScore(mod: any): string {
 export function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn") {
   const files = fs.readdirSync(modulesDir);
   let validCount = 0, invalidCount = 0;
-  let logEntries: string[] = [];
-  let pruned: string[] = [];
-  let mythUpdates: string[] = [];
-  let treaties: string[] = [];
-  let sublimityEntries: string[] = [];
+  const logEntries: string[] = [];
+  const pruned: string[] = [];
+  const mythUpdates: string[] = [];
+  const treaties: string[] = [];
+  const sublimityEntries: string[] = [];
 
   files.forEach(file => {
     // ✅ Skip hidden/dotfiles and junk

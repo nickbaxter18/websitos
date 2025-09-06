@@ -91,9 +91,10 @@ jobs:
 
       - name: Run pytest with coverage + JSON report
         if: matrix.language == 'python'
-        run: PYTHONPATH=. pytest --maxfail=1 --disable-warnings -q \
-          --json-report --json-report-file=pytest-report.json \
-          --cov=. --cov-report=xml
+        run: |
+          PYTHONPATH=. pytest --maxfail=1 --disable-warnings -q \
+            --json-report --json-report-file=pytest-report.json \
+            --cov=. --cov-report=xml
 
       - name: Upload artifacts
         if: always()
@@ -102,8 +103,8 @@ jobs:
           name: ci-artifacts
           path: |
             jest-report.json
-            coverage/
             pytest-report.json
+            coverage/
             coverage.xml
 
   # ----------------------
@@ -126,6 +127,7 @@ jobs:
 
       # ✅ Qdrant Reload (optional)
       - name: Refresh Qdrant collections
+        if: success() && env.QDRANT_HOST != ''
         run: |
           curl -X POST \
             -H "api-key: ${{ secrets.QDRANT_API_KEY }}" \
