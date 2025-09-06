@@ -1,0 +1,55 @@
+/* ============================
+   U-Dig It Design Tokens v2
+   ============================ */
+
+:root {
+  /* Colors */
+  --color-bg: #000000;
+  --color-surface: #C2C9D2;
+  --color-surface-light: #F4F6F8;
+  --color-surface-dark: #6B6B6B;
+  --color-text: #111827;
+  --color-muted: #6B7280;
+  --color-accent: #E1BC56;
+  --color-accent-light: #FFF1B0;
+  --color-cta: #A90F0F;
+  --color-cta-dark: #8C0C0C;
+  --color-cta-text: #ffffff;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font-heading: 'Poppins', var(--font-sans);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 32px;
+  --space-xl: 48px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 4px 12px rgba(0,0,0,.18);
+  --shadow-md: 0 8px 16px rgba(0,0,0,.25);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.35);
+
+  /* Buttons */
+  --btn-h: 48px;
+
+  /* Breakpoints */
+  --bp-xs: 420px;
+  --bp-sm: 600px;
+  --bp-md: 720px;
+  --bp-lg: 980px;
+  --bp-xl: 1200px;
+  --bp-xxl: 1440px;
+
+  /* Containers */
+  --container: clamp(1180px, 96vw, 1440px);
+  --gutter: clamp(12px, 2.6vw, 28px);
+}
