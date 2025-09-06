@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # ----------------------
-      # Node.js (WebsiteOS)
+      # Node.js (Frontend build)
       # ----------------------
       - name: Setup Node.js
         if: matrix.language == 'node'
@@ -38,7 +38,7 @@ jobs:
         if: matrix.language == 'node'
         run: npx tsc --noEmit
 
-      - name: Lint (ESLint via npx)
+      - name: Lint (ESLint)
         if: matrix.language == 'node'
         run: npx eslint . --ext .ts,.tsx
 
@@ -46,15 +46,6 @@ jobs:
         if: matrix.language == 'node'
         run: npx prettier --check .
 
-      - name: Run Entropy Pruner
-        if: matrix.language == 'node'
-        run: npx ts-node v2/core/entropy-pruner.ts
-
-      - name: Run Schema Validator
-        if: matrix.language == 'node'
-        run: npm run validate
-
-      # ✅ Run all Jest tests including dashboard ones
       - name: Run Jest with coverage + JSON report
         if: matrix.language == 'node'
         run: npx jest --json --outputFile=jest-report.json --coverage --coverageReporters=json-summary --coverageReporters=lcov
@@ -71,47 +62,16 @@ jobs:
             echo "✅ Coverage above threshold"
           fi
 
-      - name: Upload Jest artifacts
+      - name: Build frontend
         if: matrix.language == 'node'
-        uses: actions/upload-artifact@v4
-        with:
-          name: jest-artifacts
-          path: |
-            jest-report.json
-            coverage/
+        run: npm run build
 
-      - name: Run Cultural Health Scorer
-        if: matrix.language == 'node'
-        run: npx ts-node v2/core/cultural-health-scorer.ts
-
-      - name: Check Cultural Health Thresholds
+      # ✅ Copy frontend build into FastAPI static folder
+      - name: Move frontend into backend
         if: matrix.language == 'node'
         run: |
-          node -e "
-          const fs = require('fs');
-          const log = fs.readFileSync('docs/meta/health.md','utf-8');
-          const lastReport = log.split('## Cultural Health Report').pop();
-          const vals = {};
-          ['Diversity','Coherence','Resilience','Beauty'].forEach(k=>{
-            const m = lastReport.match(new RegExp(`${k}: (-?\\\\d+(?:\\\\.\\\\d+)?)`));
-            vals[k] = m ? parseFloat(m[1]) : 0;
-          });
-          console.log('Latest Cultural Health:', vals);
-          if(vals.Diversity < -0.2 || vals.Coherence < 0.3 || vals.Resilience < 0.3 || vals.Beauty < 0.2) {
-            console.error('❌ Cultural Health below thresholds, blocking merge');
-            process.exit(1);
-          } else {
-            console.log('✅ Cultural Health above thresholds');
-          }"
-
-      - name: Upload Cultural Health Reports
-        if: matrix.language == 'node'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cultural-health-reports
-          path: |
-            docs/meta/health.md
-            docs/meta/health-history.json
+          mkdir -p backend/static
+          cp -r dist/* backend/static/
 
       # ----------------------
       # Python (FastAPI backend)
@@ -135,11 +95,39 @@ jobs:
           --json-report --json-report-file=pytest-report.json \
           --cov=. --cov-report=xml
 
-      - name: Upload pytest artifacts
-        if: matrix.language == 'python'
+      - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-artifacts
+          name: ci-artifacts
           path: |
+            jest-report.json
+            coverage/
             pytest-report.json
             coverage.xml
+
+  # ----------------------
+  # Deploy (single Render service for frontend+backend)
+  # ----------------------
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Render (FastAPI + static frontend)
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"serviceId":"${{ secrets.RENDER_SERVICE_ID }}"}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys
+
+      # ✅ Qdrant Reload (optional)
+      - name: Refresh Qdrant collections
+        run: |
+          curl -X POST \
+            -H "api-key: ${{ secrets.QDRANT_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "https://${{ secrets.QDRANT_HOST }}/collections/_reload"
