@@ -1,4 +1,3 @@
-
 export const CheckoutSessions = {
   id: "checkout_sessions",
   function: "checkout sessions",
@@ -6,11 +5,13 @@ export const CheckoutSessions = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['checkout', 'sessions'],
+  cultural_tags: ["checkout", "sessions"],
   apply() {
     // Original logic
-﻿export default { flag:"checkout_sessions", async apply(html:string){
-  const s=`<script>(function(){
+    export default {
+      flag: "checkout_sessions",
+      async apply(html: string) {
+        const s = `<script>(function(){
     function postCheckout(){
       return fetch("/checkout",{
         method:"POST",
@@ -34,13 +35,23 @@ export const CheckoutSessions = {
     document.querySelectorAll("[data-cta=\\"hero_buy\\"],[data-cta=\\"header_buy\\"]")
       .forEach(function(btn){ btn.addEventListener("click", function(e){ e.preventDefault(); postCheckout(); }); });
   })();</script>`;
-  return html.replace("</body>", s+"</body>");
-} };
-
+        return html.replace("</body>", s + "</body>");
+      },
+    };
   },
-  fallback() { console.warn("[checkout_sessions] fallback safe mode."); },
-  negotiate() { return "checkout_sessions negotiates between system and culture."; },
-  evolve() { return "checkout_sessions evolves toward adaptive governance."; },
-  coevolve() { return "checkout_sessions coevolves with other modules."; },
-  cultivate() { return "checkout_sessions cultivates cultural resilience."; }
-}
+  fallback() {
+    console.warn("[checkout_sessions] fallback safe mode.");
+  },
+  negotiate() {
+    return "checkout_sessions negotiates between system and culture.";
+  },
+  evolve() {
+    return "checkout_sessions evolves toward adaptive governance.";
+  },
+  coevolve() {
+    return "checkout_sessions coevolves with other modules.";
+  },
+  cultivate() {
+    return "checkout_sessions cultivates cultural resilience.";
+  },
+};

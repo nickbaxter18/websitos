@@ -1,102 +1,312 @@
-﻿<!doctype html><html lang="en-CA"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-﻿<link rel="preconnect" href="https://www.google-analytics.com"><meta name="theme-color" content="#0EA5E9">
-<link rel="stylesheet" href="/assets/tokens.css"><link rel="stylesheet" href="/assets/components.css"><title>Offer</title>﻿<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
-gtag("consent","default",{ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied",analytics_storage:"denied"});</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"AI Funnel","description":"Launch faster with AI","offers":{"@type":"Offer","price":"29","priceCurrency":"USD"}}</script><meta property="og:title" content="AI Funnel"><meta property="og:description" content="Launch faster with AI"><script>window.PRICE_ID='price_TEST';</script></head>
-<body><header>﻿<nav class="nav"><a class="logo" href="/">U-Dig It</a><a href="#features">Features</a><a href="#pricing">Pricing</a></nav>
-</header><main><section class="hero"><h1>Grow faster with AI</h1><a class="btn-primary" data-cta="hero_buy" href="#buy">Buy now</a></section>﻿<section class="lead-card"><h2>Get the free AI Quick Wins checklist</h2>
-<form id="leadForm" method="POST" action="/api/leads" novalidate>
-<input type="email" name="email" required placeholder="you@company.com" autocomplete="email" inputmode="email"/>
-<input type="text" name="company" placeholder="Company (optional)"/>
-<input type="text" name="website" style="display:none" tabindex="-1" aria-hidden="true">
-<label><input type="checkbox" name="consent" required> I agree to receive emails per the <a href="/privacypolicy/">Privacy Policy</a>.</label>
-<button type="submit" class="btn-primary" data-cta="lead_submit">Get the checklist</button>
-<div id="leadStatus" role="status" aria-live="polite"></div>
-</form></section>
-<section class="order-bump"><h3>Add ai spark starter for only $9</h3>
-  <label><input type="checkbox" id="bump"> Yes, add to my order</label></section>
-  <script>
-    (function(){
-      var el = document.getElementById("bump");
-      if(!el) return;
-      el.addEventListener("change", function(e){
-        var t = e && e.target ? e.target : {};
-        var checked = !!t.checked;
-        if (window.udigitEmit) window.udigitEmit("order_bump_toggle", {checked: checked});
+﻿<!doctype html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    ﻿
+    <link rel="preconnect" href="https://www.google-analytics.com" />
+    <meta name="theme-color" content="#0EA5E9" />
+    <link rel="stylesheet" href="/assets/tokens.css" />
+    <link rel="stylesheet" href="/assets/components.css" />
+    <title>Offer</title>
+    ﻿
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("consent", "default", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: "denied",
       });
-    })();
-  </script></main><footer>﻿<div class="footer-inner">
-<p>© <span id="y"></span> U-Dig It • Support: <a href="mailto:nickbaxter@udigit.ca">nickbaxter@udigit.ca</a></p>
-<ul class="legal"><li><a href="/terms/">Terms</a></li><li><a href="/privacypolicy/">Privacy</a></li><li><a href="/refund/">Refund</a></li><li><a href="/disclaimer/">Disclaimer</a></li></ul>
-</div><script>document.getElementById("y").textContent=new Date().getFullYear()</script>
-</footer><script src="/assets/analytics.js" defer></script>﻿<div id="consentBanner" style="position:fixed;left:1rem;right:1rem;bottom:1rem;background:#111;color:#fff;padding:1rem;border-radius:.75rem;display:none;z-index:1000">
-  <span>Allow analytics to help us improve? <a href="/privacypolicy/" style="color:#9ae6b4">Learn more</a></span>
-  <div style="float:right;gap:.5rem;display:inline-flex">
-    <button id="consentAccept" style="background:#22c55e;color:#000;border:0;padding:.5rem .75rem;border-radius:.5rem">Accept</button>
-    <button id="consentDecline" style="background:#e2e8f0;color:#111;border:0;padding:.5rem .75rem;border-radius:.5rem">Decline</button>
-  </div>
-</div>
-<script>(function(){
-  var KEY='consent_choice_v2';
-  var banner=document.getElementById('consentBanner');
-  if(!localStorage.getItem(KEY)){ banner.style.display='block'; }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "AI Funnel",
+        "description": "Launch faster with AI",
+        "offers": { "@type": "Offer", "price": "29", "priceCurrency": "USD" }
+      }
+    </script>
+    <meta property="og:title" content="AI Funnel" />
+    <meta property="og:description" content="Launch faster with AI" />
+    <script>
+      window.PRICE_ID = "price_TEST";
+    </script>
+  </head>
+  <body>
+    <header>
+      ﻿
+      <nav class="nav">
+        <a class="logo" href="/">U-Dig It</a><a href="#features">Features</a
+        ><a href="#pricing">Pricing</a>
+      </nav>
+    </header>
+    <main>
+      <section class="hero">
+        <h1>Grow faster with AI</h1>
+        <a class="btn-primary" data-cta="hero_buy" href="#buy">Buy now</a>
+      </section>
+      ﻿
+      <section class="lead-card">
+        <h2>Get the free AI Quick Wins checklist</h2>
+        <form id="leadForm" method="POST" action="/api/leads" novalidate>
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="you@company.com"
+            autocomplete="email"
+            inputmode="email"
+          />
+          <input type="text" name="company" placeholder="Company (optional)" />
+          <input
+            type="text"
+            name="website"
+            style="display: none"
+            tabindex="-1"
+            aria-hidden="true"
+          />
+          <label
+            ><input type="checkbox" name="consent" required /> I agree to receive emails per the
+            <a href="/privacypolicy/">Privacy Policy</a>.</label
+          >
+          <button type="submit" class="btn-primary" data-cta="lead_submit">
+            Get the checklist
+          </button>
+          <div id="leadStatus" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+      <section class="order-bump">
+        <h3>Add ai spark starter for only $9</h3>
+        <label><input type="checkbox" id="bump" /> Yes, add to my order</label>
+      </section>
+      <script>
+        (function () {
+          var el = document.getElementById("bump");
+          if (!el) return;
+          el.addEventListener("change", function (e) {
+            var t = e && e.target ? e.target : {};
+            var checked = !!t.checked;
+            if (window.udigitEmit) window.udigitEmit("order_bump_toggle", { checked: checked });
+          });
+        })();
+      </script>
+    </main>
+    <footer>
+      ﻿
+      <div class="footer-inner">
+        <p>
+          © <span id="y"></span> U-Dig It • Support:
+          <a href="mailto:nickbaxter@udigit.ca">nickbaxter@udigit.ca</a>
+        </p>
+        <ul class="legal">
+          <li><a href="/terms/">Terms</a></li>
+          <li><a href="/privacypolicy/">Privacy</a></li>
+          <li><a href="/refund/">Refund</a></li>
+          <li><a href="/disclaimer/">Disclaimer</a></li>
+        </ul>
+      </div>
+      <script>
+        document.getElementById("y").textContent = new Date().getFullYear();
+      </script>
+    </footer>
+    <script src="/assets/analytics.js" defer></script>
+    ﻿
+    <div
+      id="consentBanner"
+      style="
+        position: fixed;
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        background: #111;
+        color: #fff;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        display: none;
+        z-index: 1000;
+      "
+    >
+      <span
+        >Allow analytics to help us improve?
+        <a href="/privacypolicy/" style="color: #9ae6b4">Learn more</a></span
+      >
+      <div style="float: right; gap: 0.5rem; display: inline-flex">
+        <button
+          id="consentAccept"
+          style="
+            background: #22c55e;
+            color: #000;
+            border: 0;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+          "
+        >
+          Accept
+        </button>
+        <button
+          id="consentDecline"
+          style="
+            background: #e2e8f0;
+            color: #111;
+            border: 0;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+          "
+        >
+          Decline
+        </button>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var KEY = "consent_choice_v2";
+        var banner = document.getElementById("consentBanner");
+        if (!localStorage.getItem(KEY)) {
+          banner.style.display = "block";
+        }
 
-  function loadGA(id){
-    if(window.gaLoaded) return; window.gaLoaded=true;
-    var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id='+id; document.head.appendChild(s);
-    window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
-    gtag('js', new Date()); gtag('config', id, {anonymize_ip:true}); gtag('consent','update',{analytics_storage:'granted'});
-  }
+        function loadGA(id) {
+          if (window.gaLoaded) return;
+          window.gaLoaded = true;
+          var s = document.createElement("script");
+          s.async = true;
+          s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () {
+            dataLayer.push(arguments);
+          };
+          gtag("js", new Date());
+          gtag("config", id, { anonymize_ip: true });
+          gtag("consent", "update", { analytics_storage: "granted" });
+        }
 
-  var a=document.getElementById('consentAccept');
-  var d=document.getElementById('consentDecline');
-  if(a){ a.addEventListener('click', function(){ localStorage.setItem(KEY,'accepted'); loadGA('G-BF3NB7NFEL'); banner.remove(); }); }
-  if(d){ d.addEventListener('click', function(){ localStorage.setItem(KEY,'declined'); banner.remove(); }); }
-})();</script>
-﻿<div class="sticky-cta" id="stickyCta" role="region" aria-label="Quick checkout">
-  <div class="sticky-cta__inner">
-    <span id="stickyPrice">$29</span>
-    <button class="btn-primary" id="stickyBuy" data-cta="sticky_buy">Buy now</button>
-  </div>
-</div>
-<style>.sticky-cta{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eee;display:none;}
-.sticky-cta__inner{max-width:960px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px;}
-@media (max-width:768px){.sticky-cta{display:block;}}</style>
-<script>document.getElementById("stickyBuy")?.addEventListener("click",()=>{document.querySelector("[data-cta=\\"hero_buy\\"]")?.click();});</script>
-<script>(function(){
-    window.udigitEmit=function(type,payload){
-      try{
-        const uid=localStorage.getItem("uid")||""; 
-        const consent=localStorage.getItem("consent_choice_v2")||"unknown";
-        const body=JSON.stringify({type,payload,uid,ts:Date.now(),consent});
-        navigator.sendBeacon && navigator.sendBeacon("/events", new Blob([body],{type:"application/json"}));
-      }catch(e){}
-    };
-  })();</script><script src="https://unpkg.com/web-vitals@4/dist/web-vitals.umd.js" defer onload="
+        var a = document.getElementById("consentAccept");
+        var d = document.getElementById("consentDecline");
+        if (a) {
+          a.addEventListener("click", function () {
+            localStorage.setItem(KEY, "accepted");
+            loadGA("G-BF3NB7NFEL");
+            banner.remove();
+          });
+        }
+        if (d) {
+          d.addEventListener("click", function () {
+            localStorage.setItem(KEY, "declined");
+            banner.remove();
+          });
+        }
+      })();
+    </script>
+    ﻿
+    <div class="sticky-cta" id="stickyCta" role="region" aria-label="Quick checkout">
+      <div class="sticky-cta__inner">
+        <span id="stickyPrice">$29</span>
+        <button class="btn-primary" id="stickyBuy" data-cta="sticky_buy">Buy now</button>
+      </div>
+    </div>
+    <style>
+      .sticky-cta {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #fff;
+        border-top: 1px solid #eee;
+        display: none;
+      }
+      .sticky-cta__inner {
+        max-width: 960px;
+        margin: 0 auto;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+      }
+      @media (max-width: 768px) {
+        .sticky-cta {
+          display: block;
+        }
+      }
+    </style>
+    <script>
+      document.getElementById("stickyBuy")?.addEventListener("click",()=>{document.querySelector("[data-cta=\\"hero_buy\\"]")?.click();});
+    </script>
+    <script>
+      (function () {
+        window.udigitEmit = function (type, payload) {
+          try {
+            const uid = localStorage.getItem("uid") || "";
+            const consent = localStorage.getItem("consent_choice_v2") || "unknown";
+            const body = JSON.stringify({ type, payload, uid, ts: Date.now(), consent });
+            navigator.sendBeacon &&
+              navigator.sendBeacon("/events", new Blob([body], { type: "application/json" }));
+          } catch (e) {}
+        };
+      })();
+    </script>
+    <script
+      src="https://unpkg.com/web-vitals@4/dist/web-vitals.umd.js"
+      defer
+      onload="
     webVitals.onLCP(v=>dispatchEvent(new CustomEvent('udigit:vital',{detail:{type:'LCP',value:v.value}})));
     webVitals.onINP(v=>dispatchEvent(new CustomEvent('udigit:vital',{detail:{type:'INP',value:v.value}})));
     webVitals.onCLS(v=>dispatchEvent(new CustomEvent('udigit:vital',{detail:{type:'CLS',value:v.value}})));
-  "></script><script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}</script><script>(function(){
-    function postCheckout(){
-      return fetch("/checkout",{
-        method:"POST",
-        headers:{ "content-type":"application/json" },
-        body: JSON.stringify({
-          sku: window.PRODUCT_SLUG || "offer",
-          utm: JSON.parse(localStorage.getItem("utm")||"{}"),
-          persona: window.PERSONA || "default"
-        })
-      })
-      .then(async r=>{
-        const ct=r.headers.get("content-type")||"";
-        const body=ct.includes("application/json")? await r.json() : {error: await r.text()};
-        if(!r.ok) throw body;
-        return body;
-      })
-      .then(j=>{ if(j && j.url){ location.href=j.url; } else { console.warn("Checkout unexpected:", j); } })
-      .catch(e=>{ console.warn("Checkout error:", e); alert((e && e.error) || "Checkout failed"); });
-    }
+  "
+    ></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      }
+    </script>
+    <script>
+      (function () {
+        function postCheckout() {
+          return fetch("/checkout", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              sku: window.PRODUCT_SLUG || "offer",
+              utm: JSON.parse(localStorage.getItem("utm") || "{}"),
+              persona: window.PERSONA || "default",
+            }),
+          })
+            .then(async (r) => {
+              const ct = r.headers.get("content-type") || "";
+              const body = ct.includes("application/json")
+                ? await r.json()
+                : { error: await r.text() };
+              if (!r.ok) throw body;
+              return body;
+            })
+            .then((j) => {
+              if (j && j.url) {
+                location.href = j.url;
+              } else {
+                console.warn("Checkout unexpected:", j);
+              }
+            })
+            .catch((e) => {
+              console.warn("Checkout error:", e);
+              alert((e && e.error) || "Checkout failed");
+            });
+        }
 
-    document.querySelectorAll("[data-cta=\"hero_buy\"],[data-cta=\"header_buy\"]")
-      .forEach(function(btn){ btn.addEventListener("click", function(e){ e.preventDefault(); postCheckout(); }); });
-  })();</script></body></html>
+        document
+          .querySelectorAll('[data-cta="hero_buy"],[data-cta="header_buy"]')
+          .forEach(function (btn) {
+            btn.addEventListener("click", function (e) {
+              e.preventDefault();
+              postCheckout();
+            });
+          });
+      })();
+    </script>
+  </body>
+</html>

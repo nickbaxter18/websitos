@@ -1,4 +1,3 @@
-
 export const UriJsSerialize = {
   id: "uri-js-serialize",
   function: "uri-js-serialize",
@@ -6,11 +5,15 @@ export const UriJsSerialize = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['uri-js-serialize'],
-  apply() { return require("./uri-js-serialize.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["uri-js-serialize"],
+  apply() {
+    return require("./uri-js-serialize.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

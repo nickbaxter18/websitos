@@ -15,10 +15,7 @@ const translations: TranslationEntry[] = [];
 
 export function addTranslation(entry: TranslationEntry) {
   translations.push(entry);
-  fs.appendFileSync(
-    translationsFile,
-    `\n${entry.lang} :: ${entry.key} = ${entry.value}`
-  );
+  fs.appendFileSync(translationsFile, `\n${entry.lang} :: ${entry.key} = ${entry.value}`);
 }
 
 export function translate(key: string, lang: string): string {

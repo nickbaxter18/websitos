@@ -1,4 +1,3 @@
-
 export const ProductAnnouncementUpdateSequence = {
   id: "product_announcement_update_sequence",
   function: "product announcement update sequence",
@@ -6,11 +5,15 @@ export const ProductAnnouncementUpdateSequence = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['product', 'announcement', 'update', 'sequence'],
-  apply() { return require("./product_announcement_update_sequence.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["product", "announcement", "update", "sequence"],
+  apply() {
+    return require("./product_announcement_update_sequence.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

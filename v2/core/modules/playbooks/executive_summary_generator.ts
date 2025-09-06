@@ -1,4 +1,3 @@
-
 export const ExecutiveSummaryGenerator = {
   id: "executive_summary_generator",
   function: "executive summary generator",
@@ -6,11 +5,15 @@ export const ExecutiveSummaryGenerator = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['executive', 'summary', 'generator'],
-  apply() { return require("./executive_summary_generator.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["executive", "summary", "generator"],
+  apply() {
+    return require("./executive_summary_generator.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

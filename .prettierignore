@@ -1,6 +1,24 @@
+# Dependencies
 node_modules
+
+# Build artifacts
 dist
 build
+
+# Python virtual environments
 venv
+.venv
+
+# TypeScript declaration files
 *.d.ts
+
+# Old docs / archive
 docs/meta/archive
+
+# Python site-packages (Windows / pip installs)
+Lib/
+Scripts/
+
+# Coverage, logs, cache
+coverage
+*.log

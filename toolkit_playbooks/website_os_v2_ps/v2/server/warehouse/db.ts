@@ -24,18 +24,24 @@ db.exec(`
   );
 `);
 
-export function insertEvent(e:{ uid:string, type:string, ts:number, payload:any }) {
-  db.prepare("INSERT INTO events(uid,type,ts,payload) VALUES (?,?,?,?)")
-    .run(e.uid, e.type, e.ts, JSON.stringify(e.payload||{}));
+export function insertEvent(e: { uid: string; type: string; ts: number; payload: any }) {
+  db.prepare("INSERT INTO events(uid,type,ts,payload) VALUES (?,?,?,?)").run(
+    e.uid,
+    e.type,
+    e.ts,
+    JSON.stringify(e.payload || {})
+  );
 }
 
-export function hasProcessed(eventId:string) {
+export function hasProcessed(eventId: string) {
   return !!db.prepare("SELECT 1 FROM processed_events WHERE event_id=?").get(eventId);
 }
 
-export function markProcessed(eventId:string) {
-  db.prepare("INSERT OR IGNORE INTO processed_events(event_id,ts) VALUES (?,?)")
-    .run(eventId, Date.now());
+export function markProcessed(eventId: string) {
+  db.prepare("INSERT OR IGNORE INTO processed_events(event_id,ts) VALUES (?,?)").run(
+    eventId,
+    Date.now()
+  );
 }
 
 export default db;

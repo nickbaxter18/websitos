@@ -1,4 +1,3 @@
-
 export const Jsconfig = {
   id: "jsconfig",
   function: "jsconfig",
@@ -6,11 +5,15 @@ export const Jsconfig = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['jsconfig'],
-  apply() { return require("./jsconfig.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["jsconfig"],
+  apply() {
+    return require("./jsconfig.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

@@ -1,5 +1,7 @@
-﻿export default { flag:"server_tagging", async apply(html:string){
-  const s=`<script>(function(){
+﻿export default {
+  flag: "server_tagging",
+  async apply(html: string) {
+    const s = `<script>(function(){
     window.udigitEmit=function(type,payload){
       try{
         const uid=localStorage.getItem("uid")||""; 
@@ -9,5 +11,6 @@
       }catch(e){}
     };
   })();</script>`;
-  return html.replace("</body>", s+"</body>");
-} };
+    return html.replace("</body>", s + "</body>");
+  },
+};

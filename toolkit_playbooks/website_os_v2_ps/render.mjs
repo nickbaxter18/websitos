@@ -6,11 +6,14 @@ const ctx = {
     name: "AI Funnel",
     price: 29,
     currency: "USD",
-    description: "Launch faster with AI"
+    description: "Launch faster with AI",
   },
-  locale: "en-CA"
+  locale: "en-CA",
 };
 
 buildPage(ctx)
-  .then(r => console.log("[rendered]", r.outPath))
-  .catch(err => { console.error(err); process.exit(1); });
+  .then((r) => console.log("[rendered]", r.outPath))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

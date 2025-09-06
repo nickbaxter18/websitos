@@ -1,4 +1,3 @@
-
 export const Applicability = {
   id: "applicability",
   function: "applicability",
@@ -6,36 +5,45 @@ export const Applicability = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['applicability'],
+  cultural_tags: ["applicability"],
   apply() {
     // Original logic
-import type {AnySchemaObject} from "../../types"
-import type {SchemaObjCxt} from ".."
-import type {JSONType, RuleGroup, Rule} from "../rules"
+    import type { AnySchemaObject } from "../../types";
+    import type { SchemaObjCxt } from "..";
+    import type { JSONType, RuleGroup, Rule } from "../rules";
 
-export function schemaHasRulesForType(
-  {schema, self}: SchemaObjCxt,
-  type: JSONType
-): boolean | undefined {
-  const group = self.RULES.types[type]
-  return group && group !== true && shouldUseGroup(schema, group)
-}
+    export function schemaHasRulesForType(
+      { schema, self }: SchemaObjCxt,
+      type: JSONType
+    ): boolean | undefined {
+      const group = self.RULES.types[type];
+      return group && group !== true && shouldUseGroup(schema, group);
+    }
 
-export function shouldUseGroup(schema: AnySchemaObject, group: RuleGroup): boolean {
-  return group.rules.some((rule) => shouldUseRule(schema, rule))
-}
+    export function shouldUseGroup(schema: AnySchemaObject, group: RuleGroup): boolean {
+      return group.rules.some((rule) => shouldUseRule(schema, rule));
+    }
 
-export function shouldUseRule(schema: AnySchemaObject, rule: Rule): boolean | undefined {
-  return (
-    schema[rule.keyword] !== undefined ||
-    rule.definition.implements?.some((kwd) => schema[kwd] !== undefined)
-  )
-}
-
+    export function shouldUseRule(schema: AnySchemaObject, rule: Rule): boolean | undefined {
+      return (
+        schema[rule.keyword] !== undefined ||
+        rule.definition.implements?.some((kwd) => schema[kwd] !== undefined)
+      );
+    }
   },
-  fallback() { console.warn("[applicability] fallback safe mode."); },
-  negotiate() { return "applicability negotiates between system and culture."; },
-  evolve() { return "applicability evolves toward adaptive governance."; },
-  coevolve() { return "applicability coevolves with other modules."; },
-  cultivate() { return "applicability cultivates cultural resilience."; }
-}
+  fallback() {
+    console.warn("[applicability] fallback safe mode.");
+  },
+  negotiate() {
+    return "applicability negotiates between system and culture.";
+  },
+  evolve() {
+    return "applicability evolves toward adaptive governance.";
+  },
+  coevolve() {
+    return "applicability coevolves with other modules.";
+  },
+  cultivate() {
+    return "applicability cultivates cultural resilience.";
+  },
+};

@@ -1,4 +1,3 @@
-
 export const PricingExperimentsPlaybook = {
   id: "pricing_experiments_playbook",
   function: "pricing experiments playbook",
@@ -6,11 +5,15 @@ export const PricingExperimentsPlaybook = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['pricing', 'experiments', 'playbook'],
-  apply() { return require("./pricing_experiments_playbook.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["pricing", "experiments", "playbook"],
+  apply() {
+    return require("./pricing_experiments_playbook.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

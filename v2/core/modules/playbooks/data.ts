@@ -1,4 +1,3 @@
-
 export const Data = {
   id: "data",
   function: "data",
@@ -6,11 +5,15 @@ export const Data = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['data'],
-  apply() { return require("./data.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["data"],
+  apply() {
+    return require("./data.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

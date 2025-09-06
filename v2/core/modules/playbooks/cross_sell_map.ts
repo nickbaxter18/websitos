@@ -1,4 +1,3 @@
-
 export const CrossSellMap = {
   id: "cross_sell_map",
   function: "cross sell map",
@@ -6,11 +5,15 @@ export const CrossSellMap = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['cross', 'sell'],
-  apply() { return require("./cross_sell_map.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["cross", "sell"],
+  apply() {
+    return require("./cross_sell_map.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

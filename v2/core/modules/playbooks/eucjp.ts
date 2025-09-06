@@ -1,4 +1,3 @@
-
 export const Eucjp = {
   id: "eucjp",
   function: "eucjp",
@@ -6,11 +5,15 @@ export const Eucjp = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['eucjp'],
-  apply() { return require("./eucjp.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["eucjp"],
+  apply() {
+    return require("./eucjp.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

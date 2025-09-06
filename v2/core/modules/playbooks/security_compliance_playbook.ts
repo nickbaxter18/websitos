@@ -1,4 +1,3 @@
-
 export const SecurityCompliancePlaybook = {
   id: "security_compliance_playbook",
   function: "security compliance playbook",
@@ -6,11 +5,15 @@ export const SecurityCompliancePlaybook = {
   gardener_role: "pruner",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['security', 'compliance', 'playbook'],
-  apply() { return require("./security_compliance_playbook.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["security", "compliance", "playbook"],
+  apply() {
+    return require("./security_compliance_playbook.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

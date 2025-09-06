@@ -4,7 +4,31 @@
     <button class="btn-primary" id="stickyBuy" data-cta="sticky_buy">Buy now</button>
   </div>
 </div>
-<style>.sticky-cta{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eee;display:none;}
-.sticky-cta__inner{max-width:960px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px;}
-@media (max-width:768px){.sticky-cta{display:block;}}</style>
-<script>document.getElementById("stickyBuy")?.addEventListener("click",()=>{document.querySelector("[data-cta=\\"hero_buy\\"]")?.click();});</script>
+<style>
+  .sticky-cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid #eee;
+    display: none;
+  }
+  .sticky-cta__inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+  }
+  @media (max-width: 768px) {
+    .sticky-cta {
+      display: block;
+    }
+  }
+</style>
+<script>
+  document.getElementById("stickyBuy")?.addEventListener("click",()=>{document.querySelector("[data-cta=\\"hero_buy\\"]")?.click();});
+</script>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     {% include "partials/head.html" %}
@@ -13,16 +13,13 @@
     {% include "partials/navbar.html" %}
 
     <!-- Main Content -->
-    <main class="section">
-      {% block content %}{% endblock %}
-    </main>
+    <main class="section">{% block content %}{% endblock %}</main>
 
     <!-- Footer -->
     {% include "partials/footer.html" %}
 
     <!-- Compliance + Tracking -->
-    {% include "partials/consent.html" %}
-    {% include "partials/ga4_head.html" %}
+    {% include "partials/consent.html" %} {% include "partials/ga4_head.html" %}
 
     <!-- Sticky CTA -->
     {% include "partials/sticky_cta.html" %}

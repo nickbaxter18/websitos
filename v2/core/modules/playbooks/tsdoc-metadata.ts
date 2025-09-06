@@ -1,4 +1,3 @@
-
 export const TsdocMetadata = {
   id: "tsdoc-metadata",
   function: "tsdoc-metadata",
@@ -6,11 +5,15 @@ export const TsdocMetadata = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['tsdoc-metadata'],
-  apply() { return require("./tsdoc-metadata.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["tsdoc-metadata"],
+  apply() {
+    return require("./tsdoc-metadata.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

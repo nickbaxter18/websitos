@@ -1,5 +1,15 @@
 import React from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceArea,
+} from "recharts";
 
 interface HealthChartProps {
   data: any[];
@@ -13,9 +23,10 @@ export default function HealthChart({ data }: HealthChartProps) {
   if (data.length >= 2) {
     const last = data[data.length - 1];
     const prev = data[data.length - 2];
-    const avgChange = ["diversity", "coherence", "resilience", "beauty"].reduce((acc, metric: any) => {
-      return acc + ((last[metric] ?? 0) - (prev[metric] ?? 0));
-    }, 0) / 4;
+    const avgChange =
+      ["diversity", "coherence", "resilience", "beauty"].reduce((acc, metric: any) => {
+        return acc + ((last[metric] ?? 0) - (prev[metric] ?? 0));
+      }, 0) / 4;
 
     if (avgChange > 0.1) {
       trendColor = "#dcfce7";
@@ -41,10 +52,34 @@ export default function HealthChart({ data }: HealthChartProps) {
         <Line type="monotone" dataKey="beauty" stroke="#ef4444" dot={false} />
 
         {/* Rolling averages */}
-        <Line type="monotone" dataKey="diversity_avg" stroke="#60a5fa" strokeDasharray="5 5" dot={false} />
-        <Line type="monotone" dataKey="coherence_avg" stroke="#34d399" strokeDasharray="5 5" dot={false} />
-        <Line type="monotone" dataKey="resilience_avg" stroke="#fbbf24" strokeDasharray="5 5" dot={false} />
-        <Line type="monotone" dataKey="beauty_avg" stroke="#f87171" strokeDasharray="5 5" dot={false} />
+        <Line
+          type="monotone"
+          dataKey="diversity_avg"
+          stroke="#60a5fa"
+          strokeDasharray="5 5"
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="coherence_avg"
+          stroke="#34d399"
+          strokeDasharray="5 5"
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="resilience_avg"
+          stroke="#fbbf24"
+          strokeDasharray="5 5"
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="beauty_avg"
+          stroke="#f87171"
+          strokeDasharray="5 5"
+          dot={false}
+        />
 
         {/* Cultural Vitality Index */}
         <Line type="monotone" dataKey="cvi" stroke="#111827" strokeWidth={3} dot={false} />

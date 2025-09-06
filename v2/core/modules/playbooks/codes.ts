@@ -1,4 +1,3 @@
-
 export const Codes = {
   id: "codes",
   function: "codes",
@@ -6,11 +5,15 @@ export const Codes = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['codes'],
-  apply() { return require("./codes.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["codes"],
+  apply() {
+    return require("./codes.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

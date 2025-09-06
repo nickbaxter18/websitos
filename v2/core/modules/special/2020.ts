@@ -11,9 +11,19 @@ export const Schema2020 = {
   apply() {
     console.log("Apply logic for Schema2020");
   },
-  fallback() { console.warn("[2020] fallback safe mode."); },
-  negotiate() { return "2020 negotiates between system and culture."; },
-  evolve() { return "2020 evolves toward adaptive governance."; },
-  coevolve() { return "2020 coevolves with other modules."; },
-  cultivate() { return "2020 cultivates cultural resilience."; }
+  fallback() {
+    console.warn("[2020] fallback safe mode.");
+  },
+  negotiate() {
+    return "2020 negotiates between system and culture.";
+  },
+  evolve() {
+    return "2020 evolves toward adaptive governance.";
+  },
+  coevolve() {
+    return "2020 coevolves with other modules.";
+  },
+  cultivate() {
+    return "2020 cultivates cultural resilience.";
+  },
 };

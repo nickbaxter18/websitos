@@ -13,18 +13,32 @@ const sublimityPath = path.resolve("docs/meta/sublimity-index.md");
 
 // Base + Extended schema from v3.1 Covenant
 const required = [
-  "id","function","dependencies","gardener_role",
-  "archetype","myth_alignment","cultural_tags"
+  "id",
+  "function",
+  "dependencies",
+  "gardener_role",
+  "archetype",
+  "myth_alignment",
+  "cultural_tags",
 ];
 const extended = [
-  "morphogenetics","quantum_light","material_poetry","ritual_navigation",
-  "breath_cycles","dream_transitions","sensory_convergence",
-  "ephemeral_rituals","collective_awe_gates","sublimity_index"
+  "morphogenetics",
+  "quantum_light",
+  "material_poetry",
+  "ritual_navigation",
+  "breath_cycles",
+  "dream_transitions",
+  "sensory_convergence",
+  "ephemeral_rituals",
+  "collective_awe_gates",
+  "sublimity_index",
 ];
 
 function validateModule(mod: any): boolean {
-  return required.every(k => Object.prototype.hasOwnProperty.call(mod, k)) &&
-         extended.every(k => Object.prototype.hasOwnProperty.call(mod, k));
+  return (
+    required.every((k) => Object.prototype.hasOwnProperty.call(mod, k)) &&
+    extended.every((k) => Object.prototype.hasOwnProperty.call(mod, k))
+  );
 }
 
 // Helper: derive myths from modules
@@ -51,14 +65,15 @@ function sublimityScore(mod: any): string {
 
 export function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn") {
   const files = fs.readdirSync(modulesDir);
-  let validCount = 0, invalidCount = 0;
+  let validCount = 0,
+    invalidCount = 0;
   const logEntries: string[] = [];
   const pruned: string[] = [];
   const mythUpdates: string[] = [];
   const treaties: string[] = [];
   const sublimityEntries: string[] = [];
 
-  files.forEach(file => {
+  files.forEach((file) => {
     // ✅ Skip hidden/dotfiles and junk
     if (file.startsWith(".")) return;
     if (!file.endsWith(".ts")) return;
@@ -69,7 +84,9 @@ export function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn
       validCount++;
       const aweTriggered = tenantActiveUsers >= (mod.collective_awe_gates?.users || 100);
 
-      logEntries.push(`[VALID] ${file} → role=${mod.gardener_role} | Phase=${phase} | AweTriggered=${aweTriggered}`);
+      logEntries.push(
+        `[VALID] ${file} → role=${mod.gardener_role} | Phase=${phase} | AweTriggered=${aweTriggered}`
+      );
 
       // Record myth cycle
       mythUpdates.push(extractMyth(mod));
@@ -80,36 +97,51 @@ export function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn
 
       // Record sublimity index
       sublimityEntries.push(sublimityScore(mod));
-
     } else {
       invalidCount++;
       const closureNote = `- ${file} (schema non-compliant → archived with ritual closure at ${new Date().toISOString()})`;
       pruned.push(closureNote);
 
       const archiveDir = path.resolve("docs/meta/archive");
-      fs.mkdirSync(archiveDir, {recursive: true});
+      fs.mkdirSync(archiveDir, { recursive: true });
       fs.renameSync(path.join(modulesDir, file), path.join(archiveDir, file));
     }
   });
 
   // Write logs
-  fs.writeFileSync(logPath, logEntries.join("\n") + "\n", {flag:"a"});
-  fs.writeFileSync(prunedPath, pruned.join("\n") + "\n", {flag:"a"});
-  fs.writeFileSync(healthPath, `\nCycle: ${new Date().toISOString()} | Valid: ${validCount} | Pruned: ${invalidCount}`, {flag:"a"});
+  fs.writeFileSync(logPath, logEntries.join("\n") + "\n", { flag: "a" });
+  fs.writeFileSync(prunedPath, pruned.join("\n") + "\n", { flag: "a" });
+  fs.writeFileSync(
+    healthPath,
+    `\nCycle: ${new Date().toISOString()} | Valid: ${validCount} | Pruned: ${invalidCount}`,
+    { flag: "a" }
+  );
 
   // Write myth cycles
   if (mythUpdates.length > 0) {
-    fs.writeFileSync(mythCyclesPath, `\n### Cycle ${new Date().toISOString()}\n${mythUpdates.join("\n")}\n`, {flag:"a"});
+    fs.writeFileSync(
+      mythCyclesPath,
+      `\n### Cycle ${new Date().toISOString()}\n${mythUpdates.join("\n")}\n`,
+      { flag: "a" }
+    );
   }
 
   // Write reconciliations
   if (treaties.length > 0) {
-    fs.writeFileSync(reconciliationsPath, `\n### Cycle ${new Date().toISOString()}\n${treaties.join("\n")}\n`, {flag:"a"});
+    fs.writeFileSync(
+      reconciliationsPath,
+      `\n### Cycle ${new Date().toISOString()}\n${treaties.join("\n")}\n`,
+      { flag: "a" }
+    );
   }
 
   // Write sublimity index entries
   if (sublimityEntries.length > 0) {
-    fs.writeFileSync(sublimityPath, `\n### Cycle ${new Date().toISOString()}\n${sublimityEntries.join("\n")}\n`, {flag:"a"});
+    fs.writeFileSync(
+      sublimityPath,
+      `\n### Cycle ${new Date().toISOString()}\n${sublimityEntries.join("\n")}\n`,
+      { flag: "a" }
+    );
   }
 }
 

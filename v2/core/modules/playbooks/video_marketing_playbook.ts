@@ -1,4 +1,3 @@
-
 export const VideoMarketingPlaybook = {
   id: "video_marketing_playbook",
   function: "video marketing playbook",
@@ -6,11 +5,15 @@ export const VideoMarketingPlaybook = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['video', 'marketing', 'playbook'],
-  apply() { return require("./video_marketing_playbook.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["video", "marketing", "playbook"],
+  apply() {
+    return require("./video_marketing_playbook.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

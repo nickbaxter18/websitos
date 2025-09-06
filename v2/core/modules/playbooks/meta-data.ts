@@ -1,4 +1,3 @@
-
 export const MetaData = {
   id: "meta-data",
   function: "meta-data",
@@ -6,11 +5,15 @@ export const MetaData = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['meta-data'],
-  apply() { return require("./meta-data.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["meta-data"],
+  apply() {
+    return require("./meta-data.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

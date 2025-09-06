@@ -1,4 +1,3 @@
-
 export const Schema = {
   id: "schema",
   function: "schema",
@@ -6,11 +5,15 @@ export const Schema = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['schema'],
-  apply() { return require("./schema.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["schema"],
+  apply() {
+    return require("./schema.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

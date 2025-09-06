@@ -1,4 +1,3 @@
-
 export const CustomerSuccessPlaybook = {
   id: "customer_success_playbook",
   function: "customer success playbook",
@@ -6,11 +5,15 @@ export const CustomerSuccessPlaybook = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['customer', 'success', 'playbook'],
-  apply() { return require("./customer_success_playbook.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["customer", "success", "playbook"],
+  apply() {
+    return require("./customer_success_playbook.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

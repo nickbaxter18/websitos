@@ -1,4 +1,3 @@
-
 export const Prefetch = {
   id: "prefetch",
   function: "prefetch",
@@ -6,11 +5,13 @@ export const Prefetch = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['prefetch'],
+  cultural_tags: ["prefetch"],
   apply() {
     // Original logic
-﻿export default { flag:"prefetch", async apply(html:string){
-  const s=`<script>(function(){
+    export default {
+      flag: "prefetch",
+      async apply(html: string) {
+        const s = `<script>(function(){
     var supports = "connection" in navigator;
     function prefetch(href){ var l=document.createElement("link"); l.rel="prefetch"; l.href=href; document.head.appendChild(l); }
     document.body.addEventListener("mouseover", function(e){
@@ -20,13 +21,23 @@ export const Prefetch = {
       prefetch(t.href);
     }, {passive:true});
   })();</script>`;
-  return html.replace("</body>", s+"</body>");
-} };
-
+        return html.replace("</body>", s + "</body>");
+      },
+    };
   },
-  fallback() { console.warn("[prefetch] fallback safe mode."); },
-  negotiate() { return "prefetch negotiates between system and culture."; },
-  evolve() { return "prefetch evolves toward adaptive governance."; },
-  coevolve() { return "prefetch coevolves with other modules."; },
-  cultivate() { return "prefetch cultivates cultural resilience."; }
-}
+  fallback() {
+    console.warn("[prefetch] fallback safe mode.");
+  },
+  negotiate() {
+    return "prefetch negotiates between system and culture.";
+  },
+  evolve() {
+    return "prefetch evolves toward adaptive governance.";
+  },
+  coevolve() {
+    return "prefetch coevolves with other modules.";
+  },
+  cultivate() {
+    return "prefetch cultivates cultural resilience.";
+  },
+};

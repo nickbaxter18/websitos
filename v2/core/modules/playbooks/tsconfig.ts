@@ -1,4 +1,3 @@
-
 export const Tsconfig = {
   id: "tsconfig",
   function: "tsconfig",
@@ -6,11 +5,15 @@ export const Tsconfig = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['tsconfig'],
-  apply() { return require("./tsconfig.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["tsconfig"],
+  apply() {
+    return require("./tsconfig.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

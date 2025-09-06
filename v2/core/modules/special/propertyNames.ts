@@ -1,4 +1,3 @@
-
 export const Propertynames = {
   id: "propertyNames",
   function: "propertyNames",
@@ -6,64 +5,77 @@ export const Propertynames = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['propertyNames'],
+  cultural_tags: ["propertyNames"],
   apply() {
     // Original logic
-import type {
-  CodeKeywordDefinition,
-  ErrorObject,
-  KeywordErrorDefinition,
-  AnySchema,
-} from "../../types"
-import type {KeywordCxt} from "../../compile/validate"
-import {_, not} from "../../compile/codegen"
-import {alwaysValidSchema} from "../../compile/util"
+    import type {
+      CodeKeywordDefinition,
+      ErrorObject,
+      KeywordErrorDefinition,
+      AnySchema,
+    } from "../../types";
+    import type { KeywordCxt } from "../../compile/validate";
+    import { _, not } from "../../compile/codegen";
+    import { alwaysValidSchema } from "../../compile/util";
 
-export type PropertyNamesError = ErrorObject<"propertyNames", {propertyName: string}, AnySchema>
+    export type PropertyNamesError = ErrorObject<
+      "propertyNames",
+      { propertyName: string },
+      AnySchema
+    >;
 
-const error: KeywordErrorDefinition = {
-  message: "property name must be valid",
-  params: ({params}) => _`{propertyName: ${params.propertyName}}`,
-}
+    const error: KeywordErrorDefinition = {
+      message: "property name must be valid",
+      params: ({ params }) => _`{propertyName: ${params.propertyName}}`,
+    };
 
-const def: CodeKeywordDefinition = {
-  keyword: "propertyNames",
-  type: "object",
-  schemaType: ["object", "boolean"],
-  error,
-  code(cxt: KeywordCxt) {
-    const {gen, schema, data, it} = cxt
-    if (alwaysValidSchema(it, schema)) return
-    const valid = gen.name("valid")
+    const def: CodeKeywordDefinition = {
+      keyword: "propertyNames",
+      type: "object",
+      schemaType: ["object", "boolean"],
+      error,
+      code(cxt: KeywordCxt) {
+        const { gen, schema, data, it } = cxt;
+        if (alwaysValidSchema(it, schema)) return;
+        const valid = gen.name("valid");
 
-    gen.forIn("key", data, (key) => {
-      cxt.setParams({propertyName: key})
-      cxt.subschema(
-        {
-          keyword: "propertyNames",
-          data: key,
-          dataTypes: ["string"],
-          propertyName: key,
-          compositeRule: true,
-        },
-        valid
-      )
-      gen.if(not(valid), () => {
-        cxt.error(true)
-        if (!it.allErrors) gen.break()
-      })
-    })
+        gen.forIn("key", data, (key) => {
+          cxt.setParams({ propertyName: key });
+          cxt.subschema(
+            {
+              keyword: "propertyNames",
+              data: key,
+              dataTypes: ["string"],
+              propertyName: key,
+              compositeRule: true,
+            },
+            valid
+          );
+          gen.if(not(valid), () => {
+            cxt.error(true);
+            if (!it.allErrors) gen.break();
+          });
+        });
 
-    cxt.ok(valid)
+        cxt.ok(valid);
+      },
+    };
+
+    export default def;
   },
-}
-
-export default def
-
+  fallback() {
+    console.warn("[propertyNames] fallback safe mode.");
   },
-  fallback() { console.warn("[propertyNames] fallback safe mode."); },
-  negotiate() { return "propertyNames negotiates between system and culture."; },
-  evolve() { return "propertyNames evolves toward adaptive governance."; },
-  coevolve() { return "propertyNames coevolves with other modules."; },
-  cultivate() { return "propertyNames cultivates cultural resilience."; }
-}
+  negotiate() {
+    return "propertyNames negotiates between system and culture.";
+  },
+  evolve() {
+    return "propertyNames evolves toward adaptive governance.";
+  },
+  coevolve() {
+    return "propertyNames coevolves with other modules.";
+  },
+  cultivate() {
+    return "propertyNames cultivates cultural resilience.";
+  },
+};

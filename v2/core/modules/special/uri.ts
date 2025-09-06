@@ -1,4 +1,3 @@
-
 export const Uri = {
   id: "uri",
   function: "uri",
@@ -9,17 +8,26 @@ export const Uri = {
   cultural_tags: [],
   apply() {
     // Original logic
-import * as uri from "fast-uri"
+    import * as uri from "fast-uri";
 
-type URI = typeof uri & {code: string}
-;(uri as URI).code = 'require("ajv/dist/runtime/uri").default'
+    type URI = typeof uri & { code: string };
+    (uri as URI).code = 'require("ajv/dist/runtime/uri").default';
 
-export default uri as URI
-
+    export default uri as URI;
   },
-  fallback() { console.warn("[uri] fallback safe mode."); },
-  negotiate() { return "uri negotiates between system and culture."; },
-  evolve() { return "uri evolves toward adaptive governance."; },
-  coevolve() { return "uri coevolves with other modules."; },
-  cultivate() { return "uri cultivates cultural resilience."; }
-}
+  fallback() {
+    console.warn("[uri] fallback safe mode.");
+  },
+  negotiate() {
+    return "uri negotiates between system and culture.";
+  },
+  evolve() {
+    return "uri evolves toward adaptive governance.";
+  },
+  coevolve() {
+    return "uri coevolves with other modules.";
+  },
+  cultivate() {
+    return "uri cultivates cultural resilience.";
+  },
+};

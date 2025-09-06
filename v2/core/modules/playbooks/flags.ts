@@ -1,4 +1,3 @@
-
 export const Flags = {
   id: "flags",
   function: "flags",
@@ -6,11 +5,15 @@ export const Flags = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['flags'],
-  apply() { return require("./flags.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["flags"],
+  apply() {
+    return require("./flags.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

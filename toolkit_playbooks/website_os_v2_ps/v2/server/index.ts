@@ -12,14 +12,17 @@ import { thankYouJSON } from "./thankyou";
 
 const app = express();
 
-function sendHtmlWithNonce(res: any, filePath: string){
+function sendHtmlWithNonce(res: any, filePath: string) {
   const fs = require("fs");
   const p = require("path");
-  const nonce = (res && res.locals && res.locals.nonce) ? res.locals.nonce : "";
+  const nonce = res && res.locals && res.locals.nonce ? res.locals.nonce : "";
   let html = fs.readFileSync(p.resolve(filePath), "utf-8");
   // add nonce to any <script ...> missing it
-  html = html.replace(/<script(?![^>]*\bnonce=)([^>]*)>/g, (_m: string, attrs: string) => `<script nonce="${nonce}"${attrs}>`);
-  res.setHeader("Content-Type","text/html; charset=utf-8");
+  html = html.replace(
+    /<script(?![^>]*\bnonce=)([^>]*)>/g,
+    (_m: string, attrs: string) => `<script nonce="${nonce}"${attrs}>`
+  );
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(html);
 }
 
@@ -42,7 +45,7 @@ app.post("/checkout", createSession);
 app.post("/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhook as any);
 app.post("/events", ingest);
 app.post("/api/leads", async (req, res) => {
-  const { email, consent } = (req.body || {});
+  const { email, consent } = req.body || {};
   if (!email || !consent) return res.status(400).json({ ok: false });
   return res.json({ ok: true });
 });

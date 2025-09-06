@@ -1,4 +1,3 @@
-
 export const SalesEnablementPlaybook = {
   id: "sales_enablement_playbook",
   function: "sales enablement playbook",
@@ -6,11 +5,15 @@ export const SalesEnablementPlaybook = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['sales', 'enablement', 'playbook'],
-  apply() { return require("./sales_enablement_playbook.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["sales", "enablement", "playbook"],
+  apply() {
+    return require("./sales_enablement_playbook.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

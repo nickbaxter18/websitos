@@ -1,4 +1,3 @@
-
 export const CommunityEngagementPlaybook = {
   id: "community_engagement_playbook",
   function: "community engagement playbook",
@@ -6,11 +5,15 @@ export const CommunityEngagementPlaybook = {
   gardener_role: "reconciler",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['community', 'engagement', 'playbook'],
-  apply() { return require("./community_engagement_playbook.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["community", "engagement", "playbook"],
+  apply() {
+    return require("./community_engagement_playbook.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

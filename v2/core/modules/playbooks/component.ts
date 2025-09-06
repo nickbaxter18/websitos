@@ -1,4 +1,3 @@
-
 export const Component = {
   id: "component",
   function: "component",
@@ -6,11 +5,15 @@ export const Component = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['component'],
-  apply() { return require("./component.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["component"],
+  apply() {
+    return require("./component.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

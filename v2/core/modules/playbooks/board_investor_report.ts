@@ -1,4 +1,3 @@
-
 export const BoardInvestorReport = {
   id: "board_investor_report",
   function: "board investor report",
@@ -6,11 +5,15 @@ export const BoardInvestorReport = {
   gardener_role: "reconciler",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['board', 'investor', 'report'],
-  apply() { return require("./board_investor_report.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["board", "investor", "report"],
+  apply() {
+    return require("./board_investor_report.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

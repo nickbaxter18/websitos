@@ -1,4 +1,3 @@
-
 export const Offers = {
   id: "offers",
   function: "offers",
@@ -6,13 +5,17 @@ export const Offers = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['offers'],
+  cultural_tags: ["offers"],
   apply() {
     // Original logic
-﻿export function pickOrderBump(product:{price:number}){ return product && product.price<=29 ? "ai_spark_starter" : "quick_win_addon"; }
-export default { flag:"order_bump", async apply(html:string, ctx:any){
-  const bump=pickOrderBump(ctx.product||{price:29});
-  const block=`<section class="order-bump"><h3>Add ${bump.replace(/_/g," ")} for only $9</h3>
+    export function pickOrderBump(product: { price: number }) {
+      return product && product.price <= 29 ? "ai_spark_starter" : "quick_win_addon";
+    }
+    export default {
+      flag: "order_bump",
+      async apply(html: string, ctx: any) {
+        const bump = pickOrderBump(ctx.product || { price: 29 });
+        const block = `<section class="order-bump"><h3>Add ${bump.replace(/_/g, " ")} for only $9</h3>
   <label><input type="checkbox" id="bump"> Yes, add to my order</label></section>
   <script>
     (function(){
@@ -25,13 +28,23 @@ export default { flag:"order_bump", async apply(html:string, ctx:any){
       });
     })();
   </script>`;
-  return html.replace("</main>", block+"</main>");
-} };
-
+        return html.replace("</main>", block + "</main>");
+      },
+    };
   },
-  fallback() { console.warn("[offers] fallback safe mode."); },
-  negotiate() { return "offers negotiates between system and culture."; },
-  evolve() { return "offers evolves toward adaptive governance."; },
-  coevolve() { return "offers coevolves with other modules."; },
-  cultivate() { return "offers cultivates cultural resilience."; }
-}
+  fallback() {
+    console.warn("[offers] fallback safe mode.");
+  },
+  negotiate() {
+    return "offers negotiates between system and culture.";
+  },
+  evolve() {
+    return "offers evolves toward adaptive governance.";
+  },
+  coevolve() {
+    return "offers coevolves with other modules.";
+  },
+  cultivate() {
+    return "offers cultivates cultural resilience.";
+  },
+};

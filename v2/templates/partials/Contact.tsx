@@ -6,8 +6,7 @@ export default function Contact() {
     <Layout>
       <h1 className="text-2xl font-bold">Contact Us</h1>
       <p className="mt-4 text-gray-700">
-        Have questions or want to collaborate? Reach out and we’ll get back to
-        you.
+        Have questions or want to collaborate? Reach out and we’ll get back to you.
       </p>
       <form className="mt-6 max-w-md">
         <label className="block mb-2 font-medium" htmlFor="name">

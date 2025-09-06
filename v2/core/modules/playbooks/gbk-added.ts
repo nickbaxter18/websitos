@@ -1,4 +1,3 @@
-
 export const GbkAdded = {
   id: "gbk-added",
   function: "gbk-added",
@@ -6,11 +5,15 @@ export const GbkAdded = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['gbk-added'],
-  apply() { return require("./gbk-added.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["gbk-added"],
+  apply() {
+    return require("./gbk-added.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

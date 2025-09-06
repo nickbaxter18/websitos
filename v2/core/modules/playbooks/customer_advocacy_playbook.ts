@@ -1,4 +1,3 @@
-
 export const CustomerAdvocacyPlaybook = {
   id: "customer_advocacy_playbook",
   function: "customer advocacy playbook",
@@ -6,11 +5,15 @@ export const CustomerAdvocacyPlaybook = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['customer', 'advocacy', 'playbook'],
-  apply() { return require("./customer_advocacy_playbook.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["customer", "advocacy", "playbook"],
+  apply() {
+    return require("./customer_advocacy_playbook.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};

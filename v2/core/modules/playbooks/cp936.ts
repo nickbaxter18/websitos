@@ -1,4 +1,3 @@
-
 export const Cp936 = {
   id: "cp936",
   function: "cp936",
@@ -6,11 +5,15 @@ export const Cp936 = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ['cp936'],
-  apply() { return require("./cp936.json"); },
-  fallback() { return {}; },
-  negotiate() { },
-  evolve() { },
-  coevolve() { },
-  cultivate() { }
-}
+  cultural_tags: ["cp936"],
+  apply() {
+    return require("./cp936.json");
+  },
+  fallback() {
+    return {};
+  },
+  negotiate() {},
+  evolve() {},
+  coevolve() {},
+  cultivate() {},
+};
