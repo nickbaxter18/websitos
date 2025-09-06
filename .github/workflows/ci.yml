@@ -9,6 +9,34 @@ on:
       - main
 
 jobs:
+  # ----------------------
+  # Lint & Format Check
+  # ----------------------
+  lint-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install Node deps
+        run: npm ci
+        env:
+          HUSKY: 0 # Disable Husky in CI
+
+      - name: ESLint check
+        run: npm run lint
+
+      - name: Prettier check
+        run: npm run format:check
+
+  # ----------------------
+  # Build & Test
+  # ----------------------
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -18,9 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ----------------------
-      # Node.js (Frontend build)
-      # ----------------------
+      # Node.js frontend build
       - name: Setup Node.js
         if: matrix.language == 'node'
         uses: actions/setup-node@v4
@@ -36,15 +62,7 @@ jobs:
 
       - name: Type-check (TS)
         if: matrix.language == 'node'
-        run: npx tsc --noEmit
-
-      - name: Lint (ESLint)
-        if: matrix.language == 'node'
-        run: npx eslint . --ext .ts,.tsx
-
-      - name: Prettier check
-        if: matrix.language == 'node'
-        run: npx prettier --check .
+        run: npm run type-check
 
       - name: Run Jest with coverage + JSON report
         if: matrix.language == 'node'
@@ -66,16 +84,13 @@ jobs:
         if: matrix.language == 'node'
         run: npm run build
 
-      # ✅ Copy frontend build into FastAPI static folder
       - name: Move frontend into backend
         if: matrix.language == 'node'
         run: |
           mkdir -p backend/static
           cp -r dist/* backend/static/
 
-      # ----------------------
-      # Python (FastAPI backend)
-      # ----------------------
+      # Python backend
       - name: Setup Python
         if: matrix.language == 'python'
         uses: actions/setup-python@v5
@@ -108,11 +123,11 @@ jobs:
             coverage.xml
 
   # ----------------------
-  # Deploy (single Render service for frontend+backend)
+  # Deploy (Render)
   # ----------------------
   deploy:
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [lint-format, build]
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +140,6 @@ jobs:
             -d '{"serviceId":"${{ secrets.RENDER_SERVICE_ID }}"}' \
             https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys
 
-      # ✅ Qdrant Reload (optional)
       - name: Refresh Qdrant collections
         if: success() && env.QDRANT_HOST != ''
         run: |
