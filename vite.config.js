@@ -1,9 +1,10 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react"; // ✅ switched from swc to react
+import react from "@vitejs/plugin-react";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: "/websitos/", // 👈 IMPORTANT: must match your repo name
   server: {
     port: 5173, // try 5173 first
     strictPort: false, // ✅ fallback to next available if 5173 is taken
