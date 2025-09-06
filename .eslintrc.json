@@ -38,6 +38,14 @@
     "prefer-const": "warn",
     "no-var": "warn"
   },
+  "ignorePatterns": [
+    "**/playbooks/*.ts",
+    "**/*.spec.ts",
+    "**/*.test-d.ts",
+    "**/*.generated.ts",
+    "dist/",
+    "build/"
+  ],
   "settings": {
     "react": {
       "version": "detect"
