@@ -68,16 +68,16 @@ jobs:
         if: matrix.language == 'node'
         run: npx jest --json --outputFile=jest-report.json --coverage --coverageReporters=json-summary --coverageReporters=lcov
 
-      - name: Enforce Coverage Threshold
+      - name: Enforce Node Coverage Threshold
         if: matrix.language == 'node'
         run: |
           COVERAGE=$(npx jest --coverage --coverageReporters=text-summary | grep 'All files' | awk '{print $3}' | sed 's/%//')
-          echo "Coverage: $COVERAGE%"
+          echo "Node Coverage: $COVERAGE%"
           if [ "$COVERAGE" -lt 80 ]; then
-            echo "❌ Coverage below 80%"
+            echo "❌ Node coverage below 80%"
             exit 1
           else
-            echo "✅ Coverage above threshold"
+            echo "✅ Node coverage above threshold"
           fi
 
       - name: Build frontend
@@ -107,15 +107,27 @@ jobs:
       - name: Run pytest with coverage + JSON report
         if: matrix.language == 'python'
         run: |
-          PYTHONPATH=. pytest --maxfail=1 --disable-warnings -q \
+          PYTHONPATH=. pytest tests --maxfail=1 --disable-warnings -q \
             --json-report --json-report-file=pytest-report.json \
-            --cov=. --cov-report=xml
+            --cov=./tests --cov-report=xml
+
+      - name: Enforce Python Coverage Threshold
+        if: matrix.language == 'python'
+        run: |
+          COVERAGE=$(coverage report | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
+          echo "Python Coverage: $COVERAGE%"
+          if [ "$COVERAGE" -lt 80 ]; then
+            echo "❌ Python coverage below 80%"
+            exit 1
+          else
+            echo "✅ Python coverage above threshold"
+          fi
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ci-artifacts
+          name: ci-artifacts-${{ matrix.language }}
           path: |
             jest-report.json
             pytest-report.json
