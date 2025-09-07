@@ -20,6 +20,7 @@ export default function Home() {
           href="tel:+15066431575"
           className="btn call"
           data-analytics="cta_sticky_call"
+          aria-label="Call U-Dig It Rentals"
         >
           Call
         </a>
@@ -27,6 +28,7 @@ export default function Home() {
           href="sms:+15066431575"
           className="btn ghost"
           data-analytics="cta_sticky_text"
+          aria-label="Text U-Dig It Rentals"
         >
           Text
         </a>
@@ -54,7 +56,7 @@ export default function Home() {
             openingHours: "Mo-Fr 07:00-19:00",
           }),
         }}
-      />
+      }></script>
 
       <script
         type="application/ld+json"
@@ -75,7 +77,7 @@ export default function Home() {
             termsOfService: "https://udigit.ca/terms-and-conditions/",
           }),
         }}
-      />
+      }></script>
     </section>
   );
 }
