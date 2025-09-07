@@ -1,5 +1,13 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+echo "🔍 Checking for staged files..."
+
+# If no staged files, skip lint-staged
+if [ -z "$(git diff --cached --name-only)" ]; then
+  echo "✅ No staged files — skipping lint-staged"
+  exit 0
+fi
+
 echo "🔍 Running lint-staged on staged source files..."
 npx lint-staged

@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./index.html", // for Vite/CRA
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}", // shadcn/ui components
   ],
   darkMode: "class", // allow dark/light toggling
   theme: {
@@ -59,6 +60,9 @@ module.exports = {
     },
   },
   plugins: [
-    require("@tailwindcss/forms"), // keep inputs clean & consistent
+    require("@tailwindcss/forms"),       // normalize forms
+    require("@tailwindcss/typography"),  // prose support
+    require("@tailwindcss/aspect-ratio"),// aspect ratio utilities
+    require("tailwindcss-animate"),      // shadcn/ui animation helpers
   ],
 };
