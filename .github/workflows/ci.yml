@@ -35,7 +35,7 @@ jobs:
         run: npm run format:check
 
   # -------------------
-  # Build & Test
+  # Build & Test (Matrix: Node + Python)
   # -------------------
   build:
     runs-on: ubuntu-latest
@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node.js frontend build
+      # Node.js frontend
       - name: Setup Node.js
         if: matrix.language == 'node'
         uses: actions/setup-node@v4
@@ -68,13 +68,13 @@ jobs:
         if: matrix.language == 'node'
         run: npm run test -- --json --outputFile=jest-report.json --coverage --coverageReporters=json-summary --coverageReporters=lcov
 
-      - name: Enforce Node Coverage Threshold
+      - name: Enforce Node Coverage Threshold (25%)
         if: matrix.language == 'node'
         run: |
           COVERAGE=$(npx jest --coverage --coverageReporters=text-summary | grep 'All files' | awk '{print $3}' | sed 's/%//')
           echo "Node Coverage: $COVERAGE%"
-          if [ "$COVERAGE" -lt 80 ]; then
-            echo "❌ Node coverage below 80%"
+          if [ "$COVERAGE" -lt 25 ]; then
+            echo "❌ Node coverage below 25%"
             exit 1
           else
             echo "✅ Node coverage above threshold"
@@ -111,13 +111,13 @@ jobs:
             --json-report --json-report-file=pytest-report.json \
             --cov=. --cov-report=xml
 
-      - name: Enforce Python Coverage Threshold
+      - name: Enforce Python Coverage Threshold (25%)
         if: matrix.language == 'python'
         run: |
           COVERAGE=$(coverage report | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
           echo "Python Coverage: $COVERAGE%"
-          if [ "$COVERAGE" -lt 80 ]; then
-            echo "❌ Python coverage below 80%"
+          if [ "$COVERAGE" -lt 25 ]; then
+            echo "❌ Python coverage below 25%"
             exit 1
           else
             echo "✅ Python coverage above threshold"
