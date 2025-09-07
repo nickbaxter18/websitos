@@ -57,9 +57,9 @@ export default function ComparisonTable({ selectedCommit, compareCommit }: Compa
   }
 
   return (
-    <div className="mt-6 bg-blue-50 p-4 rounded-xl shadow-sm">
-      <h2 className="text-lg font-semibold mb-2">Comparison</h2>
-      <table className="table-auto text-sm w-full">
+    <div className="mt-6 rounded-xl bg-blue-50 p-4 shadow-sm">
+      <h2 className="mb-2 text-lg font-semibold">Comparison</h2>
+      <table className="w-full table-auto text-sm">
         <thead>
           <tr className="text-left">
             <th className="p-2">Metric</th>
@@ -82,13 +82,13 @@ export default function ComparisonTable({ selectedCommit, compareCommit }: Compa
       <div className="mt-4 flex gap-2">
         <button
           onClick={exportComparisonJSON}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
           ⬇️ Export as JSON
         </button>
         <button
           onClick={exportComparisonCSV}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
         >
           ⬇️ Export as CSV
         </button>

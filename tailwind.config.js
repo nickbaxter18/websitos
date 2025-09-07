@@ -10,12 +10,12 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          gold: "#E1BC56",     // your primary CRO gold
+          gold: "#E1BC56", // your primary CRO gold
           "gold-light": "#FFF1B0",
-          red: "#A90F0F",      // CTA red
+          red: "#A90F0F", // CTA red
           "red-dark": "#8C0C0C",
-          black: "#000000",    // deep black
-          gray: "#6B6B6B",     // steel gray
+          black: "#000000", // deep black
+          gray: "#6B6B6B", // steel gray
         },
         steel: {
           light: "#d9d9d9",
@@ -60,9 +60,9 @@ module.exports = {
     },
   },
   plugins: [
-    require("@tailwindcss/forms"),       // normalize forms
-    require("@tailwindcss/typography"),  // prose support
-    require("@tailwindcss/aspect-ratio"),// aspect ratio utilities
-    require("tailwindcss-animate"),      // shadcn/ui animation helpers
+    require("@tailwindcss/forms"), // normalize forms
+    require("@tailwindcss/typography"), // prose support
+    require("@tailwindcss/aspect-ratio"), // aspect ratio utilities
+    require("tailwindcss-animate"), // shadcn/ui animation helpers
   ],
 };

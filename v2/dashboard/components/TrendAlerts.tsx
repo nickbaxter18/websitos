@@ -47,8 +47,8 @@ export default function TrendAlerts({ data, alerts, setAlerts }: TrendAlertsProp
   if (alerts.length === 0) return null;
 
   return (
-    <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-      <h2 className="font-semibold mb-2">Trend Alerts</h2>
+    <div className="mb-6 rounded border-l-4 border-yellow-400 bg-yellow-50 p-4">
+      <h2 className="mb-2 font-semibold">Trend Alerts</h2>
       <ul className="list-disc pl-6 text-sm">
         {alerts.map((alert, i) => (
           <li key={i}>{alert}</li>

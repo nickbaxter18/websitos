@@ -10,9 +10,9 @@ export default function CviGauge({ selectedCommit }: CviGaugeProps) {
 
   return (
     <div className="mb-8 flex flex-col items-center">
-      <h2 className="text-lg font-semibold mb-2">Cultural Vitality Index (CVI)</h2>
-      <div className="relative w-40 h-20">
-        <svg viewBox="0 0 100 50" className="w-full h-full">
+      <h2 className="mb-2 text-lg font-semibold">Cultural Vitality Index (CVI)</h2>
+      <div className="relative h-20 w-40">
+        <svg viewBox="0 0 100 50" className="h-full w-full">
           <path d="M10 50 A40 40 0 0 1 90 50" fill="none" stroke="#e5e7eb" strokeWidth="8" />
           <path
             d="M10 50 A40 40 0 0 1 90 50"

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function NavigationMenu() {
   return (
     <nav aria-label="Main navigation">
-      <ul className="flex space-x-6 p-4 bg-gray-100">
+      <ul className="flex space-x-6 bg-gray-100 p-4">
         <li>
           <Link to="/" className="text-blue-600 hover:underline">
             Home

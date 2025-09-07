@@ -14,32 +14,32 @@ import Privacy from "./pages/Privacy";
 function App() {
   return (
     <Router basename="/websitos">
-      <div className="flex flex-col min-h-screen">
+      <div className="flex min-h-screen flex-col">
         {/* Navigation */}
-        <nav className="bg-slate-900 text-white px-6 py-4 shadow-md">
+        <nav className="bg-slate-900 px-6 py-4 text-white shadow-md">
           <ul className="flex space-x-6">
             <li>
-              <Link to="/" className="hover:text-amber-400 transition-colors font-medium">
+              <Link to="/" className="font-medium transition-colors hover:text-amber-400">
                 Home
               </Link>
             </li>
             <li>
-              <Link to="/about" className="hover:text-amber-400 transition-colors font-medium">
+              <Link to="/about" className="font-medium transition-colors hover:text-amber-400">
                 About
               </Link>
             </li>
             <li>
-              <Link to="/contact" className="hover:text-amber-400 transition-colors font-medium">
+              <Link to="/contact" className="font-medium transition-colors hover:text-amber-400">
                 Contact
               </Link>
             </li>
             <li>
-              <Link to="/terms" className="hover:text-amber-400 transition-colors font-medium">
+              <Link to="/terms" className="font-medium transition-colors hover:text-amber-400">
                 Terms
               </Link>
             </li>
             <li>
-              <Link to="/privacy" className="hover:text-amber-400 transition-colors font-medium">
+              <Link to="/privacy" className="font-medium transition-colors hover:text-amber-400">
                 Privacy
               </Link>
             </li>

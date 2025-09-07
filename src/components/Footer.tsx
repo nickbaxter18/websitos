@@ -3,37 +3,37 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-200 py-10 mt-10 border-t border-slate-700">
-      <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-10">
+    <footer className="mt-10 border-t border-slate-700 bg-slate-900 py-10 text-slate-200">
+      <div className="mx-auto grid max-w-6xl gap-10 px-6 md:grid-cols-3">
         {/* Brand / About */}
         <div>
           <h2 className="text-2xl font-bold text-amber-400">Website OS V2</h2>
-          <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Cultivating cultural ecosystems with speed ⚡, compliance 🔒, and beauty 🎨 built in.
           </p>
         </div>
 
         {/* Quick Links */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-3">Quick Links</h3>
+          <h3 className="mb-3 text-lg font-semibold text-white">Quick Links</h3>
           <ul className="space-y-2">
             <li>
-              <Link to="/about" className="hover:text-amber-400 transition-colors">
+              <Link to="/about" className="transition-colors hover:text-amber-400">
                 About
               </Link>
             </li>
             <li>
-              <Link to="/contact" className="hover:text-amber-400 transition-colors">
+              <Link to="/contact" className="transition-colors hover:text-amber-400">
                 Contact
               </Link>
             </li>
             <li>
-              <Link to="/terms" className="hover:text-amber-400 transition-colors">
+              <Link to="/terms" className="transition-colors hover:text-amber-400">
                 Terms of Service
               </Link>
             </li>
             <li>
-              <Link to="/privacy" className="hover:text-amber-400 transition-colors">
+              <Link to="/privacy" className="transition-colors hover:text-amber-400">
                 Privacy Policy
               </Link>
             </li>
@@ -42,14 +42,14 @@ export default function Footer() {
 
         {/* Newsletter Signup */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-3">Stay Updated</h3>
-          <form className="flex flex-col sm:flex-row gap-3">
+          <h3 className="mb-3 text-lg font-semibold text-white">Stay Updated</h3>
+          <form className="flex flex-col gap-3 sm:flex-row">
             <input
               type="email"
               placeholder="Enter your email"
-              className="w-full sm:flex-1 px-4 py-2 rounded-md text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full rounded-md px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:flex-1"
             />
-            <button type="submit" className="btn-gold w-full sm:w-auto px-6 py-2">
+            <button type="submit" className="btn-gold w-full px-6 py-2 sm:w-auto">
               Subscribe
             </button>
           </form>

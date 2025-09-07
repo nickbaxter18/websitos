@@ -37,7 +37,7 @@ export default function CulturalHealthDashboard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">🌱 Cultural Health Dashboard</h1>
+      <h1 className="mb-4 text-2xl font-bold">🌱 Cultural Health Dashboard</h1>
 
       <div className="mb-4">
         <label className="flex items-center gap-2 text-sm">
