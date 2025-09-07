@@ -1,6 +1,6 @@
 # ---- Core web framework
-fastapi==0.115.5
-uvicorn[standard]==0.32.0
+fastapi~=0.115.5
+uvicorn[standard]~=0.32.0
 
 # ---- Env & config
 python-dotenv==1.0.1
@@ -37,9 +37,10 @@ pymupdf==1.24.10   # provides 'fitz'
 # ---- Form parsing (FastAPI file uploads)
 python-multipart==0.0.9
 
-# ---- Database drivers (replacing adodbapi)
+# ---- Database drivers
 pyodbc==4.0.39
-sqlalchemy==2.0.31
+sqlalchemy~=2.0.31
+psycopg2-binary==2.9.9   # PostgreSQL driver (for CI/CD and local dev)
 
 # ---- Testing
 pytest==8.3.3

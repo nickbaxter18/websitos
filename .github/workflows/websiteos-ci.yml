@@ -32,6 +32,22 @@ jobs:
 
   backend-tests:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U testuser -d testdb"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -39,8 +55,31 @@ jobs:
         with:
           python-version: "3.10"
           cache: "pip"
+
+      # Install system dependencies for pyodbc + Postgres support
+      - name: Install ODBC drivers
+        run: sudo apt-get update && sudo apt-get install -y unixodbc-dev libpq-dev
+
+      # Install Python dependencies
       - run: pip install -r requirements.txt
-      - run: pip install adodbapi
+
+      # DB Connection Smoke Test (Postgres)
+      - name: DB Connection Smoke Test
+        run: |
+          python - << 'EOF'
+          from sqlalchemy import create_engine, text
+          try:
+              conn_str = "postgresql+psycopg2://testuser:testpass@localhost:5432/testdb"
+              engine = create_engine(conn_str)
+              with engine.connect() as conn:
+                  result = conn.execute(text("SELECT 1"))
+                  print("DB Connected ✅:", result.scalar())
+          except Exception as e:
+              print("DB Connection Failed ❌:", e)
+              exit(1)
+          EOF
+
+      # Run backend tests with coverage
       - run: pytest --maxfail=1 --disable-warnings --cov=. --cov-fail-under=80
 
   qa-audit:
