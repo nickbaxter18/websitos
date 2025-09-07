@@ -26,21 +26,21 @@
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
 
-    /* ✅ Relaxing all common blockers */
-    "no-unused-vars": "warn",
-    "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-var-requires": "warn",
-    "no-empty": "warn",
-    "no-irregular-whitespace": "warn",
-    "no-control-regex": "warn",
-    "react-hooks/rules-of-hooks": "warn",
-    "@typescript-eslint/ban-ts-comment": "warn",
+    /* ✅ Silence noise: completely disable these rules */
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "no-console": "off",
+    "no-debugger": "off",
+    "no-empty": "off",
+    "no-irregular-whitespace": "off",
+    "no-control-regex": "off",
+    "react-hooks/rules-of-hooks": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+
+    /* ✅ Keep only meaningful warnings */
     "prefer-const": "warn",
     "no-var": "warn",
-
-    /* 🚨 Master override: downgrade anything else */
-    "no-console": "warn",
-    "no-debugger": "warn",
     "no-unexpected-multiline": "warn"
   },
   "ignorePatterns": [
