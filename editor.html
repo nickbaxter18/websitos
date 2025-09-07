@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>U-Dig It File Editor</title>
+  <style>
+    body { margin:0; font-family:sans-serif; background:#111; color:#eee; display:flex; height:100vh; overflow:hidden; }
+    #sidebar { width:260px; background:#1b1b1b; overflow-y:auto; border-right:1px solid #333; padding:10px; display:flex; flex-direction:column; }
+    #fileSearch { padding:6px; margin-bottom:8px; font-size:14px; width:100%; border-radius:4px; border:1px solid #444; background:#222; color:#eee; }
+    #main { flex:1; display:flex; flex-direction:column; }
+    header { background:#222; padding:8px; display:flex; align-items:center; gap:10px; }
+    #tabs { display:flex; gap:6px; overflow-x:auto; max-width:70%; }
+    .tab { padding:4px 10px; background:#2b2b2b; border-radius:6px 6px 0 0; cursor:pointer; font-size:13px; }
+    .tab.active { background:#444; font-weight:bold; }
+    .close { margin-left:6px; color:#aaa; cursor:pointer; }
+    button { padding:6px 10px; font-size:13px; }
+    .status { margin-left:auto; font-size:12px; color:#aaa; }
+    #editor { flex:1; }
+    .file, .dir { cursor:pointer; padding:4px 8px; border-radius:4px; margin:1px 0; }
+    .file:hover, .dir:hover { background:#333; }
+    .dir { font-weight:bold; }
+    .nested { margin-left:12px; }
+    .hidden { display:none; }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/jsx/jsx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/json/json.min.js"></script>
+</head>
+<body>
+  <div id="sidebar">
+    <input type="text" id="fileSearch" placeholder="Search files..." />
+    <div id="fileTree"></div>
+  </div>
+  <div id="main">
+    <header>
+      <div id="tabs"></div>
+      <button onclick="saveFile()">Save</button>
+      <div class="status" id="status">Idle</div>
+    </header>
+    <textarea id="editor"></textarea>
+  </div>
+
+  <script>
+    const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+      lineNumbers: true,
+      theme: "dracula",
+    });
+    editor.setSize("100%", "100%");
+
+    let openFiles = {};
+    let activeFile = null;
+
+    function detectMode(file) {
+      if (!file) return "javascript";
+      if (file.endsWith(".tsx") || file.endsWith(".jsx")) return "jsx";
+      if (file.endsWith(".ts") || file.endsWith(".js")) return "javascript";
+      if (file.endsWith(".json")) return "application/json";
+      if (file.endsWith(".css")) return "css";
+      if (file.endsWith(".html") || file.endsWith(".htm")) return "htmlmixed";
+      if (file.endsWith(".md") || file.endsWith(".markdown")) return "markdown";
+      if (file.endsWith(".xml")) return "xml";
+      return "javascript";
+    }
+
+    async function loadTree(dir=".") {
+      const res = await fetch("/list?dir=" + encodeURIComponent(dir));
+      const data = await res.json();
+      const container = document.createElement("div");
+      data.files.forEach(f => {
+        const item = document.createElement("div");
+        item.dataset.name = f.name.toLowerCase();
+        item.dataset.type = f.type;
+        if (f.type === "dir") {
+          item.textContent = "📂 " + f.name;
+          item.className = "dir";
+          item.onclick = async () => {
+            if (item.nextSibling && item.nextSibling.classList.contains("nested")) {
+              item.nextSibling.remove();
+            } else {
+              const nested = await loadTree(data.dir + "/" + f.name);
+              nested.classList.add("nested");
+              item.after(nested);
+            }
+          };
+        } else {
+          item.textContent = "📄 " + f.name;
+          item.className = "file";
+          item.onclick = () => openFile(data.dir + "/" + f.name);
+        }
+        container.appendChild(item);
+      });
+      return container;
+    }
+
+    async function renderSidebar() {
+      const sidebar = document.getElementById("fileTree");
+      sidebar.innerHTML = "";
+      const root = await loadTree(".");
+      sidebar.appendChild(root);
+    }
+
+    async function openFile(path) {
+      if (openFiles[path]) { setActiveTab(path); return; }
+      const res = await fetch("/file?path=" + encodeURIComponent(path));
+      if (!res.ok) { alert("File not found"); return; }
+      const data = await res.json();
+
+      const tab = document.createElement("div");
+      tab.className = "tab";
+      tab.textContent = path.split("/").pop();
+      const closeBtn = document.createElement("span");
+      closeBtn.textContent = "×";
+      closeBtn.className = "close";
+      closeBtn.onclick = (e) => { e.stopPropagation(); closeTab(path); };
+      tab.appendChild(closeBtn);
+      tab.onclick = () => setActiveTab(path);
+      document.getElementById("tabs").appendChild(tab);
+
+      openFiles[path] = { content: data.content, tabEl: tab };
+      setActiveTab(path);
+    }
+
+    function setActiveTab(path) {
+      if (activeFile && openFiles[activeFile]) {
+        openFiles[activeFile].content = editor.getValue();
+        openFiles[activeFile].tabEl.classList.remove("active");
+      }
+      activeFile = path;
+      editor.setValue(openFiles[path].content);
+      editor.setOption("mode", detectMode(path));
+      openFiles[path].tabEl.classList.add("active");
+      document.getElementById("status").innerText = "Opened " + path;
+    }
+
+    function closeTab(path) {
+      if (!openFiles[path]) return;
+      const wasActive = activeFile === path;
+      openFiles[path].tabEl.remove();
+      delete openFiles[path];
+      if (wasActive) {
+        const next = Object.keys(openFiles)[0];
+        if (next) setActiveTab(next);
+        else {
+          activeFile = null;
+          editor.setValue("");
+          document.getElementById("status").innerText = "Idle";
+        }
+      }
+    }
+
+    async function saveFile() {
+      if (!activeFile) { alert("No file open"); return; }
+      const content = editor.getValue();
+      const res = await fetch("/file", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: activeFile, content })
+      });
+      const data = await res.json();
+      document.getElementById("status").innerText = data.message || "Saved!";
+    }
+
+    document.getElementById("fileSearch").addEventListener("input", (e) => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll("#fileTree .file, #fileTree .dir").forEach(el => {
+        if (el.dataset.name.includes(term)) el.classList.remove("hidden");
+        else el.classList.add("hidden");
+      });
+    });
+
+    renderSidebar();
+  </script>
+</body>
+</html>

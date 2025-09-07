@@ -1,0 +1,426 @@
+/* ================================
+   U-Dig It Rentals Homepage Styles
+   ================================ */
+.udig-home {
+  --bg: #000;
+  --panel: #000;
+  --ink: #E1BC56;
+  --muted: #C9C9C9;
+  --line: #6B6B6B;
+  --brand: #E1BC56;
+  --brand-ink: #FFF1B0;
+  --cta: #A90F0F;
+  --cta-ink: #fff;
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  --btn-h: 48px;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: linear-gradient(180deg, #000 0%, #6B6B6B 100%);
+}
+.udig-home * { box-sizing: border-box; }
+.udig-home .container { max-width: min(1180px, 94vw); margin: 0 auto; }
+.udig-home .section { padding: 38px 0; }
+.udig-home .stack { display: grid; gap: 22px; }
+
+/* Typography */
+.udig-home a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
+.udig-home a:hover { color: var(--brand); }
+.udig-home .kicker { font: 700 12px/1.1 ui-sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--brand-ink); }
+.udig-home h1 { font: 800 clamp(28px, 4.5vw, 56px)/1.05 ui-sans-serif; color: var(--ink); margin: 0; }
+.udig-home h2 { font: 800 clamp(20px, 3vw, 34px)/1.15 ui-sans-serif; color: var(--ink); margin: 0 0 10px; }
+.udig-home h3 { font: 700 clamp(16px, 2vw, 22px)/1.2 ui-sans-serif; color: #111827; margin: 0 0 8px; }
+.udig-home p { color: var(--ink); margin: 10px 0; }
+
+/* Buttons */
+.udig-home .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: var(--btn-h); min-height: var(--btn-h);
+  padding: 0 18px; border-radius: 999px;
+  font-weight: 800; font-size: 16px; white-space: nowrap;
+  min-width: clamp(200px, 50%, 280px);
+  border: 1px solid transparent; cursor: pointer; text-decoration: none;
+}
+.udig-home .btn.primary {
+  background: linear-gradient(180deg, #A90F0F 0%, #8C0C0C 100%);
+  color: var(--cta-ink); border: 1px solid #7F0B0B;
+  box-shadow: 0 8px 16px rgba(169, 15, 15, .25);
+}
+.udig-home .btn.primary:hover { filter: brightness(1.05); }
+.udig-home .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.udig-home .btn.ghost:hover { border-color: var(--brand); }
+.udig-home .btn.call { background: transparent; border: 2px solid #E1BC56; color: #E1BC56; }
+.udig-home .btn.call:hover { background: #E1BC56; color: #000; }
+
+/* HERO */
+.udig-home .hero {
+  position: relative; padding: 48px 0;
+  background: linear-gradient(160deg, #706A6A 0%, #000 70%);
+}
+.udig-home .hero .grid { display: grid; gap: 24px; }
+@media (min-width: 980px) {
+  .udig-home .hero .grid { grid-template-columns: 1.2fr 0.95fr; gap: 36px; }
+}
+.udig-home .trustbar { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; color: var(--muted); font-weight: 600; }
+.udig-home .trustbar .tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border: 1px dashed var(--line); border-radius: 999px;
+  background: rgba(255, 255, 255, .04);
+}
+
+/* Hero Card */
+.udig-home .hero-card {
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 20px;
+  background: linear-gradient(180deg, #F4F6F8 0%, #C2C9D2 100%);
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+.udig-home .hero-card h2,
+.udig-home .hero-card p { color: #111827; }
+
+/* Mini-quote form */
+.udig-home .mini-quote {
+  border: 1px solid #d1d5db; border-radius: var(--radius); padding: 18px;
+  background: #fff;
+}
+.udig-home .mini-quote .row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 720px) { .udig-home .mini-quote .row { grid-template-columns: 1fr 1fr; } }
+.udig-home .mini-quote input,
+.udig-home .mini-quote select {
+  width: 100%; padding: 14px; min-height: 46px;
+  border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; color: #111827;
+}
+.udig-home .mini-quote input:focus,
+.udig-home .mini-quote select:focus {
+  outline: none; border-color: #A90F0F; box-shadow: 0 0 0 3px rgba(169, 15, 15, .15);
+}
+
+/* Benefits */
+.udig-home .benefits .cards { display: grid; gap: 16px; }
+@media (min-width: 720px) { .udig-home .benefits .cards { grid-template-columns: repeat(3,1fr); } }
+.udig-home .card {
+  border: 1px solid #d1d5db; border-radius: 16px; padding: 18px;
+  background: linear-gradient(180deg, #F4F6F8 0%, #C2C9D2 100%);
+  box-shadow: 0 10px 24px rgba(0,0,0,.18); color: #111827;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.udig-home .card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 14px 28px rgba(0,0,0,.28);
+}
+
+/* Pricing */
+.udig-home .pricing .tiers { display: grid; gap: 16px; }
+@media (min-width: 980px) { .udig-home .pricing .tiers { grid-template-columns: repeat(3,1fr); } }
+.udig-home .tier {
+  border: 1px solid #d1d5db; border-radius: 16px; padding: 18px;
+  background: linear-gradient(180deg, #F4F6F8 0%, #C2C9D2 100%);
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+.udig-home .tier.popular { border-color: #E1BC56; box-shadow: 0 0 0 2px rgba(225,188,86,.25); }
+.udig-home .tier .price { display: flex; gap: 10px; align-items: baseline; margin: 6px 0; }
+.udig-home .tier .now { font-weight: 900; font-size: 24px; color: #111827; }
+.udig-home .tier .was { color: #6b7280; text-decoration: line-through; }
+.udig-home .tier .per { color: #374151; }
+
+/* Process */
+.udig-home .process .steps { display: grid; gap: 14px; }
+@media (min-width: 880px) { .udig-home .process .steps { grid-template-columns: repeat(5,1fr); } }
+.udig-home .step {
+  border: 1px solid #d1d5db; border-radius: 16px; padding: 18px;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.udig-home .step:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 14px 28px rgba(0,0,0,.28);
+}
+
+/* Delivery Map */
+.udig-home .mapbox {
+  border: 1px solid var(--line); border-radius: 16px; padding: 12px;
+  min-height: 200px; display: grid; place-items: center;
+  color: #999; background: #000;
+}
+
+/* Insurance */
+.udig-home .insurance .cards { display: grid; gap: 16px; }
+@media (min-width: 760px) { .udig-home .insurance .cards { grid-template-columns: repeat(2,1fr); } }
+@media (min-width: 1080px) { .udig-home .insurance .cards { grid-template-columns: repeat(4,1fr); } }
+.udig-home .insurance .broker-name { font-weight: 800; color: #111827; }
+.udig-home .insurance .phone, .udig-home .insurance .email {
+  color: #A90F0F; font-weight: 800; display: block;
+}
+/* Typography refinements */
+.udig-home h1,
+.udig-home h2,
+.udig-home h3 {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.udig-home p,
+.udig-home li {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.udig-home .btn {
+  font-weight: 700 !important;
+  letter-spacing: .01em;
+}
+
+
+/* Gallery */
+.udig-home .gallery .grid { display: grid; gap: 12px; }
+@media (min-width: 780px) { .udig-home .gallery .grid { grid-template-columns: repeat(4,1fr); } }
+.udig-home .gallery img { width: 100%; height: 160px; object-fit: cover; border-radius: 12px; }
+.udig-home .ba { position: relative; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; --pos: 50%; }
+.udig-home .ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.udig-home .ba .ba-after { z-index: 0; }
+.udig-home .ba .ba-before { z-index: 1; clip-path: polygon(0 0, var(--pos) 0, var(--pos) 100%, 0 100%); }
+.udig-home .ba::after {
+  content: ""; position: absolute; left: var(--pos); top: 0; bottom: 0; width: 2px;
+  background: rgba(255,255,255,.65); z-index: 2;
+}
+.udig-home .ba-slider { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 60%; }
+
+/* Promises & Standards */
+.udig-home .trust .cards { display: grid; gap: 16px; }
+@media (min-width: 720px) { .udig-home .trust .cards { grid-template-columns: repeat(3,1fr); } }
+.udig-home .trust .card { border: 1px solid #d1d5db; border-radius: 16px; padding: 18px; background: #F4F6F8; }
+
+/* FAQ */
+#faq .cards { display: grid; gap: 16px; }
+@media (min-width: 720px) { #faq .cards { grid-template-columns: repeat(3,1fr); } }
+#faq .card { border: 1px solid #d1d5db; border-radius: 16px; padding: 18px; background: #F4F6F8; }
+
+/* Quote Panel */
+.udig-home .panel { border: 1px solid #d1d5db; border-radius: 16px; padding: 18px; background: #F4F6F8; margin-bottom: 16px; }
+.udig-home .contact-panel p, .udig-home .contact-panel strong { color: #111827; }
+
+/* Sticky CTA */
+.udig-home .sticky-cta {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: 16px; background: rgba(0,0,0,.86); border: 1px solid var(--line);
+  border-radius: 999px; padding: 10px 14px;
+  display: flex; gap: 14px; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .28s ease;
+  z-index: 9999;
+}
+.udig-home .sticky-cta.is-visible { opacity: 1; pointer-events: auto; }
+.udig-home .sticky-cta .btn { min-width: unset; }
+
+/* ================================
+   Astra + Elementor Integration Fixes
+   ================================ */
+
+/* Docked sticky CTA in footer */
+#udig-cta-dock { display:flex; justify-content:center; align-items:center; padding-top:8px; }
+#udig-cta-dock .sticky-cta{ background:transparent !important; border:0 !important; }
+
+/* Hide Astra page titles */
+.page .entry-title, .page .page-title, h1.entry-title { display:none !important; }
+
+/* Footer colors */
+#astra-footer, #colophon { background:#5A5A5A !important; color:#fff !important; }
+#astra-footer a, #colophon a { color:#E1BC56 !important; }
+#astra-footer a:hover, #colophon a:hover { color:#000 !important; }
+
+/* Header→Hero transition */
+body.page-id-95 header.site-header { background:#0f0f10 !important; position:relative; z-index:40; }
+body.page-id-95 header.site-header::after {
+  content:""; position:absolute; left:2.4vw; right:2.4vw; bottom:0; height:2px;
+  background: linear-gradient(90deg, rgba(225,188,86,0) 0%, rgba(225,188,86,.85) 12%, #F4E2A6 50%, rgba(225,188,86,.85) 88%, rgba(225,188,86,0) 100%);
+  box-shadow: 0 0 22px rgba(225,188,86,.28);
+}
+
+/* Footer fade */
+#colophon::before {
+  content:""; position:absolute; left:0; right:0; top:-44px; height:44px;
+  background: linear-gradient(to bottom, transparent, #5A5A5A);
+}
+/* ================================
+   CTA Hover Glow & Animations
+   ================================ */
+
+/* Red Primary Buttons */
+.udig-home .btn.primary {
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.udig-home .btn.primary:hover,
+.udig-home .btn.primary:focus-visible {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 28px rgba(169, 15, 15, .35), 0 3px 8px rgba(0, 0, 0, .18);
+}
+.udig-home .btn.primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 6px 14px rgba(169, 15, 15, .25);
+}
+
+/* Gold Pill Buttons (Call/Text/Outline) */
+.udig-home .btn.call,
+.udig-home a.btn[href^="sms:"],
+.udig-home a.btn[href*="/rent-now/"] {
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+}
+.udig-home .btn.call:hover,
+.udig-home a.btn[href^="sms:"]:hover,
+.udig-home a.btn[href*="/rent-now/"]:hover {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 28px rgba(225, 188, 86, .35), 0 0 0 3px rgba(225, 188, 86, .28);
+}
+.udig-home .btn.call:active,
+.udig-home a.btn[href^="sms:"]:active,
+.udig-home a.btn[href*="/rent-now/"]:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 6px 14px rgba(225, 188, 86, .25);
+}
+
+/* Pulse Glow Animation (for Sticky CTA) */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(225, 188, 86, .55);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(225, 188, 86, 0);
+  }
+}
+
+.udig-home .sticky-cta .btn.primary {
+  animation: pulseGlow 2.8s infinite;
+}
+
+/* ================================
+   Pricing Fixes — Bullets + Equal Height
+   ================================ */
+
+/* Force real dot bullets */
+.udig-home #pricing .tier .bullet::before,
+.udig-home #pricing .tier p::before {
+  content: none !important;
+}
+.udig-home #pricing .tier .bullet {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  margin: .35em 0 !important;
+}
+.udig-home #pricing .tier .bullet p {
+  margin: 0 !important;
+}
+.udig-home #pricing .tier .bullet .dot {
+  display: inline-block !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  margin-top: .45em !important;
+  background: #E1BC56 !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.10), inset 0 0 0 1px rgba(255,255,255,.55) !important;
+}
+
+/* Equal height for pricing cards */
+.udig-home #pricing .tiers {
+  align-items: stretch;
+}
+.udig-home #pricing .tier {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.udig-home #pricing .tier .fineprint {
+  margin-top: auto !important;
+}
+
+/* Popular card styling */
+.udig-home #pricing .tier.popular {
+  border-color: #E1BC56;
+  box-shadow: 0 10px 24px rgba(0,0,0,.22),
+              0 0 0 2px rgba(225,188,86,.20) inset;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-top: 46px !important;
+}
+.udig-home #pricing .tier.popular .save-pill {
+  position: absolute !important;
+  top: 12px;
+  left: 12px;
+}
+.udig-home #pricing .tier.popular .badge {
+  position: absolute !important;
+  top: 12px;
+  right: 12px;
+}
+.udig-home #pricing .tier.popular > h3 {
+  position: absolute !important;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0 !important;
+  text-align: center;
+  white-space: nowrap;
+}
+@media (max-width: 420px) {
+  .udig-home #pricing .tier.popular > h3 {
+    white-space: normal;
+    max-width: 90%;
+  }
+}
+/* ================================
+   Long Weekend Card — Title + Pill Nudge
+   ================================ */
+
+/* Nudge pills so left + right align perfectly */
+.udig-home #pricing .tier.popular {
+  --pill-nudge: 2px;
+}
+.udig-home #pricing .tier.popular .save-pill {
+  position: absolute !important;
+  top: calc(17px + var(--pill-nudge)) !important;
+  left: 12px !important;
+}
+.udig-home #pricing .tier.popular .badge {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+}
+@media (max-width: 420px) {
+  .udig-home #pricing .tier.popular {
+    --pill-nudge: 1px;
+  }
+}
+
+/* Title nudge horizontally */
+.udig-home #pricing .tier.popular {
+  --title-nudge: 4px;
+}
+.udig-home #pricing .tier.popular > h3 {
+  transform: translateX(calc(-50% - var(--title-nudge))) !important;
+}
+@media (max-width: 420px) {
+  .udig-home #pricing .tier.popular {
+    --title-nudge: 2px;
+  }
+}
+
+/* Lift the title above the pills on tablets + phones */
+@media (max-width: 1024px) {
+  .udig-home #pricing .tier.popular {
+    padding-top: 62px !important; /* extra headroom */
+  }
+  .udig-home #pricing .tier.popular > h3 {
+    top: 2px !important;
+    z-index: 3 !important;
+  }
+}
+
+/* On ultra-narrow phones, let the title wrap */
+@media (max-width: 420px) {
+  .udig-home #pricing .tier.popular > h3 {
+    white-space: normal !important;
+    max-width: 92%;
+    text-align: center;
+  }
+}

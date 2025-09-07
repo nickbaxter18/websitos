@@ -1,12 +1,26 @@
+/* === Tailwind base layers === */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Covenant Buttons */
-.btn-primary {
-  @apply px-6 py-3 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md;
+/* === U-Dig It Rentals Homepage Styles === */
+@import "./styles/udig.css";
+
+/* === Global Resets & Typography === */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.btn-gold {
-  @apply px-6 py-3 rounded-lg font-semibold text-black bg-amber-400 hover:bg-amber-500 shadow-md;
+/* Ensure links inherit brand style unless overridden */
+a {
+  text-decoration: none;
+}
+
+/* Smooth scroll everywhere */
+html {
+  scroll-behavior: smooth;
 }

@@ -13,7 +13,7 @@ import Privacy from "./pages/Privacy";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/websitos">
       <div className="flex flex-col min-h-screen">
         {/* Navigation */}
         <nav className="bg-slate-900 text-white px-6 py-4 shadow-md">
