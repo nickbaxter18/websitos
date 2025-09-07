@@ -1,83 +1,81 @@
 import React from "react";
+import '../styles/mdig.css';
 
 export default function Home() {
   return (
-    <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col justify-center items-center text-center bg-aurora animate-aurora text-white px-6">
-        <div className="absolute inset-0 bg-aurora opacity-80 animate-aurora"></div>
-        <div className="relative z-10 max-w-3xl">
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-lg">
-            Cultivate Your <span className="text-amber-300">Digital Ecosystem</span> <br />
-            with <span className="text-pink-400">Website OS V2</span>
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-amber-100 leading-relaxed">
-            Launch faster ⚡ · Stay trusted 🔒 · Grow beautifully 🎨 <br />
-            The covenant OS that integrates speed, compliance, and culture.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <a href="/contact" className="btn-primary">
-              Get a Demo
-            </a>
-            <a href="/about" className="btn-gold">
-              See How It Works
-            </a>
-          </div>
-        </div>
-      </section>
+    <section className="udig-home" data-component="udig-home">
+      {/... existing content above ... }
 
-      {/* Ecosystem Cycle */}
-      <section className="py-20 bg-slate-50 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-800">The Ecosystem Cycle</h2>
-        <p className="mt-4 text-slate-600">Seed → Grow → Prune → Reconcile</p>
-        <div className="mt-10">
-          <img
-            src="/images/ecosystem-cycle.png"
-            alt="Ecosystem Cycle"
-            className="mx-auto max-w-lg rounded-xl shadow-md"
-          />
-        </div>
-      </section>
+      {/* === STICKY CTA (single source) === */}
+      <div id="sticky-cta-source" className="sticky-cta" aria-hidden="true">
+        <a
+          href="#quote"
+          className="btn primary cta-main"
+          data-analytics="cta_sticky_quote"
+        >
+          <span className="label-full">Get Availability &amp; Quote</span>
+          <span className="label-short" aria-hidden="true">Availability</span>
+        </a>
+        <a
+          href="tel:+15066431575"
+          className="btn call"
+          data-analytics="cta_sticky_call"
+        >
+          Call
+        </a>
+        <a
+          href="sms:+15066431575"
+          className="btn ghost"
+          data-analytics="cta_sticky_text"
+        >
+          Text
+        </a>
+      </div>
 
-      {/* Features */}
-      <section className="py-20 bg-slate-900 text-white">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12 px-6">
-          <div className="p-6 bg-slate-800/60 rounded-2xl shadow-lg hover:scale-105 transition">
-            <h3 className="text-xl font-bold">⚡ Speed & Resilience</h3>
-            <p className="mt-2 text-slate-300">
-              Launch in half the time with built-in playbooks and automated pruning.
-            </p>
-          </div>
-          <div className="p-6 bg-slate-800/60 rounded-2xl shadow-lg hover:scale-105 transition">
-            <h3 className="text-xl font-bold">🎨 Beauty by Default</h3>
-            <p className="mt-2 text-slate-300">
-              Covenant color tokens ensure consistent aesthetics across dashboards and sites.
-            </p>
-          </div>
-          <div className="p-6 bg-slate-800/60 rounded-2xl shadow-lg hover:scale-105 transition">
-            <h3 className="text-xl font-bold">🔒 Trust by Design</h3>
-            <p className="mt-2 text-slate-300">
-              Consent Mode + GA4 built in for compliance-first ecosystems.
-            </p>
-          </div>
-        </div>
-      </section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: "U-Dig It Rentals Inc.",
+            url: "https://udigit.ca/",
+            telephone: "+1-506-643-1575",
+            image: "https://udigit.ca/wp-content/uploads/logo.png",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "945 Golden Grove Road",
+              addressLocality: "Saint John",
+              addressRegion: "NB",
+              postalCode: "E2H 2X1",
+              addressCountry: "CA",
+            },
+            areaServed: ["Saint John", "Rothesay", "Quispamsis", "Grand Bay-Westfield", "Hampton"],
+            openingHours: "Mo-Fr 07:00-19:00",
+          }),
+        }}
+      />
 
-      {/* Final Call to Action */}
-      <section className="py-20 bg-gradient-to-b from-indigo-900 via-slate-900 to-black text-center text-white">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">
-          Ready to Cultivate Your Digital Ecosystem?
-        </h2>
-        <p className="mb-8 text-slate-300">Start today — early access spots are filling fast.</p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <a href="/contact" className="btn-primary">
-            Contact Us
-          </a>
-          <a href="/about" className="btn-gold">
-            Explore Features
-          </a>
-        </div>
-      </section>
-    </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML>{{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            name: "Skid Steer Rental (Kubota SVL-75-3)",
+            provider: {
+              "@type": "LocalBusiness",
+              name: "U-Dig It Rentals Inc.",
+            },
+            areaServed: {
+              "@type": "AdministrativeArea",
+              name: "Saint John, New Brunswick",
+            },
+            serviceType: "Heavy Equipment Rental",
+            termsOfService: "https://udigit.ca/terms-and-conditions/",
+          }),
+        }}
+      />
+    </section>
   );
 }
