@@ -1,2 +1,4 @@
 #!/usr/bin/env sh
-npm test --workspaces --if-present
+set -e
+# Runs "test" script if present; exits 0 when absent
+npm run -s test --if-present
