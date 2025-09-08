@@ -1,0 +1,20 @@
+name: OpsPipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ops-pipeline:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-pwsh@v2
+
+      - name: Run OpsPipeline
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File OpsPipeline.ps1
