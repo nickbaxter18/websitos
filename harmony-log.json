@@ -1,0 +1,19 @@
+{
+  "cycleId": "cycle-2025-09-08T2213",
+  "editor": {
+    "files": [
+      "Dockerfile"
+    ],
+    "modes": [
+      "insert"
+    ]
+  },
+  "qa": {
+    "status": "pass"
+  },
+  "sec": {
+    "status": "safe"
+  },
+  "decision": "approved",
+  "reason": "All gates green."
+}

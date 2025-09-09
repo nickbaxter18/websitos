@@ -1,0 +1,17 @@
+{
+  "build": {
+    "status": "pass",
+    "durationSec": 12
+  },
+  "container": {
+    "scan": "pass",
+    "cves": []
+  },
+  "deploy": {
+    "status": "success",
+    "strategy": "canary"
+  },
+  "monitor": {
+    "health": "ok"
+  }
+}

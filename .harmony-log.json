@@ -1,0 +1,23 @@
+{
+"$schema": "https://json-schema.org/draft/2020-12/schema",
+"title": "HarmonyLog",
+"type": "object",
+"properties": {
+"cycleId": { "type": "string" },
+"editor": {
+"type": "object",
+"properties": {
+"files": { "type": "array", "items": { "type": "string" } },
+"modes": { "type": "array", "items": { "type": "string" } }
+},
+"required": ["files", "modes"],
+"additionalProperties": false
+},
+"qa": { "type": "object", "properties": { "status": { "type": "string", "enum": ["pass", "warn", "fail"] } }, "required": ["status"], "additionalProperties": false },
+"sec": { "type": "object", "properties": { "status": { "type": "string", "enum": ["safe", "warn", "block"] } }, "required": ["status"], "additionalProperties": false },
+"decision": { "type": "string", "enum": ["approved", "blocked"] },
+"reason": { "type": "string" }
+},
+"required": ["cycleId", "editor", "qa", "sec", "decision"],
+"additionalProperties": false
+}

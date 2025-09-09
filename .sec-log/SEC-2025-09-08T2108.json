@@ -1,0 +1,25 @@
+{
+  "summary": {
+    "status": "safe"
+  },
+  "secrets": {
+    "found": [],
+    "status": "safe"
+  },
+  "deps": {
+    "highOrCritical": [],
+    "status": "safe"
+  },
+  "configs": {
+    "issues": [],
+    "status": "safe"
+  },
+  "runtime": {
+    "https": true,
+    "headers": {
+      "csp": true,
+      "hsts": true
+    },
+    "status": "safe"
+  }
+}

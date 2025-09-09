@@ -1,0 +1,24 @@
+{
+  "editor": {
+    "files": [
+      "Dockerfile"
+    ],
+    "modes": [
+      "insert"
+    ]
+  },
+  "qa": {
+    "status": "fail"
+  },
+  "sec": {
+    "status": "safe"
+  },
+  "dev": {
+    "summary": "skipped"
+  },
+  "arch": {},
+  "front": {},
+  "back": {},
+  "know": {},
+  "summary": "Cycle cycle-2025-09-08T2053: blocked."
+}

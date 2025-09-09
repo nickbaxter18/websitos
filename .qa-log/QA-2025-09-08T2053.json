@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "status": "fail"
+  },
+  "syntax": {
+    "status": "pass",
+    "notes": []
+  },
+  "tests": {
+    "coverage": 0,
+    "status": "pass",
+    "notes": []
+  },
+  "perf": {
+    "bundleKB": 0,
+    "budgetKB": 200,
+    "status": "pass"
+  },
+  "access": {
+    "contrastMin": 3.2,
+    "budget": 4.5,
+    "status": "fail"
+  },
+  "seo": {
+    "status": "pass",
+    "notes": []
+  },
+  "governance": {
+    "licenseOk": true,
+    "status": "pass"
+  }
+}

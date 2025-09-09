@@ -99,6 +99,7 @@
         display: none;
       }
     </style>
+    <!-- ✅ CodeMirror CSS -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
@@ -107,6 +108,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css"
     />
+    <!-- ✅ CodeMirror JS + Modes -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/jsx/jsx.min.js"></script>
@@ -130,6 +132,7 @@
       <textarea id="editor"></textarea>
     </div>
 
+    <!-- ✅ Inline JS -->
     <script>
       const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
