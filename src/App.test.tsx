@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import App from "./App";
 
-test("renders App route", () => {
+test("renders App shell", () => {
   render(<App />);
-  expect(screen.getByText(/home/i)).toBeInTheDocument();
+  // Look for a stable UI element like the navigation bar
+  expect(screen.getByRole("navigation")).toBeInTheDocument();
 });

@@ -1,8 +1,8 @@
 module.exports = {
+  preset: "ts-jest/presets/js-with-babel",
   testEnvironment: "jsdom",
   transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest",
-    "^.+\\.(js|jsx|mjs)$": "babel-jest",
+    "^.+\\.(ts|tsx|js|jsx|mjs)$": "ts-jest",
   },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node", "mjs"],
   moduleNameMapper: {
@@ -11,9 +11,4 @@ module.exports = {
   transformIgnorePatterns: ["/node_modules/(?!recharts)"],
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
-  globals: {
-    "ts-jest": {
-      tsconfig: "tsconfig.json",
-    },
-  },
 };
