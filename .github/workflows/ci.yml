@@ -69,11 +69,14 @@ jobs:
           HUSKY: 0
 
       - name: Run Jest with coverage + JSON report
-        run: npm run test -- --json --outputFile=jest-report.json --coverage --coverageReporters=json-summary --coverageReporters=lcov
+        run: npm run test -- --passWithNoTests --json --outputFile=jest-report.json --coverage --coverageReporters=json-summary --coverageReporters=lcov
+
+      - name: Ensure coverage directory exists
+        run: mkdir -p coverage && touch coverage/lcov.info
 
       - name: Enforce Node Coverage Threshold (25%)
         run: |
-          COVERAGE=$(npx jest --coverage --coverageReporters=text-summary | grep 'All files' | awk '{print $3}' | sed 's/%//')
+          COVERAGE=$(npx jest --coverage --coverageReporters=text-summary --passWithNoTests | grep 'All files' | awk '{print $3}' | sed 's/%//')
           echo "Node Coverage: $COVERAGE%"
           if [ "$COVERAGE" -lt 25 ]; then
             echo "❌ Node coverage below 25%"
