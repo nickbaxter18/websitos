@@ -64,32 +64,38 @@ app.add_middleware(
 )
 
 # -------------------------------------------------------------------
-# Health + Status Endpoints (always first)
+# Core Routes Registration (always first)
 # -------------------------------------------------------------------
-@app.get("/api/health")
-def api_health():
-    logging.info("💓 /api/health hit")
-    return {"ok": True, "status": "api running"}
+def register_core_routes(app):
+    @app.get("/api/health")
+    def api_health():
+        logging.info("💓 /api/health hit")
+        return {"ok": True, "status": "api running"}
 
-@app.get("/health")
-def root_health():
-    logging.info("💓 /health hit")
-    return {"ok": True, "status": "root running"}
+    @app.get("/health")
+    def root_health():
+        logging.info("💓 /health hit")
+        return {"ok": True, "status": "root running"}
 
-@app.get("/api/status")
-def api_status():
-    frontend_dir = os.path.join(BASE_DIR, "dist")
-    return {
-        "ok": True,
-        "qdrant_ready": bool(qc),
-        "openai_ready": bool(oai),
-        "frontend_index": os.path.exists(os.path.join(frontend_dir, "index.html")),
-    }
+    @app.get("/api/status")
+    def api_status():
+        return {
+            "ok": True,
+            "qdrant_ready": bool(qc),
+            "openai_ready": bool(oai),
+            "frontend_index": os.path.exists(os.path.join(BASE_DIR, "dist", "index.html")),
+        }
 
-@app.get("/")
-def root_index():
-    logging.info("🌐 Root index hit")
-    return {"message": "Welcome to U-DIG IT Rentals API"}
+    @app.get("/")
+    def root_index():
+        logging.info("🌐 Root index hit")
+        return {"message": "Welcome to U-DIG IT Rentals API"}
+
+register_core_routes(app)
+
+# Log all registered routes at startup for verification
+for route in app.routes:
+    logging.info(f"🔗 Registered route: {route.path} [{','.join(route.methods)}]")
 
 # -------------------------------------------------------------------
 # Middleware for Security, Cache, and Logging
@@ -134,6 +140,4 @@ async def server_error_handler(request: Request, exc):
     logging.error(f"💥 500 on {request.method} {request.url.path}: {exc}")
     return JSONResponse(status_code=500, content={"error": "internal_error"})
 
-# -------------------------------------------------------------------
 # (rest of api.py continues with auth, ingest, frontend mount, etc.)
-# -------------------------------------------------------------------

@@ -3,9 +3,10 @@ services:
     name: websiteos
     env: python
     buildCommand: |
-      echo "==== START CUSTOM BUILD ===="
+      echo "==== START CLEAN BUILD ===="
 
-      rm -rf dist node_modules .vite .cache || true
+      # Force full clean build every time
+      rm -rf dist node_modules .vite .cache __pycache__ .venv || true
 
       pip install -r requirements.txt
       npm install --legacy-peer-deps
@@ -21,7 +22,7 @@ services:
       echo "==== recursive dist tree (3 levels) ===="
       find dist -maxdepth 3 -type f -print || true
 
-      echo "==== END CUSTOM BUILD ===="
+      echo "==== END CLEAN BUILD ===="
 
       test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
       test -s dist/index.html || (echo "❌ index.html exists but is empty" && exit 1)
@@ -30,11 +31,9 @@ services:
       fi
 
       echo "✅ Final dist structure:" && ls -R dist
-    startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
-    cacheDirectories:
-      - node_modules
-      - .vite
+    cacheDirectories: []  # disable caching, always clean build
     routes:
       - type: rewrite
         source: /websitos/(.*)
