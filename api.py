@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import numpy as np
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -46,13 +46,13 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "*"],  # tighten for prod
+    allow_origins=["http://localhost:3000", "*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Security Headers + Cache-Control Middleware
+# Security Headers + Cache-Control Middleware + MIME override
 @app.middleware("http")
 async def security_and_cache_headers(request, call_next):
     response: Response = await call_next(request)
@@ -79,6 +79,10 @@ async def security_and_cache_headers(request, call_next):
     elif request.url.path in ["/", "/websitos", "/websitos/"]:
         response.headers["Cache-Control"] = "no-cache"
 
+    # MIME override for JS
+    if request.url.path.endswith(".js"):
+        response.headers["Content-Type"] = "application/javascript"
+
     return response
 
 # -------------------------------------------------------------------
@@ -104,11 +108,9 @@ if OPENAI_API_KEY:
 # -------------------------------------------------------------------
 bearer_scheme = HTTPBearer()
 
-
 def auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     if credentials.credentials != APP_KEY:
         raise HTTPException(401, "Unauthorized")
-
 
 # -------------------------------------------------------------------
 # Models
@@ -122,55 +124,8 @@ class Query(BaseModel):
     type_any: Optional[List[str]] = None
     path_contains: Optional[str] = None
 
-
 class IngestRequest(BaseModel):
     texts: List[str]
-
-
-# -------------------------------------------------------------------
-# Helpers
-# -------------------------------------------------------------------
-def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
-    """Cosine similarity with safe denominator."""
-    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8))
-
-
-def mmr(q: np.ndarray, docs: List[np.ndarray], k: int = 6, lam: float = 0.5):
-    if not docs:
-        return []
-
-    q_sims = [cosine_sim(q, d) for d in docs]
-    sel = [int(np.argmax(q_sims))]
-    cand = [i for i in range(len(docs)) if i != sel[0]]
-
-    while len(sel) < min(k, len(docs)) and cand:
-        best_score = -1e9
-        best_idx = None
-        for c in cand:
-            rel = q_sims[c]
-            div = max(cosine_sim(docs[c], docs[s]) for s in sel)
-            score = lam * rel - (1 - lam) * div
-            if score > best_score:
-                best_score = score
-                best_idx = c
-        if best_idx is None:
-            break
-        sel.append(best_idx)
-        cand.remove(best_idx)
-
-    return sel
-
-
-def build_filter(body: Query):
-    must = []
-    if body.tags_any:
-        must.append(qm.FieldCondition(key="tags", match=qm.MatchAny(any=body.tags_any)))
-    if body.type_any:
-        must.append(qm.FieldCondition(key="type", match=qm.MatchAny(any=body.type_any)))
-    if body.path_contains and hasattr(qm, "MatchText"):
-        must.append(qm.FieldCondition(key="section_path", match=qm.MatchText(text=body.path_contains)))
-    return qm.Filter(must=must) if must else None
-
 
 # -------------------------------------------------------------------
 # API Routes (now under /api/*)
@@ -184,16 +139,13 @@ def health():
         "openai_ready": bool(oai),
     }
 
-# Alias for Render default health check
 @app.get("/health")
 def root_health():
     return {"ok": True}
 
-
 @app.get("/api/version")
 def version():
     return {"version": app.version, "title": app.title}
-
 
 @app.post("/api/ingest")
 def ingest(data: IngestRequest, _=Depends(auth)):
@@ -216,7 +168,6 @@ def ingest(data: IngestRequest, _=Depends(auth)):
         raise HTTPException(500, f"ingest_error: {str(ex)[:400]}")
     return {"status": "ok", "ingested": len(data.texts)}
 
-
 # -------------------------------------------------------------------
 # Serve Frontend (static + SPA fallback)
 # -------------------------------------------------------------------
@@ -225,22 +176,35 @@ if os.path.isdir(frontend_dir):
     print("📂 dist folder contents:", os.listdir(frontend_dir))
     assets_path = os.path.join(frontend_dir, "assets")
     if os.path.isdir(assets_path):
-        print("📂 dist/assets contents:", os.listdir(assets_path))
+        for f in os.listdir(assets_path):
+            path = os.path.join(assets_path, f)
+            size = os.path.getsize(path)
+            print(f"📦 asset: {f} ({size} bytes)")
+    else:
+        print("⚠️ dist/assets missing")
 
-    app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
-    print("✅ Frontend dist directory mounted at /websitos")
+    try:
+        app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+        print("✅ Static mount at /websitos successful")
+    except Exception as e:
+        print("❌ Failed to mount static files:", e)
 
-    # ✅ Serve frontend at root
     @app.api_route("/", methods=["GET", "HEAD"])
     async def serve_root():
         index_path = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index_path):
+            try:
+                with open(index_path, "r", encoding="utf-8") as f:
+                    head = "".join([next(f) for _ in range(5)])
+                    print("📝 index.html head:", head)
+            except Exception as e:
+                print("⚠️ Could not read index.html:", e)
             return FileResponse(index_path)
         return {"error": "Frontend not built"}
 
-    # ✅ Global SPA fallback (any route)
     @app.get("/{full_path:path}")
     async def spa_fallback(full_path: str):
+        print(f"🔄 SPA fallback triggered for: {full_path}")
         index_path = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
@@ -248,10 +212,14 @@ if os.path.isdir(frontend_dir):
 else:
     print("⚠️ Frontend dist directory not found — skipping mount")
 
+# -------------------------------------------------------------------
+# Error Handlers
+# -------------------------------------------------------------------
+@app.exception_handler(404)
+async def not_found(request: Request, exc):
+    print(f"❌ 404 at {request.url.path}")
+    return JSONResponse({"error": "Not Found", "path": request.url.path}, status_code=404)
 
-# -------------------------------------------------------------------
-# Global Error Handler
-# -------------------------------------------------------------------
 @app.exception_handler(Exception)
 async def _unhandled(request, exc):
     logging.exception("Unhandled exception")
