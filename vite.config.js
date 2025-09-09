@@ -4,9 +4,10 @@ import react from "@vitejs/plugin-react";
 // Production-ready Vite config aligned with Render deployment
 export default defineConfig({
   plugins: [react()],
-  base: "/websitos/", // 👈 MUST match FastAPI static mount path
+  base: "/websitos/", // must match FastAPI static mount
   build: {
     outDir: "dist",
+    assetsDir: "assets", // ✅ lock assets folder
     sourcemap: false,
   },
   resolve: {

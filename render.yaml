@@ -5,6 +5,8 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       npm install && npm run build
+      # ✅ CI/CD pre-check: fail if dist/index.html or dist/assets is missing
+      test -f dist/index.html && test -d dist/assets
     startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
     healthCheckPath: /api/health
     envVars:
