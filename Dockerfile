@@ -35,9 +35,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend source
 COPY . .
 
-# Copy built frontend from Node stage into FastAPI static folder
-RUN mkdir -p /app/static
-COPY --from=frontend-builder /app/dist /app/static
+# Copy built frontend from Node stage into FastAPI dist folder
+RUN mkdir -p /app/dist
+COPY --from=frontend-builder /app/dist /app/dist
 
 # Add non-root user
 RUN useradd -m appuser
@@ -47,7 +47,7 @@ USER appuser
 EXPOSE 8000
 
 # Healthcheck
-HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK CMD curl -f http://localhost:8000/api/health || exit 1
 
 # Run FastAPI with uvicorn
 CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -208,17 +208,17 @@ def ingest(data: IngestRequest, _=Depends(auth)):
 # -------------------------------------------------------------------
 # Serve Frontend (static + SPA fallback)
 # -------------------------------------------------------------------
-static_dir = os.path.join(BASE_DIR, "static")
-if os.path.isdir(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-    print("✅ Static directory mounted")
+frontend_dir = os.path.join(BASE_DIR, "dist")
+if os.path.isdir(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+    print("✅ Frontend dist directory mounted")
 else:
-    print("⚠️ Static directory not found — skipping mount")
+    print("⚠️ Frontend dist directory not found — skipping mount")
 
 
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
-    index_path = os.path.join(static_dir, "index.html")
+    index_path = os.path.join(frontend_dir, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {"error": "Frontend not built"}
