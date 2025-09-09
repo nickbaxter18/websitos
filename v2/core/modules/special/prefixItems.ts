@@ -8,7 +8,7 @@ export const Prefixitems = {
   cultural_tags: ["prefixItems"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
+    import type { CodeKeywordDefinition } from "../types";
     import { validateTuple } from "./items";
 
     const def: CodeKeywordDefinition = {

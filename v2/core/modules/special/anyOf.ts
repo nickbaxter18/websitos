@@ -8,7 +8,7 @@ export const Anyof = {
   cultural_tags: ["anyOf"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorNoParams, AnySchema } from "../../types";
+    import type { CodeKeywordDefinition, ErrorNoParams, AnySchema } from "../types";
     import { validateUnion } from "../code";
 
     export type AnyOfError = ErrorNoParams<"anyOf", AnySchema[]>;

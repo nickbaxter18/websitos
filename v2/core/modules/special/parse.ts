@@ -9,7 +9,7 @@ export const Parse = {
   apply() {
     // Original logic
     import type Ajv from "../../core";
-    import type { SchemaObject } from "../../types";
+    import type { SchemaObject } from "../types";
     import { jtdForms, JTDForm, SchemaObjectMap } from "./types";
     import { SchemaEnv, getCompilingSchema } from "..";
     import { _, str, and, or, nil, not, CodeGen, Code, Name, SafeExpr } from "../codegen";
@@ -18,9 +18,9 @@ export const Parse = {
     import { hasPropFunc } from "../../vocabularies/code";
     import { hasRef } from "../../vocabularies/jtd/ref";
     import { intRange, IntType } from "../../vocabularies/jtd/type";
-    import { parseJson, parseJsonNumber, parseJsonString } from "../../runtime/parseJson";
+    import { parseJson, parseJsonNumber, parseJsonString } from "../runtime/parseJson";
     import { useFunc } from "../util";
-    import validTimestamp from "../../runtime/timestamp";
+    import validTimestamp from "../runtime/timestamp";
 
     type GenParse = (cxt: ParseCxt) => void;
 

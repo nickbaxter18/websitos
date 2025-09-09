@@ -8,7 +8,7 @@ export const Applicability = {
   cultural_tags: ["applicability"],
   apply() {
     // Original logic
-    import type { AnySchemaObject } from "../../types";
+    import type { AnySchemaObject } from "../types";
     import type { SchemaObjCxt } from "..";
     import type { JSONType, RuleGroup, Rule } from "../rules";
 

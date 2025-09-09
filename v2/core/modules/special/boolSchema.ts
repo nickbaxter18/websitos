@@ -8,7 +8,7 @@ export const Boolschema = {
   cultural_tags: ["boolSchema"],
   apply() {
     // Original logic
-    import type { KeywordErrorDefinition, KeywordErrorCxt } from "../../types";
+    import type { KeywordErrorDefinition, KeywordErrorCxt } from "../types";
     import type { SchemaCxt } from "..";
     import { reportError } from "../errors";
     import { _, Name } from "../codegen";

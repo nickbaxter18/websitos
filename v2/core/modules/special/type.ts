@@ -8,11 +8,11 @@ export const Type = {
   cultural_tags: ["type"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, nil, or, Code } from "../../compile/codegen";
-    import validTimestamp from "../../runtime/timestamp";
-    import { useFunc } from "../../compile/util";
+    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, nil, or, Code } from "../compile/codegen";
+    import validTimestamp from "../runtime/timestamp";
+    import { useFunc } from "../compile/util";
     import { checkMetadata } from "./metadata";
     import { typeErrorMessage, typeErrorParams, _JTDTypeError } from "./error";
 

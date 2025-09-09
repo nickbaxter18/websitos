@@ -8,10 +8,10 @@ export const Values = {
   cultural_tags: ["values"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, SchemaObject } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { alwaysValidSchema, Type } from "../../compile/util";
-    import { not, or, Name } from "../../compile/codegen";
+    import type { CodeKeywordDefinition, SchemaObject } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { alwaysValidSchema, Type } from "../compile/util";
+    import { not, or, Name } from "../compile/codegen";
     import { checkMetadata } from "./metadata";
     import { checkNullableObject } from "./nullable";
     import { typeError, _JTDTypeError } from "./error";

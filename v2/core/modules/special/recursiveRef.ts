@@ -8,7 +8,7 @@ export const Recursiveref = {
   cultural_tags: ["recursiveRef"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
+    import type { CodeKeywordDefinition } from "../types";
     import { dynamicRef } from "./dynamicRef";
 
     const def: CodeKeywordDefinition = {

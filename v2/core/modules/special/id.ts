@@ -8,7 +8,7 @@ export const Id = {
   cultural_tags: [],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
+    import type { CodeKeywordDefinition } from "../types";
 
     const def: CodeKeywordDefinition = {
       keyword: "id",

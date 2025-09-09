@@ -8,13 +8,13 @@ export const Patternproperties = {
   cultural_tags: ["patternProperties"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
+    import type { CodeKeywordDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
     import { allSchemaProperties, usePattern } from "../code";
-    import { _, not, Name } from "../../compile/codegen";
-    import { alwaysValidSchema, checkStrictMode } from "../../compile/util";
-    import { evaluatedPropsToName, Type } from "../../compile/util";
-    import { AnySchema } from "../../types";
+    import { _, not, Name } from "../compile/codegen";
+    import { alwaysValidSchema, checkStrictMode } from "../compile/util";
+    import { evaluatedPropsToName, Type } from "../compile/util";
+    import { AnySchema } from "../types";
 
     const def: CodeKeywordDefinition = {
       keyword: "patternProperties",

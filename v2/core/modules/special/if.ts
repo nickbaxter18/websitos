@@ -13,11 +13,11 @@ export const If = {
       ErrorObject,
       KeywordErrorDefinition,
       AnySchema,
-    } from "../../types";
+    } from "../types";
     import type { SchemaObjCxt } from "../../compile";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, not, Name } from "../../compile/codegen";
-    import { alwaysValidSchema, checkStrictMode } from "../../compile/util";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, not, Name } from "../compile/codegen";
+    import { alwaysValidSchema, checkStrictMode } from "../compile/util";
 
     export type IfKeywordError = ErrorObject<"if", { failingKeyword: string }, AnySchema>;
 

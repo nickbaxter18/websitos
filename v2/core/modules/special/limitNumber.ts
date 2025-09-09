@@ -8,9 +8,9 @@ export const Limitnumber = {
   cultural_tags: ["limitNumber"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, operators, Code } from "../../compile/codegen";
+    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, operators, Code } from "../compile/codegen";
 
     const ops = operators;
 

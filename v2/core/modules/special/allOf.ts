@@ -8,9 +8,9 @@ export const Allof = {
   cultural_tags: ["allOf"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, AnySchema } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { alwaysValidSchema } from "../../compile/util";
+    import type { CodeKeywordDefinition, AnySchema } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { alwaysValidSchema } from "../compile/util";
 
     const def: CodeKeywordDefinition = {
       keyword: "allOf",

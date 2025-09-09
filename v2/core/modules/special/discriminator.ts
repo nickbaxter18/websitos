@@ -8,9 +8,9 @@ export const Discriminator = {
   cultural_tags: ["discriminator"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, not, getProperty, Name } from "../../compile/codegen";
+    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, not, getProperty, Name } from "../compile/codegen";
     import { checkMetadata } from "./metadata";
     import { checkNullableObject } from "./nullable";
     import { typeErrorMessage, typeErrorParams, _JTDTypeError } from "./error";

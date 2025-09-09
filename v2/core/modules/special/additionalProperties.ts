@@ -14,12 +14,12 @@ export const Additionalproperties = {
       ErrorObject,
       KeywordErrorDefinition,
       AnySchema,
-    } from "../../types";
+    } from "../types";
     import { allSchemaProperties, usePattern, isOwnProperty } from "../code";
-    import { _, nil, or, not, Code, Name } from "../../compile/codegen";
-    import N from "../../compile/names";
-    import type { SubschemaArgs } from "../../compile/validate/subschema";
-    import { alwaysValidSchema, schemaRefOrVal, Type } from "../../compile/util";
+    import { _, nil, or, not, Code, Name } from "../compile/codegen";
+    import N from "../compile/names";
+    import type { SubschemaArgs } from "../compile/validate/subschema";
+    import { alwaysValidSchema, schemaRefOrVal, Type } from "../compile/util";
 
     export type AdditionalPropertiesError = ErrorObject<
       "additionalProperties",

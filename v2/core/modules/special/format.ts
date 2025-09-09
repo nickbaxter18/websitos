@@ -15,9 +15,9 @@ export const Format = {
       CodeKeywordDefinition,
       KeywordErrorDefinition,
       ErrorObject,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, nil, or, Code, getProperty, regexpCode } from "../../compile/codegen";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, nil, or, Code, getProperty, regexpCode } from "../compile/codegen";
 
     type FormatValidate =
       | FormatValidator<string>

@@ -13,11 +13,11 @@ export const Properties = {
       ErrorObject,
       KeywordErrorDefinition,
       SchemaObject,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
     import { propertyInData, allSchemaProperties, isOwnProperty } from "../code";
-    import { alwaysValidSchema, schemaRefOrVal } from "../../compile/util";
-    import { _, and, not, Code, Name } from "../../compile/codegen";
+    import { alwaysValidSchema, schemaRefOrVal } from "../compile/util";
+    import { _, and, not, Code, Name } from "../compile/codegen";
     import { checkMetadata } from "./metadata";
     import { checkNullableObject } from "./nullable";
     import { typeErrorMessage, typeErrorParams, _JTDTypeError } from "./error";

@@ -13,10 +13,10 @@ export const Unevaluatedproperties = {
       KeywordErrorDefinition,
       ErrorObject,
       AnySchema,
-    } from "../../types";
-    import { _, not, and, Name, Code } from "../../compile/codegen";
-    import { alwaysValidSchema, Type } from "../../compile/util";
-    import N from "../../compile/names";
+    } from "../types";
+    import { _, not, and, Name, Code } from "../compile/codegen";
+    import { alwaysValidSchema, Type } from "../compile/util";
+    import N from "../compile/names";
 
     export type UnevaluatedPropertiesError = ErrorObject<
       "unevaluatedProperties",

@@ -8,7 +8,7 @@ export const Dependentschemas = {
   cultural_tags: ["dependentSchemas"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
+    import type { CodeKeywordDefinition } from "../types";
     import { validateSchemaDeps } from "./dependencies";
 
     const def: CodeKeywordDefinition = {

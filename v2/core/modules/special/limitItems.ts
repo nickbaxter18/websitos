@@ -8,9 +8,9 @@ export const Limititems = {
   cultural_tags: ["limitItems"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, operators } from "../../compile/codegen";
+    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, operators } from "../compile/codegen";
 
     const error: KeywordErrorDefinition = {
       message({ keyword, schemaCode }) {

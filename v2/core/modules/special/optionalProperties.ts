@@ -8,8 +8,8 @@ export const Optionalproperties = {
   cultural_tags: ["optionalProperties"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
+    import type { CodeKeywordDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
     import { validateProperties, error } from "./properties";
 
     const def: CodeKeywordDefinition = {

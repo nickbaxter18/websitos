@@ -8,11 +8,11 @@ export const Enum = {
   cultural_tags: ["enum"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, or, Name, Code } from "../../compile/codegen";
-    import { useFunc } from "../../compile/util";
-    import equal from "../../runtime/equal";
+    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, or, Name, Code } from "../compile/codegen";
+    import { useFunc } from "../compile/util";
+    import equal from "../runtime/equal";
 
     export type EnumError = ErrorObject<
       "enum",

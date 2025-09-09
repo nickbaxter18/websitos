@@ -8,7 +8,7 @@ export const Union = {
   cultural_tags: ["union"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
+    import type { CodeKeywordDefinition } from "../types";
     import { validateUnion } from "../code";
 
     const def: CodeKeywordDefinition = {

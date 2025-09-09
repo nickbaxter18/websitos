@@ -9,7 +9,7 @@ export const Serialize = {
   apply() {
     // Original logic
     import type Ajv from "../../core";
-    import type { SchemaObject } from "../../types";
+    import type { SchemaObject } from "../types";
     import { jtdForms, JTDForm, SchemaObjectMap } from "./types";
     import { SchemaEnv, getCompilingSchema } from "..";
     import { _, str, and, getProperty, CodeGen, Code, Name } from "../codegen";
@@ -18,7 +18,7 @@ export const Serialize = {
     import { isOwnProperty } from "../../vocabularies/code";
     import { hasRef } from "../../vocabularies/jtd/ref";
     import { useFunc } from "../util";
-    import quote from "../../runtime/quote";
+    import quote from "../runtime/quote";
 
     const genSerialize: { [F in JTDForm]: (cxt: SerializeCxt) => void } = {
       elements: serializeElements,

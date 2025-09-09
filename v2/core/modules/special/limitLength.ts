@@ -8,11 +8,11 @@ export const Limitlength = {
   cultural_tags: ["limitLength"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, operators } from "../../compile/codegen";
-    import { useFunc } from "../../compile/util";
-    import ucs2length from "../../runtime/ucs2length";
+    import type { CodeKeywordDefinition, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, operators } from "../compile/codegen";
+    import { useFunc } from "../compile/util";
+    import ucs2length from "../runtime/ucs2length";
 
     const error: KeywordErrorDefinition = {
       message({ keyword, schemaCode }) {

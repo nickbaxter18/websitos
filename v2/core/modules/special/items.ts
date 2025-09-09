@@ -8,10 +8,10 @@ export const Items = {
   cultural_tags: ["items"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, AnySchema, AnySchemaObject } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _ } from "../../compile/codegen";
-    import { alwaysValidSchema, mergeEvaluated, checkStrictMode } from "../../compile/util";
+    import type { CodeKeywordDefinition, AnySchema, AnySchemaObject } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _ } from "../compile/codegen";
+    import { alwaysValidSchema, mergeEvaluated, checkStrictMode } from "../compile/util";
     import { validateArray } from "../code";
 
     const def: CodeKeywordDefinition = {

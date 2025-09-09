@@ -16,7 +16,7 @@ export const Keyword = {
       AddedKeywordDefinition,
       MacroKeywordDefinition,
       FuncKeywordDefinition,
-    } from "../../types";
+    } from "../types";
     import type { SchemaObjCxt } from "..";
     import { _, nil, not, stringify, Code, Name, CodeGen } from "../codegen";
     import N from "../names";

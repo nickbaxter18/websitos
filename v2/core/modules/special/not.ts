@@ -8,9 +8,9 @@ export const Not = {
   cultural_tags: [],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorNoParams, AnySchema } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { alwaysValidSchema } from "../../compile/util";
+    import type { CodeKeywordDefinition, ErrorNoParams, AnySchema } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { alwaysValidSchema } from "../compile/util";
 
     export type NotKeywordError = ErrorNoParams<"not", AnySchema>;
 

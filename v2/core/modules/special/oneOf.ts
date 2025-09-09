@@ -13,10 +13,10 @@ export const Oneof = {
       ErrorObject,
       KeywordErrorDefinition,
       AnySchema,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, Name } from "../../compile/codegen";
-    import { alwaysValidSchema } from "../../compile/util";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, Name } from "../compile/codegen";
+    import { alwaysValidSchema } from "../compile/util";
     import { SchemaCxt } from "../../compile";
 
     export type OneOfError = ErrorObject<

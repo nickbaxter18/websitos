@@ -8,10 +8,10 @@ export const Dynamicref = {
   cultural_tags: ["dynamicRef"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, getProperty, Code, Name } from "../../compile/codegen";
-    import N from "../../compile/names";
+    import type { CodeKeywordDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, getProperty, Code, Name } from "../compile/codegen";
+    import N from "../compile/names";
     import { callRef } from "../core/ref";
 
     const def: CodeKeywordDefinition = {

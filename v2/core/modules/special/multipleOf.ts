@@ -8,9 +8,9 @@ export const Multipleof = {
   cultural_tags: ["multipleOf"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str } from "../../compile/codegen";
+    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str } from "../compile/codegen";
 
     export type MultipleOfError = ErrorObject<
       "multipleOf",

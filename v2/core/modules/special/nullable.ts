@@ -8,8 +8,8 @@ export const Nullable = {
   cultural_tags: ["nullable"],
   apply() {
     // Original logic
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, not, nil, Code, Name } from "../../compile/codegen";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, not, nil, Code, Name } from "../compile/codegen";
 
     export function checkNullable(
       { gen, data, parentSchema }: KeywordCxt,

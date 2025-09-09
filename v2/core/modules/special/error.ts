@@ -8,8 +8,8 @@ export const Error = {
   cultural_tags: ["error"],
   apply() {
     // Original logic
-    import type { KeywordErrorDefinition, KeywordErrorCxt, ErrorObject } from "../../types";
-    import { _, Code } from "../../compile/codegen";
+    import type { KeywordErrorDefinition, KeywordErrorCxt, ErrorObject } from "../types";
+    import { _, Code } from "../compile/codegen";
 
     export type _JTDTypeError<K extends string, T extends string, S> = ErrorObject<
       K,

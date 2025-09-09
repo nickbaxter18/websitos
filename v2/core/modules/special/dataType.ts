@@ -13,7 +13,7 @@ export const Datatype = {
       KeywordErrorCxt,
       ErrorObject,
       AnySchemaObject,
-    } from "../../types";
+    } from "../types";
     import type { SchemaObjCxt } from "..";
     import { isJSONType, JSONType } from "../rules";
     import { schemaHasRulesForType } from "./applicability";

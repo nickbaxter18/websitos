@@ -13,10 +13,10 @@ export const Additionalitems = {
       ErrorObject,
       KeywordErrorDefinition,
       AnySchema,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, not, Name } from "../../compile/codegen";
-    import { alwaysValidSchema, checkStrictMode, Type } from "../../compile/util";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, not, Name } from "../compile/codegen";
+    import { alwaysValidSchema, checkStrictMode, Type } from "../compile/util";
 
     export type AdditionalItemsError = ErrorObject<"additionalItems", { limit: number }, AnySchema>;
 

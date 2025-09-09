@@ -8,7 +8,7 @@ export const Dependentrequired = {
   cultural_tags: ["dependentRequired"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorObject } from "../../types";
+    import type { CodeKeywordDefinition, ErrorObject } from "../types";
     import {
       validatePropertyDeps,
       error,

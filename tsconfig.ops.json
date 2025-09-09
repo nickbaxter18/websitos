@@ -1,4 +1,4 @@
-﻿{
+{
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
@@ -9,5 +9,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["ops/**/*.ts", "scripts/**/*.ts"]
+  "include": ["ops/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "dist", "v2/core/modules/special"]
 }

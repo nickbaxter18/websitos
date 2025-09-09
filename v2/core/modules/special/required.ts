@@ -8,8 +8,8 @@ export const Required = {
   cultural_tags: ["required"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
+    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
     import {
       checkReportMissingProp,
       checkMissingProp,
@@ -17,8 +17,8 @@ export const Required = {
       propertyInData,
       noPropertyInData,
     } from "../code";
-    import { _, str, nil, not, Name, Code } from "../../compile/codegen";
-    import { checkStrictMode } from "../../compile/util";
+    import { _, str, nil, not, Name, Code } from "../compile/codegen";
+    import { checkStrictMode } from "../compile/util";
 
     export type RequiredError = ErrorObject<
       "required",

@@ -13,10 +13,10 @@ export const Unevaluateditems = {
       ErrorObject,
       KeywordErrorDefinition,
       AnySchema,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, not, Name } from "../../compile/codegen";
-    import { alwaysValidSchema, Type } from "../../compile/util";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, not, Name } from "../compile/codegen";
+    import { alwaysValidSchema, Type } from "../compile/util";
 
     export type UnevaluatedItemsError = ErrorObject<
       "unevaluatedItems",

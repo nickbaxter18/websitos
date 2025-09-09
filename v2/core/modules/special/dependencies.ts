@@ -14,10 +14,10 @@ export const Dependencies = {
       KeywordErrorDefinition,
       SchemaMap,
       AnySchema,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str } from "../../compile/codegen";
-    import { alwaysValidSchema } from "../../compile/util";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str } from "../compile/codegen";
+    import { alwaysValidSchema } from "../compile/util";
     import {
       checkReportMissingProp,
       checkMissingProp,

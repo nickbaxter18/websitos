@@ -8,12 +8,12 @@ export const Ref = {
   cultural_tags: [],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, AnySchemaObject } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
+    import type { CodeKeywordDefinition, AnySchemaObject } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
     import { compileSchema, SchemaEnv } from "../../compile";
-    import { _, not, nil, stringify } from "../../compile/codegen";
-    import MissingRefError from "../../compile/ref_error";
-    import N from "../../compile/names";
+    import { _, not, nil, stringify } from "../compile/codegen";
+    import MissingRefError from "../compile/ref_error";
+    import N from "../compile/names";
     import { getValidate, callRef } from "../core/ref";
     import { checkMetadata } from "./metadata";
 

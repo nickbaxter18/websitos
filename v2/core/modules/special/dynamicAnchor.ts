@@ -8,10 +8,10 @@ export const Dynamicanchor = {
   cultural_tags: ["dynamicAnchor"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, getProperty, Code } from "../../compile/codegen";
-    import N from "../../compile/names";
+    import type { CodeKeywordDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, getProperty, Code } from "../compile/codegen";
+    import N from "../compile/names";
     import { SchemaEnv, compileSchema } from "../../compile";
     import { getValidate } from "../core/ref";
 

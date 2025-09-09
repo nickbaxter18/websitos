@@ -9,8 +9,8 @@ export const Metadata = {
   apply() {
     // Original logic
     import { KeywordCxt } from "../../ajv";
-    import type { CodeKeywordDefinition } from "../../types";
-    import { alwaysValidSchema } from "../../compile/util";
+    import type { CodeKeywordDefinition } from "../types";
+    import { alwaysValidSchema } from "../compile/util";
 
     const def: CodeKeywordDefinition = {
       keyword: "metadata",

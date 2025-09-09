@@ -13,10 +13,10 @@ export const Contains = {
       KeywordErrorDefinition,
       ErrorObject,
       AnySchema,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, str, Name } from "../../compile/codegen";
-    import { alwaysValidSchema, checkStrictMode, Type } from "../../compile/util";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, str, Name } from "../compile/codegen";
+    import { alwaysValidSchema, checkStrictMode, Type } from "../compile/util";
 
     export type ContainsError = ErrorObject<
       "contains",

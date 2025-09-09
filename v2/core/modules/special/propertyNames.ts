@@ -13,10 +13,10 @@ export const Propertynames = {
       ErrorObject,
       KeywordErrorDefinition,
       AnySchema,
-    } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _, not } from "../../compile/codegen";
-    import { alwaysValidSchema } from "../../compile/util";
+    } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _, not } from "../compile/codegen";
+    import { alwaysValidSchema } from "../compile/util";
 
     export type PropertyNamesError = ErrorObject<
       "propertyNames",

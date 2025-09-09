@@ -8,11 +8,11 @@ export const Const = {
   cultural_tags: ["const"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
-    import { _ } from "../../compile/codegen";
-    import { useFunc } from "../../compile/util";
-    import equal from "../../runtime/equal";
+    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
+    import { _ } from "../compile/codegen";
+    import { useFunc } from "../compile/util";
+    import equal from "../runtime/equal";
 
     export type ConstError = ErrorObject<"const", { allowedValue: any }>;
 

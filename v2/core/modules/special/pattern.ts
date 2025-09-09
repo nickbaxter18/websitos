@@ -8,10 +8,10 @@ export const Pattern = {
   cultural_tags: ["pattern"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../../types";
-    import type { KeywordCxt } from "../../compile/validate";
+    import type { CodeKeywordDefinition, ErrorObject, KeywordErrorDefinition } from "../types";
+    import type { KeywordCxt } from "../compile/validate";
     import { usePattern } from "../code";
-    import { _, str } from "../../compile/codegen";
+    import { _, str } from "../compile/codegen";
 
     export type PatternError = ErrorObject<
       "pattern",

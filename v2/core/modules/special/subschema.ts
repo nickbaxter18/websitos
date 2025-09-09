@@ -8,7 +8,7 @@ export const Subschema = {
   cultural_tags: ["subschema"],
   apply() {
     // Original logic
-    import type { AnySchema } from "../../types";
+    import type { AnySchema } from "../types";
     import type { SchemaObjCxt } from "..";
     import { _, str, getProperty, Code, Name } from "../codegen";
     import { escapeFragment, getErrorPath, Type } from "../util";

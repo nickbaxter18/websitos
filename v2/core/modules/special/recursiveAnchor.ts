@@ -8,9 +8,9 @@ export const Recursiveanchor = {
   cultural_tags: ["recursiveAnchor"],
   apply() {
     // Original logic
-    import type { CodeKeywordDefinition } from "../../types";
+    import type { CodeKeywordDefinition } from "../types";
     import { dynamicAnchor } from "./dynamicAnchor";
-    import { checkStrictMode } from "../../compile/util";
+    import { checkStrictMode } from "../compile/util";
 
     const def: CodeKeywordDefinition = {
       keyword: "$recursiveAnchor",
