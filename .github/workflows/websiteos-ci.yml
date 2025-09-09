@@ -151,7 +151,7 @@ jobs:
           targetdir: merged-coverage
           reporttypes: Html;Cobertura
 
-      - name: Upload merged coverage
+      - name: Upload merged coverage\n        if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: merged-coverage\n          path: merged-coverage/\n\n      - name: Add runtime summary to GitHub Actions Summary\n        run: |\n          echo \"### 🖥️ Runtime Versions\" >> $GITHUB_STEP_SUMMARY\n          echo \"- Node: $(node -v)\" >> $GITHUB_STEP_SUMMARY\n          echo \"- npm: $(npm -v)\" >> $GITHUB_STEP_SUMMARY\n          echo \"- Python: $(python --version)\" >> $GITHUB_STEP_SUMMARY
         if: always()
         uses: actions/upload-artifact@v4
         with:
