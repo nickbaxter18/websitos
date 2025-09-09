@@ -208,7 +208,7 @@ jobs:
           ./reportgeneratortool/reportgenerator \
             -reports:"$REPORTS" \
             -targetdir:merged-coverage \
-            -reporttypes:Html;Cobertura
+            -reporttypes:Html,Cobertura
 
       - name: Generate coverage summary
         run: |
@@ -222,6 +222,9 @@ jobs:
           echo "### Coverage Reports" >> coverage-summary.md
           if [ -f merged-coverage/Cobertura.xml ]; then
             echo "\`Cobertura\` report generated ✅" >> coverage-summary.md
+            COVERAGE=$(grep -o '<line-rate="[0-9.]*"' merged-coverage/Cobertura.xml | head -1 | cut -d '"' -f2)
+            echo "Total Coverage: ${COVERAGE}%" >> coverage-summary.md
+            echo "Total Coverage: ${COVERAGE}%"
           else
             echo "\`Cobertura\` report missing ⚠️" >> coverage-summary.md
           fi
