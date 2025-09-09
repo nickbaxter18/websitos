@@ -3,6 +3,8 @@ services:
     name: websiteos
     env: python
     buildCommand: |
+      echo "==== START CUSTOM BUILD ===="
+
       # Clean caches
       rm -rf dist node_modules .vite .cache || true
 
@@ -43,6 +45,8 @@ services:
       node -v
       npm -v
       npx vite --version || true
+
+      echo "==== END CUSTOM BUILD ===="
 
       # Verify required files exist
       test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
