@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
-import React from "react";
 import App from "./App";
 
-test("renders App component without crashing", () => {
+test("renders App without crashing", () => {
   render(<App />);
-  expect(screen.getByText(/react/i)).toBeInTheDocument();
+  // Adjusted test to look for actual visible text in the App
+  expect(screen.getByText(/home/i)).toBeInTheDocument();
 });
