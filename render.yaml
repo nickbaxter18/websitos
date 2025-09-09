@@ -3,16 +3,23 @@ services:
     name: websiteos
     env: python
     buildCommand: |
+      # ✅ Clear any stale build cache first
+      rm -rf dist node_modules .vite .cache || true
+
       pip install -r requirements.txt
       npm install --legacy-peer-deps
+
       echo "Current working directory: $(pwd)"
       npm run build -- --debug
+
       echo "==== FULL PROJECT TREE AFTER BUILD ===="
       ls -R .
+
       # ✅ Ensure dist/ and assets survive into runtime
       mkdir -p ./dist/assets
       cp -r dist/* ./dist/
       cp -r dist/assets ./dist/assets
+
       # ✅ Fail if required files missing
       test -f dist/index.html || (echo "❌ dist/index.html missing after build" && exit 1)
       test -s dist/index.html || (echo "❌ index.html exists but is empty" && exit 1)
@@ -23,6 +30,7 @@ services:
         echo "✅ dist/assets files found";
         ls -lh dist/assets;
       fi
+
       echo "✅ Final dist contents:" && ls -R dist
     startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
     healthCheckPath: /api/health
