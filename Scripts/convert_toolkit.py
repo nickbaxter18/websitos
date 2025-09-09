@@ -1,4 +1,8 @@
-import os, hashlib, datetime, shutil, zipfile
+import os
+import hashlib
+import datetime
+import shutil
+import zipfile
 
 # Input Zips
 TOOLKIT_DIR = "toolkits"

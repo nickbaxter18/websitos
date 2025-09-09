@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import numpy as np
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -18,7 +18,6 @@ from starlette.responses import Response
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qm
 from openai import OpenAI
-import fitz  # PyMuPDF for PDFs
 
 # -------------------------------------------------------------------
 # Env Config
