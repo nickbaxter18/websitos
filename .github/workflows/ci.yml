@@ -238,7 +238,8 @@ jobs:
               "repo": "'"${{ github.repository }}"'",
               "branch": "'"${{ github.head_ref }}"'",
               "env": "node",
-              "buildCommand": "npm install && npm run build",
+              "buildCommand": "npm install && npm run build
+      mv dist ./dist  # ✅ persist dist so FastAPI can serve it",
               "startCommand": "cd backend && node server.js",
               "plan": "free"
             }'
