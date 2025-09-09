@@ -6,15 +6,24 @@ import { readText, backupFile, writeText } from "./fileops";
 function appendLedger(entry: EditorEntry) {
   const path = ".editor-diff-log.json";
   let cur: { entries: EditorEntry[] } = { entries: [] };
-  try { cur = JSON.parse(fs.readFileSync(path, "utf8")); } catch {}
+  try {
+    cur = JSON.parse(fs.readFileSync(path, "utf8"));
+  } catch {}
   if (!Array.isArray(cur.entries)) cur.entries = [];
   cur.entries.push(entry);
   fs.writeFileSync(path, JSON.stringify(cur, null, 2));
 }
 
-function escRe(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function escRe(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
-export function stageAndApply(cmd: EditCommand): { entry: EditorEntry; before: string; after: string; backupPath?: string } {
+export function stageAndApply(cmd: EditCommand): {
+  entry: EditorEntry;
+  before: string;
+  after: string;
+  backupPath?: string;
+} {
   const before = readText(cmd.file);
   let after = before;
 
@@ -23,12 +32,12 @@ export function stageAndApply(cmd: EditCommand): { entry: EditorEntry; before: s
   if (cmd.type === "insert") {
     if (!anchor) throw new Error("insert requires an anchor");
     const loc = resolveAnchor(before, anchor);
-    const insertLine = (cmd.payload ?? "");
+    const insertLine = cmd.payload ?? "";
     const patchLine = insertLine + (insertLine.endsWith("\n") ? "" : "\n");
 
     // Idempotency: exact LINE match within a local window around the anchor
     const windowStart = Math.max(0, loc.index - 200);
-    const windowEnd   = Math.min(before.length, loc.index + 200);
+    const windowEnd = Math.min(before.length, loc.index + 200);
     const around = before.slice(windowStart, windowEnd);
     const lineRe = new RegExp("^\\s*" + escRe(insertLine) + "\\s*$", "m");
 
@@ -68,7 +77,7 @@ export function stageAndApply(cmd: EditCommand): { entry: EditorEntry; before: s
       anchors: cmd.anchors ?? [],
       diff: "no-op (content unchanged)",
       confidence: 0.95,
-      rationale: "Idempotent guard: exact line already present near anchor"
+      rationale: "Idempotent guard: exact line already present near anchor",
     };
     appendLedger(entry);
     return { entry, before, after };
@@ -84,7 +93,7 @@ export function stageAndApply(cmd: EditCommand): { entry: EditorEntry; before: s
     anchors: cmd.anchors ?? [],
     diff: computeDiffSummary(before, after),
     confidence: 0.9,
-    rationale: "Applied safe-scoped edit with anchor resolution"
+    rationale: "Applied safe-scoped edit with anchor resolution",
   };
   appendLedger(entry);
   return { entry, before, after, backupPath };
@@ -94,5 +103,7 @@ function computeDiffSummary(before: string, after: string): string {
   const b = before.split("\n").length;
   const a = after.split("\n").length;
   const delta = a - b;
-  return delta === 0 ? "lines unchanged (0)" : `lines ${b} -> ${a} (${delta > 0 ? "+" : ""}${delta})`;
+  return delta === 0
+    ? "lines unchanged (0)"
+    : `lines ${b} -> ${a} (${delta > 0 ? "+" : ""}${delta})`;
 }

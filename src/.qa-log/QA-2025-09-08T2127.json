@@ -25,9 +25,7 @@
   "tests": {
     "coverage": 0,
     "status": "pass",
-    "notes": [
-      "(not wired)"
-    ]
+    "notes": ["(not wired)"]
   },
   "perf": {
     "bundleKB": 0,

@@ -12,7 +12,7 @@ export function ensureDir(p: string) {
 export function backupFile(file: string): string {
   const dir = path.join(".backup");
   ensureDir(dir);
-  const ts = new Date().toISOString().replace(/[:]/g, "").replace(/\..+$/,"");
+  const ts = new Date().toISOString().replace(/[:]/g, "").replace(/\..+$/, "");
   const base = path.basename(file).replace(/[\\/:*?"<>|]/g, "_");
   const dest = path.join(dir, `${base}.${ts}`);
   fs.copyFileSync(file, dest);

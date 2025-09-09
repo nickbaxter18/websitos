@@ -1,6 +1,10 @@
 ﻿import { HarmonyDecision, Profile, QALog, SecLog } from "./types";
 
-export function decide(profile: Profile, qa: QALog, sec: SecLog): { decision: HarmonyDecision; reason: string } {
+export function decide(
+  profile: Profile,
+  qa: QALog,
+  sec: SecLog
+): { decision: HarmonyDecision; reason: string } {
   const qaFail = qa.summary.status === "fail";
   const secBlock = sec.summary.status === "block";
   if (secBlock) return { decision: "blocked", reason: "SecOps block" };

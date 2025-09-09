@@ -1,11 +1,7 @@
 {
   "editor": {
-    "files": [
-      "Dockerfile"
-    ],
-    "modes": [
-      "insert"
-    ]
+    "files": ["Dockerfile"],
+    "modes": ["insert"]
   },
   "qa": {
     "status": "fail"

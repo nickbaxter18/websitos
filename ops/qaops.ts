@@ -6,7 +6,11 @@ export function qaChecks(budgets: Budgets, simulate: "none" | "access-fail" = "n
     syntax: { status: "pass", notes: [] },
     tests: { coverage: budgets.testsCoverage, status: "pass", notes: [] },
     perf: { bundleKB: 0, budgetKB: budgets.perfMaxBundleKB, status: "pass" },
-    access: { contrastMin: budgets.accessContrast + 0.3, budget: budgets.accessContrast, status: "pass" },
+    access: {
+      contrastMin: budgets.accessContrast + 0.3,
+      budget: budgets.accessContrast,
+      status: "pass",
+    },
     seo: { status: "pass", notes: [] },
     governance: { licenseOk: true, status: "pass" },
   };

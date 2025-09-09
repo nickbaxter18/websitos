@@ -1,26 +1,29 @@
 {
-"$schema": "https://json-schema.org/draft/2020-12/schema",
-"title": "EditorDiffLog",
-"type": "object",
-"properties": {
-"entries": {
-"type": "array",
-"items": {
-"type": "object",
-"properties": {
-"ts": { "type": "string", "format": "date-time" },
-"file": { "type": "string" },
-"mode": { "type": "string", "enum": ["append", "insert", "replace", "multi", "full-rewrite"] },
-"anchors": { "type": "array", "items": { "type": "string" } },
-"diff": { "type": "string" },
-"confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-"rationale": { "type": "string" }
-},
-"required": ["ts", "file", "mode", "diff", "confidence"],
-"additionalProperties": false
-}
-}
-},
-"required": ["entries"],
-"additionalProperties": false
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EditorDiffLog",
+  "type": "object",
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ts": { "type": "string", "format": "date-time" },
+          "file": { "type": "string" },
+          "mode": {
+            "type": "string",
+            "enum": ["append", "insert", "replace", "multi", "full-rewrite"]
+          },
+          "anchors": { "type": "array", "items": { "type": "string" } },
+          "diff": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "rationale": { "type": "string" }
+        },
+        "required": ["ts", "file", "mode", "diff", "confidence"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["entries"],
+  "additionalProperties": false
 }

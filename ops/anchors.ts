@@ -7,8 +7,8 @@ export function resolveAnchor(source: string, anchor: string): { kind: AnchorKin
   //   after:FROM
   //   regex:/^ENV\s+NODE_ENV=.*$/m
   const before = anchor.startsWith("before:");
-  const after  = anchor.startsWith("after:");
-  const regex  = anchor.startsWith("regex:/");
+  const after = anchor.startsWith("after:");
+  const regex = anchor.startsWith("regex:/");
 
   if (before || after) {
     const token = anchor.split(":")[1] ?? "";

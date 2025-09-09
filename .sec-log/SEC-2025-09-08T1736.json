@@ -1,74 +1,74 @@
 {
-"$schema": "https://json-schema.org/draft/2020-12/schema",
-"title": "QALog",
-"type": "object",
-"properties": {
-"summary": {
-"type": "object",
-"properties": {
-"status": { "type": "string", "enum": ["pass", "warn", "fail"] }
-},
-"required": ["status"],
-"additionalProperties": false
-},
-"syntax": {
-"type": "object",
-"properties": {
-"status": { "type": "string", "enum": ["pass", "warn", "fail"] },
-"notes": { "type": "array", "items": { "type": "string" } }
-},
-"required": ["status"],
-"additionalProperties": false
-},
-"tests": {
-"type": "object",
-"properties": {
-"coverage": { "type": "number", "minimum": 0, "maximum": 100 },
-"status": { "type": "string", "enum": ["pass", "fail"] },
-"notes": { "type": "array", "items": { "type": "string" } }
-},
-"required": ["coverage", "status"],
-"additionalProperties": false
-},
-"perf": {
-"type": "object",
-"properties": {
-"bundleKB": { "type": "number", "minimum": 0 },
-"budgetKB": { "type": "number", "minimum": 0 },
-"status": { "type": "string", "enum": ["pass", "warn", "fail"] }
-},
-"required": ["bundleKB", "budgetKB", "status"],
-"additionalProperties": false
-},
-"access": {
-"type": "object",
-"properties": {
-"contrastMin": { "type": "number", "minimum": 0 },
-"budget": { "type": "number", "minimum": 0 },
-"status": { "type": "string", "enum": ["pass", "warn", "fail"] }
-},
-"required": ["contrastMin", "budget", "status"],
-"additionalProperties": false
-},
-"seo": {
-"type": "object",
-"properties": {
-"status": { "type": "string", "enum": ["pass", "warn", "fail"] },
-"notes": { "type": "array", "items": { "type": "string" } }
-},
-"required": ["status"],
-"additionalProperties": false
-},
-"governance": {
-"type": "object",
-"properties": {
-"licenseOk": { "type": "boolean" },
-"status": { "type": "string", "enum": ["pass", "warn", "fail"] }
-},
-"required": ["licenseOk", "status"],
-"additionalProperties": false
-}
-},
-"required": ["summary", "syntax", "tests", "perf", "access", "seo", "governance"],
-"additionalProperties": false
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QALog",
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] }
+      },
+      "required": ["status"],
+      "additionalProperties": false
+    },
+    "syntax": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["status"],
+      "additionalProperties": false
+    },
+    "tests": {
+      "type": "object",
+      "properties": {
+        "coverage": { "type": "number", "minimum": 0, "maximum": 100 },
+        "status": { "type": "string", "enum": ["pass", "fail"] },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["coverage", "status"],
+      "additionalProperties": false
+    },
+    "perf": {
+      "type": "object",
+      "properties": {
+        "bundleKB": { "type": "number", "minimum": 0 },
+        "budgetKB": { "type": "number", "minimum": 0 },
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] }
+      },
+      "required": ["bundleKB", "budgetKB", "status"],
+      "additionalProperties": false
+    },
+    "access": {
+      "type": "object",
+      "properties": {
+        "contrastMin": { "type": "number", "minimum": 0 },
+        "budget": { "type": "number", "minimum": 0 },
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] }
+      },
+      "required": ["contrastMin", "budget", "status"],
+      "additionalProperties": false
+    },
+    "seo": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["status"],
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "licenseOk": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] }
+      },
+      "required": ["licenseOk", "status"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["summary", "syntax", "tests", "perf", "access", "seo", "governance"],
+  "additionalProperties": false
 }

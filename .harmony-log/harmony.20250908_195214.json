@@ -1,17 +1,17 @@
 ﻿[
-    {
-        "Gate":  "Dockerfile Hardening",
-        "Script":  ".\\DockerfileGate.ps1",
-        "Exit":  0
-    },
-    {
-        "Gate":  "Lint (ESLint/Prettier)",
-        "Script":  ".\\LintGate.ps1",
-        "Exit":  0
-    },
-    {
-        "Gate":  "Headers Hardening",
-        "Script":  ".\\HeadersGate.ps1",
-        "Exit":  0
-    }
+  {
+    "Gate": "Dockerfile Hardening",
+    "Script": ".\\DockerfileGate.ps1",
+    "Exit": 0
+  },
+  {
+    "Gate": "Lint (ESLint/Prettier)",
+    "Script": ".\\LintGate.ps1",
+    "Exit": 0
+  },
+  {
+    "Gate": "Headers Hardening",
+    "Script": ".\\HeadersGate.ps1",
+    "Exit": 0
+  }
 ]
