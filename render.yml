@@ -5,50 +5,24 @@ services:
     buildCommand: |
       echo "==== START CUSTOM BUILD ===="
 
-      # Clean caches
       rm -rf dist node_modules .vite .cache || true
 
-      # Install backend + frontend deps
       pip install -r requirements.txt
       npm install --legacy-peer-deps
 
-      # Run Vite build in debug/verbose mode
       echo "==== Running Vite build with debug ===="
       npm run build -- --debug --verbose || { echo "❌ Vite build failed"; exit 1; }
 
-      echo "==== vite.config.js (deployed) ===="
-      cat vite.config.js || true
-
-      echo "==== .vite cache directory ===="
-      ls -R .vite || echo "⚠️ .vite missing"
-
       echo "==== dist top-level (after build) ===="
       ls -lh dist || true
-
       echo "==== dist/assets (after build) ===="
       ls -lh dist/assets || echo "⚠️ dist/assets missing after build"
 
       echo "==== recursive dist tree (3 levels) ===="
       find dist -maxdepth 3 -type f -print || true
 
-      echo "==== index.html head ===="
-      head -n 20 dist/index.html || true
-
-      echo "==== JS bundles (with size + SHA256) ===="
-      for f in $(find dist -type f -name "*.js"); do
-        sha=$(sha256sum $f | cut -c1-12)
-        ls -lh $f
-        echo "🔑 hash=$sha"
-      done || true
-
-      echo "==== Environment Info ===="
-      node -v
-      npm -v
-      npx vite --version || true
-
       echo "==== END CUSTOM BUILD ===="
 
-      # Verify required files exist
       test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
       test -s dist/index.html || (echo "❌ index.html exists but is empty" && exit 1)
       if ! find dist -type f -name "*.js" | grep -q .; then
@@ -58,6 +32,9 @@ services:
       echo "✅ Final dist structure:" && ls -R dist
     startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
     healthCheckPath: /api/health
+    cacheDirectories:
+      - node_modules
+      - .vite
     routes:
       - type: rewrite
         source: /websitos/(.*)

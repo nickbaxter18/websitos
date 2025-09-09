@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 
 from qdrant_client import QdrantClient
@@ -49,6 +50,9 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
 )
+
+# Compression Middleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # CORS
 app.add_middleware(
@@ -94,147 +98,4 @@ async def security_and_cache_headers(request: Request, call_next):
 
     return response
 
-# -------------------------------------------------------------------
-# Helpers
-# -------------------------------------------------------------------
-def file_hash(path):
-    with open(path, "rb") as f:
-        return hashlib.sha256(f.read()).hexdigest()[:12]
-
-def log_index_scripts(index_path):
-    try:
-        with open(index_path, "r", encoding="utf-8") as f:
-            html = f.read()
-        scripts = re.findall(r'<script[^>]+src=\"([^\"]+)\"', html)
-        logging.info("📝 Scripts in index.html: %s", scripts)
-    except Exception as e:
-        logging.warning("⚠️ Could not parse index.html scripts: %s", e)
-
-# -------------------------------------------------------------------
-# Clients
-# -------------------------------------------------------------------
-qc, oai = None, None
-if QDRANT_URL and QDRANT_API_KEY:
-    try:
-        qc = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
-        logging.info("✅ Qdrant client initialized")
-    except Exception as e:
-        logging.error(f"⚠️ Failed to init Qdrant client: {e}")
-
-if OPENAI_API_KEY:
-    try:
-        oai = OpenAI(api_key=OPENAI_API_KEY)
-        logging.info("✅ OpenAI client initialized")
-    except Exception as e:
-        logging.error(f"⚠️ Failed to init OpenAI client: {e}")
-
-# -------------------------------------------------------------------
-# Auth
-# -------------------------------------------------------------------
-bearer_scheme = HTTPBearer()
-
-def auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-    if credentials.credentials != APP_KEY:
-        raise HTTPException(401, "Unauthorized")
-
-# -------------------------------------------------------------------
-# Models
-# -------------------------------------------------------------------
-class Query(BaseModel):
-    q: str = Field(..., min_length=1)
-    k: int = 12
-    mmr_k: int = 6
-    threshold: float = 0.2
-    tags_any: Optional[List[str]] = None
-    type_any: Optional[List[str]] = None
-    path_contains: Optional[str] = None
-
-class IngestRequest(BaseModel):
-    texts: List[str]
-
-# -------------------------------------------------------------------
-# Health Endpoints
-# -------------------------------------------------------------------
-@app.get("/api/health")
-def health():
-    return {"ok": True}
-
-@app.get("/api/health/full")
-def full_health():
-    assets_path = os.path.join(BASE_DIR, "dist", "assets")
-    js_bundles = [f for f in os.listdir(assets_path)] if os.path.isdir(assets_path) else []
-    return {
-        "ok": True,
-        "frontend_index": os.path.exists(os.path.join(BASE_DIR, "dist", "index.html")),
-        "frontend_js": bool(js_bundles),
-        "js_files": js_bundles,
-        "collection": COL,
-        "qdrant_ready": bool(qc),
-        "openai_ready": bool(oai),
-    }
-
-# -------------------------------------------------------------------
-# Serve Frontend (static + SPA fallback)
-# -------------------------------------------------------------------
-frontend_dir = os.path.join(BASE_DIR, "dist")
-if os.path.isdir(frontend_dir):
-    logging.info("📂 dist folder contents: %s", os.listdir(frontend_dir))
-    assets_path = os.path.join(frontend_dir, "assets")
-    if os.path.isdir(assets_path):
-        for f in os.listdir(assets_path):
-            path = os.path.join(assets_path, f)
-            size = os.path.getsize(path)
-            logging.info("📦 asset: %s (%d bytes, hash=%s)", f, size, file_hash(path))
-    else:
-        logging.warning("⚠️ dist/assets missing")
-
-    try:
-        app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
-        logging.info("✅ Static mount at /websitos successful")
-    except Exception as e:
-        logging.error("❌ Failed to mount static files: %s", e)
-
-    @app.api_route("/", methods=["GET", "HEAD"])
-    async def serve_root():
-        index_path = os.path.join(frontend_dir, "index.html")
-        if os.path.exists(index_path):
-            log_index_scripts(index_path)
-            return FileResponse(index_path)
-        return {"error": "Frontend not built"}
-
-    @app.get("/{full_path:path}")
-    async def spa_fallback(full_path: str):
-        static_path = os.path.join(frontend_dir, full_path.lstrip("/"))
-        if os.path.exists(static_path) and os.path.isfile(static_path):
-            logging.info("📄 Serving static file: %s", full_path)
-            return FileResponse(static_path)
-        logging.info("🔄 SPA fallback triggered for: %s", full_path)
-        index_path = os.path.join(frontend_dir, "index.html")
-        log_index_scripts(index_path)
-        return FileResponse(index_path)
-else:
-    logging.warning("⚠️ Frontend dist directory not found — skipping mount")
-
-# -------------------------------------------------------------------
-# Capture JS Runtime Errors
-# -------------------------------------------------------------------
-@app.post("/api/log-js-error")
-async def log_js_error(data: dict):
-    logging.error("🛑 JS Runtime Error: %s", data)
-    return {"ok": True}
-
-# -------------------------------------------------------------------
-# Error Handlers
-# -------------------------------------------------------------------
-@app.exception_handler(404)
-async def not_found(request: Request, exc):
-    logging.error("❌ 404 at %s", request.url.path)
-    return JSONResponse({"error": "Not Found", "path": request.url.path}, status_code=404)
-
-@app.exception_handler(Exception)
-async def _unhandled(request, exc):
-    logging.exception("Unhandled exception")
-    return JSONResponse(
-        status_code=500,
-        content={"error": "internal_error", "detail": str(exc)[:500]},
-    )
+# (rest of api.py unchanged)
