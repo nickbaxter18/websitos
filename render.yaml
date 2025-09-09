@@ -6,6 +6,8 @@ services:
       pip install -r requirements.txt
       npm install --legacy-peer-deps
       npm run build
+      echo "==== Project root after build ===="
+      ls -R .
       # ✅ Ensure dist/ and assets survive into runtime
       mkdir -p ./dist/assets
       cp -r dist/* ./dist/
