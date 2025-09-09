@@ -173,14 +173,15 @@ def ingest(data: IngestRequest, _=Depends(auth)):
         raise HTTPException(500, f"ingest_error: {str(ex)[:400]}")
     return {"status": "ok", "ingested": len(data.texts)}
 
-# (add your other routes here, just prefix with /api/)
-
 # -------------------------------------------------------------------
 # Serve Frontend (static + SPA fallback)
 # -------------------------------------------------------------------
 static_dir = os.path.join(BASE_DIR, "static")
 if os.path.isdir(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    print("✅ Static directory mounted")
+else:
+    print("⚠️ Static directory not found — skipping mount")
 
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
