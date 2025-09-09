@@ -23,9 +23,7 @@ jobs:
           cache: "npm"
 
       - name: Install Node deps
-        run: npm ci
-        env:
-          HUSKY: 0
+        run: npm ci --ignore-scripts
 
       - name: ESLint check
         run: npm run lint
@@ -64,9 +62,7 @@ jobs:
           cache: "npm"
 
       - name: Install Node deps
-        run: npm ci
-        env:
-          HUSKY: 0
+        run: npm ci --ignore-scripts
 
       - name: Run Jest with coverage + JSON report
         run: npm run test:ci

@@ -19,9 +19,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies without updating lockfile
-        run: npm install --package-lock-only
-        env:
-          HUSKY: 0
+        run: npm install --package-lock-only --ignore-scripts
 
       - name: Check if package-lock.json is in sync
         run: |
