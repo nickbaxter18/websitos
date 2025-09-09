@@ -5,8 +5,9 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       npm install --legacy-peer-deps
-      npm run build
-      echo "==== Project root after build ===="
+      echo "Current working directory: $(pwd)"
+      npm run build -- --debug
+      echo "==== FULL PROJECT TREE AFTER BUILD ===="
       ls -R .
       # ✅ Ensure dist/ and assets survive into runtime
       mkdir -p ./dist/assets
@@ -14,7 +15,14 @@ services:
       cp -r dist/assets ./dist/assets
       # ✅ Fail if required files missing
       test -f dist/index.html || (echo "❌ dist/index.html missing after build" && exit 1)
+      test -s dist/index.html || (echo "❌ index.html exists but is empty" && exit 1)
       test -d dist/assets || (echo "❌ dist/assets missing after build" && exit 1)
+      if [ $(ls dist/assets | wc -l) -eq 0 ]; then
+        echo "❌ dist/assets folder is empty"; exit 1;
+      else
+        echo "✅ dist/assets files found";
+        ls -lh dist/assets;
+      fi
       echo "✅ Final dist contents:" && ls -R dist
     startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
     healthCheckPath: /api/health
