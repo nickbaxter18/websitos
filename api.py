@@ -8,12 +8,11 @@ from uuid import uuid4
 import numpy as np
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from starlette.responses import Response
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qm
@@ -53,11 +52,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Security Headers
+# Security Headers + Cache-Control Middleware
 @app.middleware("http")
-async def security_headers(request, call_next):
+async def security_and_cache_headers(request, call_next):
     response: Response = await call_next(request)
 
+    # Security headers
     if request.url.path.startswith("/api/docs") or request.url.path.startswith("/api/redoc") or request.url.path.startswith("/api/openapi.json"):
         csp = (
             "default-src 'self' http://localhost:3000; "
@@ -72,6 +72,13 @@ async def security_headers(request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
+
+    # Cache-Control
+    if request.url.path.endswith((".js", ".css")) or "/assets/" in request.url.path:
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    elif request.url.path in ["/", "/websitos", "/websitos/"]:
+        response.headers["Cache-Control"] = "no-cache"
+
     return response
 
 # -------------------------------------------------------------------
