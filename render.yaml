@@ -3,43 +3,20 @@ services:
     name: websiteos
     env: python
     buildCommand: |
-      # ✅ Clear any stale build cache first
+      # ✅ Clean build cache
       rm -rf dist node_modules .vite .cache || true
 
+      # ✅ Install backend + frontend deps
       pip install -r requirements.txt
       npm install --legacy-peer-deps
 
-      echo "Current working directory: $(pwd)"
-      node -v && npm -v
+      # ✅ Build frontend
+      npm run build
 
-      echo "==== package.json ====" && cat package.json
-      echo "==== vite.config.js ====" && cat vite.config.js
-
-      # ✅ Verify Vite entrypoint exists
-      test -f src/main.tsx || (echo "❌ src/main.tsx missing" && exit 1)
-
-      ./node_modules/.bin/vite build --debug
-
-      echo "==== FULL PROJECT TREE AFTER BUILD ===="
-      ls -R .
-      du -sh dist || true
-
-      # ✅ Ensure dist/ and assets survive into runtime
-      mkdir -p ./dist/assets
-      cp -r dist/* ./dist/
-      cp -r dist/assets ./dist/assets
-
-      # ✅ Fail if required files missing
-      test -f dist/index.html || (echo "❌ dist/index.html missing after build" && exit 1)
+      # ✅ Sanity checks
+      test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
       test -s dist/index.html || (echo "❌ index.html exists but is empty" && exit 1)
       test -d dist/assets || (echo "❌ dist/assets missing after build" && exit 1)
-      if [ $(ls dist/assets | wc -l) -eq 0 ]; then
-        echo "❌ dist/assets folder is empty"; exit 1;
-      else
-        echo "✅ dist/assets files found";
-        ls -lh dist/assets;
-      fi
-
       if ! ls dist/assets/*.js 1> /dev/null 2>&1; then
         echo "❌ No JS bundle generated"; exit 1;
       fi

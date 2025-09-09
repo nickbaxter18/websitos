@@ -220,7 +220,7 @@ def ingest(data: IngestRequest, _=Depends(auth)):
 # -------------------------------------------------------------------
 # Serve Frontend (static + SPA fallback)
 # -------------------------------------------------------------------
-frontend_dir = os.path.join(BASE_DIR, "dist")  # patched: ensure Vite build served under /websitos
+frontend_dir = os.path.join(BASE_DIR, "dist")
 if os.path.isdir(frontend_dir):
     print("📂 dist folder contents:", os.listdir(frontend_dir))
     assets_path = os.path.join(frontend_dir, "assets")
@@ -230,24 +230,23 @@ if os.path.isdir(frontend_dir):
     app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
     print("✅ Frontend dist directory mounted at /websitos")
 
-    # ✅ Also serve frontend at root "/" (GET + HEAD)
+    # ✅ Serve frontend at root
     @app.api_route("/", methods=["GET", "HEAD"])
     async def serve_root():
         index_path = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
         return {"error": "Frontend not built"}
+
+    # ✅ Global SPA fallback (any route)
+    @app.get("/{full_path:path}")
+    async def spa_fallback(full_path: str):
+        index_path = os.path.join(frontend_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"error": "Frontend not built"}
 else:
     print("⚠️ Frontend dist directory not found — skipping mount")
-
-
-# ✅ SPA fallback aligned with /websitos
-@app.get("/websitos/{full_path:path}")
-async def serve_spa(full_path: str):
-    index_path = os.path.join(frontend_dir, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"error": "Frontend not built"}
 
 
 # -------------------------------------------------------------------
