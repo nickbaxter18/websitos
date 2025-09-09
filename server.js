@@ -34,6 +34,18 @@ app.get("/editor", (req, res) => {
   res.sendFile(path.join(__dirname, "editor.html"));
 });
 
+// === Serve Frontend Build (CRA or Vite) ===
+let frontendBuildPath = path.join(__dirname, "frontend", "build"); // CRA default
+if (!fs.existsSync(frontendBuildPath)) {
+  frontendBuildPath = path.join(__dirname, "frontend", "dist"); // fallback for Vite
+}
+if (fs.existsSync(frontendBuildPath)) {
+  app.use(express.static(frontendBuildPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
+  });
+}
+
 // === File APIs ===
 app.get("/file", checkApiKey, (req, res) => {
   const filePath = path.join(ROOT_DIR, req.query.path);
@@ -200,4 +212,7 @@ app.listen(PORT, () => {
   console.log(`✅ Backend running at http://localhost:${PORT}`);
   console.log(`✅ Editor: http://localhost:${PORT}/editor`);
   console.log(`✅ Health: http://localhost:${PORT}/health`);
+  if (fs.existsSync(frontendBuildPath)) {
+    console.log(`✅ Frontend served at http://localhost:${PORT}/`);
+  }
 });
