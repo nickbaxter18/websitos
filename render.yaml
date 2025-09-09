@@ -10,13 +10,20 @@ services:
       pip install -r requirements.txt
       npm install --legacy-peer-deps
 
-      # Run build
-      npm run build || { echo "❌ Vite build failed"; exit 1; }
+      # Run Vite build in debug/verbose mode
+      echo "==== Running Vite build with debug ===="
+      npm run build -- --debug --verbose || { echo "❌ Vite build failed"; exit 1; }
 
-      echo "==== dist top-level (immediately after build) ===="
+      echo "==== vite.config.js (deployed) ===="
+      cat vite.config.js || true
+
+      echo "==== .vite cache directory ===="
+      ls -R .vite || echo "⚠️ .vite missing"
+
+      echo "==== dist top-level (after build) ===="
       ls -lh dist || true
 
-      echo "==== dist/assets (immediately after build) ===="
+      echo "==== dist/assets (after build) ===="
       ls -lh dist/assets || echo "⚠️ dist/assets missing after build"
 
       echo "==== recursive dist tree (3 levels) ===="
