@@ -24,8 +24,8 @@ protobuf==4.25.3
 # ---- Vector DB client
 qdrant-client==1.9.1
 
-# ---- OpenAI SDK
-openai==1.42.0
+# ---- OpenAI SDK (patched to avoid proxies bug)
+openai>=1.42.0
 
 # ---- Utilities
 tqdm==4.66.5
