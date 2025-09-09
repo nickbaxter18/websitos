@@ -3,14 +3,14 @@
 # -------------------------
 FROM node:20 AS frontend-builder
 
-WORKDIR /app/frontend
+WORKDIR /app
 
 # Copy dependency files
-COPY frontend/package*.json ./
+COPY package*.json ./
 RUN npm ci
 
 # Copy frontend source
-COPY frontend ./
+COPY . .
 
 # Build frontend
 RUN npm run build
@@ -36,7 +36,7 @@ COPY . .
 
 # Copy built frontend into FastAPI dist folder
 RUN mkdir -p /app/dist
-COPY --from=frontend-builder /app/frontend/dist /app/dist
+COPY --from=frontend-builder /app/dist /app/dist
 
 # Add non-root user
 RUN useradd -m appuser
