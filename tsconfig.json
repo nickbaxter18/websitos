@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
+    "target": "ESNext",
+    "module": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,7 +18,7 @@
       "@/*": ["src/*"],
       "v2/*": ["v2/*"]
     },
-    "types": ["node", "jest"]
+    "types": ["vite/client", "node", "jest"]
   },
   "include": ["src", "v2", "tests"],
   "exclude": ["node_modules", "dist", "v2/core/modules/special"]
