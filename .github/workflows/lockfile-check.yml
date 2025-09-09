@@ -18,11 +18,10 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Disable Husky in CI
-        run: npm set-script prepare ""
-
       - name: Install dependencies without updating lockfile
         run: npm install --package-lock-only
+        env:
+          HUSKY: 0
 
       - name: Check if package-lock.json is in sync
         run: |

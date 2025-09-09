@@ -22,11 +22,10 @@ jobs:
           node-version: "20.19.0"
           cache: "npm"
 
-      - name: Disable Husky in CI
-        run: npm set-script prepare ""
-
       - name: Install Node deps
         run: npm ci
+        env:
+          HUSKY: 0
 
       - name: ESLint check
         run: npm run lint
@@ -64,11 +63,10 @@ jobs:
           node-version: "20.19.0"
           cache: "npm"
 
-      - name: Disable Husky in CI
-        run: npm set-script prepare ""
-
       - name: Install Node deps
         run: npm ci
+        env:
+          HUSKY: 0
 
       - name: Run Jest with coverage + JSON report
         run: npm run test:ci
