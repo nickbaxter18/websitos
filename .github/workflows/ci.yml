@@ -19,47 +19,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache frontend deps
+      - name: Cache node deps
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/frontend/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-
       - name: Build frontend
         run: |
-          cd frontend
           npm ci
           npm run build
-      - name: Cache backend deps
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/backend/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-node-
-      - name: Install backend deps
-        run: |
-          cd backend
-          npm ci
-      - name: Copy frontend build into backend
-        run: |
-          if [ -d "frontend/build" ]; then
-            cp -r frontend/build backend/frontend
-          elif [ -d "frontend/dist" ]; then
-            cp -r frontend/dist backend/frontend
-          fi
       - name: Cache pip packages
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: ${{ runner.os }}-pip-
+      - name: Install ODBC dev libs
+        run: sudo apt-get update && sudo apt-get install -y unixodbc-dev
       - name: Run backend smoke tests (Python)
         run: |
-          pip install -r requirements.txt
+          pip install --prefer-binary -r requirements.txt
           pytest --maxfail=1 --disable-warnings -q --junitxml=test-results/python-smoke.xml
       - name: Run frontend smoke tests (Node)
         run: |
-          cd frontend
           npm test -- --watchAll=false --ci --reporters=default --reporters=jest-junit
         env:
           JEST_JUNIT_OUTPUT: test-results/jest-smoke.xml
@@ -88,25 +71,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache frontend deps
+      - name: Cache node deps
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/frontend/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-${{ matrix.node-version }}-
       - name: Install frontend dependencies
-        run: |
-          cd frontend
-          npm ci
+        run: npm ci
       - name: Run frontend tests with coverage
-        run: |
-          cd frontend
-          npm test -- --coverage --coverageReporters=lcov --ci --reporters=default --reporters=jest-junit
+        run: npm test -- --coverage --coverageReporters=lcov --ci --reporters=default --reporters=jest-junit
         env:
           JEST_JUNIT_OUTPUT: test-results/jest-results.xml
       - name: Ensure coverage file exists
         run: |
-          if [ ! -f frontend/coverage/lcov.info ]; then
+          if [ ! -f coverage/lcov.info ]; then
             echo "❌ Frontend coverage file not found"
             exit 1
           fi
@@ -114,18 +93,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-frontend
-          path: frontend/coverage/lcov.info
+          path: coverage/lcov.info
       - name: Upload frontend test results
         uses: actions/upload-artifact@v4
         with:
           name: frontend-test-results-${{ matrix.node-version }}
-          path: frontend/test-results/
+          path: test-results/
       - name: Publish frontend test results to GitHub
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Frontend Tests (Node ${{ matrix.node-version }})
-          path: frontend/test-results/*.xml
+          path: test-results/*.xml
           reporter: java-junit
           fail-on-error: true
 
@@ -133,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10.15", "3.11.9", "3.12.3"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -145,8 +124,10 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}-
+      - name: Install ODBC dev libs
+        run: sudo apt-get update && sudo apt-get install -y unixodbc-dev
       - run: |
-          pip install -r requirements.txt
+          pip install --prefer-binary -r requirements.txt
           pytest --cov=. --cov-report=xml:coverage.xml --junitxml=test-results/python-${{ matrix.python-version }}.xml
       - uses: actions/upload-artifact@v4
         with:
@@ -178,30 +159,30 @@ jobs:
           path: coverage-frontend
       - name: Verify frontend coverage artifact
         run: |
-          if [ ! -f coverage-frontend/lcov.info ]; then
+          if [ ! -f coverage-frontend/lcov.info ] && [ ! -f coverage/lcov.info ]; then
             echo "❌ Missing frontend coverage artifact"
             exit 1
           fi
       - name: Download backend coverage (3.10)
         uses: actions/download-artifact@v4
         with:
-          name: coverage-backend-3.10
+          name: coverage-backend-3.10.15
           path: coverage-backend-3_10
       - name: Download backend coverage (3.11)
         uses: actions/download-artifact@v4
         with:
-          name: coverage-backend-3.11
+          name: coverage-backend-3.11.9
           path: coverage-backend-3_11
       - name: Download backend coverage (3.12)
         uses: actions/download-artifact@v4
         with:
-          name: coverage-backend-3.12
+          name: coverage-backend-3.12.3
           path: coverage-backend-3_12
       - name: Merge coverage reports
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
           reportgenerator \
-            -reports:"coverage-frontend/lcov.info;coverage-backend-3_10/coverage.xml;coverage-backend-3_11/coverage.xml;coverage-backend-3_12/coverage.xml" \
+            -reports:"coverage/lcov.info;coverage-backend-3_10/coverage.xml;coverage-backend-3_11/coverage.xml;coverage-backend-3_12/coverage.xml" \
             -targetdir:"merged-coverage" \
             -reporttypes:Html;Cobertura
       - uses: actions/upload-artifact@v4
@@ -246,7 +227,7 @@ jobs:
               "repo": "'"${{ github.repository }}"'",
               "branch": "'"${{ github.head_ref }}"'",
               "env": "node",
-              "buildCommand": "cd frontend && npm install && npm run build && cd ../backend && npm install && cp -r ../frontend/build ./frontend",
+              "buildCommand": "npm install && npm run build",
               "startCommand": "cd backend && node server.js",
               "plan": "free"
             }'
