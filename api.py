@@ -215,13 +215,15 @@ def ingest(data: IngestRequest, _=Depends(auth)):
 # -------------------------------------------------------------------
 frontend_dir = os.path.join(BASE_DIR, "dist")
 if os.path.isdir(frontend_dir):
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
-    print("✅ Frontend dist directory mounted")
+    # ✅ Mount under /websitos to match vite.config.js base
+    app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+    print("✅ Frontend dist directory mounted at /websitos")
 else:
     print("⚠️ Frontend dist directory not found — skipping mount")
 
 
-@app.get("/{full_path:path}")
+# ✅ SPA fallback aligned with /websitos
+@app.get("/websitos/{full_path:path}")
 async def serve_spa(full_path: str):
     index_path = os.path.join(frontend_dir, "index.html")
     if os.path.exists(index_path):

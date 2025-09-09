@@ -1,13 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Production-ready Vite config
+// Production-ready Vite config aligned with Render deployment
 export default defineConfig({
   plugins: [react()],
-  base: "/", // ✅ ensure assets load from root
+  base: "/websitos/", // 👈 MUST match FastAPI static mount path
   build: {
     outDir: "dist",
-    sourcemap: false, // smaller + faster build
+    sourcemap: false,
   },
   resolve: {
     alias: {
