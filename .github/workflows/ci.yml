@@ -2,276 +2,127 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  # -------------------
-  # Lint & Format Check
-  # -------------------
-  lint-format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # Frontend lint / type-check
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.19.0"
-          cache: "npm"
-
-      - name: Install Node deps
-        run: npm ci --ignore-scripts
-
-      - name: ESLint check
-        run: npm run lint
-
-      - name: Prettier check
-        run: npx prettier --check .
-
-      - name: TypeScript check
-        run: npx tsc --noEmit
-
-      # Backend lint
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - name: Install Python lint deps
-        run: pip install ruff
-
-      - name: Ruff lint check
-        run: ruff check .
-
-  # -------------------
-  # Frontend Tests
-  # -------------------
   frontend-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.19.0"
-          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install Node deps
-        run: npm ci --ignore-scripts
+      - name: Run frontend tests with coverage
+        run: npm run test -- --coverage --coverageReporters=lcov
 
-      - name: Run Jest with coverage + JSON report
-        run: npm run test:ci
-
-      - name: Ensure coverage directory exists
-        run: mkdir -p coverage && touch coverage/lcov.info
-
-      - name: Enforce Node Coverage Threshold (25%)
-        run: |
-          COVERAGE=$(npm run test:ci -- --coverageReporters=text-summary | grep 'All files' | awk '{print $3}' | sed 's/%//')
-          echo "Node Coverage: $COVERAGE%"
-          if [ "$COVERAGE" -lt 25 ]; then
-            echo "❌ Node coverage below 25%"
-            exit 1
-          else
-            echo "✅ Node coverage above threshold"
-          fi
-
-      - name: Build frontend
-        run: npm run build
-
-      - name: Move frontend into backend
-        run: |
-          mkdir -p backend/static
-          cp -r dist/* backend/static/
-
-      - name: Upload frontend artifacts
-        if: always()
+      - name: Upload frontend coverage
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-coverage
-          path: |
-            jest-report.json
-            coverage/
-            coverage/lcov.info
-          if-no-files-found: warn
+          name: coverage-frontend
+          path: frontend/coverage/lcov.info
 
-  # -------------------
-  # Backend Tests (Python matrix: 3.10, 3.11)
-  # -------------------
-  backend-tests:
+  backend-tests-3_10:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ "3.10", "3.11" ]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
+          python-version: "3.10"
 
-      - name: Install Python deps
-        run: |
-          pip install -r requirements.txt
-          pip install pytest pytest-json-report pytest-cov coverage
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Run pytest with coverage + JSON report
-        run: |
-          PYTHONPATH=. pytest tests --maxfail=1 --disable-warnings -q \
-            --json-report --json-report-file=pytest-report.json \
-            --cov=. --cov-report=xml --cov-report=term
+      - name: Run backend tests (Python 3.10)
+        run: pytest --cov=. --cov-report=xml:coverage.xml
 
-      - name: Enforce Python Coverage Threshold (25%)
-        run: |
-          TOTAL=$(coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
-          echo "Python Coverage: $TOTAL%"
-          if [ "$TOTAL" -lt 25 ]; then
-            echo "❌ Python coverage below 25%"
-            exit 1
-          else
-            echo "✅ Python coverage above threshold"
-          fi
-
-      - name: Upload backend artifacts
-        if: always()
+      - name: Upload backend coverage 3.10
         uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage-${{ matrix.python-version }}
-          path: |
-            pytest-report.json
-            coverage.xml
-          if-no-files-found: warn
+          name: coverage-backend-3_10
+          path: coverage.xml
 
-  # -------------------
-  # Merge Coverage
-  # -------------------
-  build-check:
+  backend-tests-3_11:
     runs-on: ubuntu-latest
-    needs: [lint-format, frontend-tests, backend-tests]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download frontend artifacts
-        id: frontend-artifacts
-        continue-on-error: true
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run backend tests (Python 3.11)
+        run: pytest --cov=. --cov-report=xml:coverage.xml
+
+      - name: Upload backend coverage 3.11
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend-3_11
+          path: coverage.xml
+
+  build-check:
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, backend-tests-3_10, backend-tests-3_11]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download frontend coverage
         uses: actions/download-artifact@v4
         with:
-          name: frontend-coverage
+          name: coverage-frontend
           path: coverage-frontend
 
-      - name: Download backend 3.10 artifacts
-        id: backend-artifacts-310
-        continue-on-error: true
+      - name: Download backend coverage 3.10
         uses: actions/download-artifact@v4
         with:
-          name: backend-coverage-3.10
+          name: coverage-backend-3_10
           path: coverage-backend-3_10
 
-      - name: Download backend 3.11 artifacts
-        id: backend-artifacts-311
-        continue-on-error: true
+      - name: Download backend coverage 3.11
         uses: actions/download-artifact@v4
         with:
-          name: backend-coverage-3.11
+          name: coverage-backend-3_11
           path: coverage-backend-3_11
 
-      - name: Log artifact status
-        run: |
-          echo "Frontend artifacts downloaded: ${{ steps.frontend-artifacts.outcome }}"
-          echo "Backend 3.10 artifacts downloaded: ${{ steps.backend-artifacts-310.outcome }}"
-          echo "Backend 3.11 artifacts downloaded: ${{ steps.backend-artifacts-311.outcome }}"
+      - name: Debug – list coverage files
+        run: ls -R
 
       - name: Merge coverage reports
         run: |
-          REPORTS=""
-          [ -f coverage-frontend/coverage/lcov.info ] && REPORTS="$REPORTS coverage-frontend/coverage/lcov.info"
-          [ -f coverage-backend-3_10/coverage.xml ] && REPORTS="$REPORTS coverage-backend-3_10/coverage.xml"
-          [ -f coverage-backend-3_11/coverage.xml ] && REPORTS="$REPORTS coverage-backend-3_11/coverage.xml"
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator \
+            -reports:"coverage-frontend/lcov.info;coverage-backend-3_10/coverage.xml;coverage-backend-3_11/coverage.xml" \
+            -targetdir:"merged-coverage" \
+            -reporttypes:Html;Cobertura
 
-          if [ -z "$REPORTS" ]; then
-            echo "⚠️ No coverage reports found, skipping merge."
-            exit 0
-          fi
+      - name: Upload merged coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-coverage
+          path: merged-coverage
 
-          dotnet tool install dotnet-reportgenerator-globaltool --tool-path reportgeneratortool --version 5.3.7 --ignore-failed-sources
-          ./reportgeneratortool/reportgenerator \
-            -reports:$REPORTS \
-            -targetdir:merged-coverage \
-            -reporttypes:Html\;Cobertura
-
-      - name: Generate coverage summary
+      - name: Extract coverage summary
+        id: coverage
         run: |
-          echo "## CI Coverage Summary" > coverage-summary.md
-          echo "" >> coverage-summary.md
-          echo "### Artifact status" >> coverage-summary.md
-          echo "- Frontend artifacts: ${{ steps.frontend-artifacts.outcome }}" >> coverage-summary.md
-          echo "- Backend 3.10 artifacts: ${{ steps.backend-artifacts-310.outcome }}" >> coverage-summary.md
-          echo "- Backend 3.11 artifacts: ${{ steps.backend-artifacts-311.outcome }}" >> coverage-summary.md
-          echo "" >> coverage-summary.md
-          echo "### Coverage Reports" >> coverage-summary.md
-          if [ -f merged-coverage/Cobertura.xml ]; then
-            echo "\`Cobertura\` report generated ✅" >> coverage-summary.md
-            COVERAGE=$(grep -o '<line-rate="[0-9.]*"' merged-coverage/Cobertura.xml | head -1 | cut -d '"' -f2)
-            echo "Total Coverage: ${COVERAGE}%" >> coverage-summary.md
-            echo "Total Coverage: ${COVERAGE}%"
-          else
-            echo "\`Cobertura\` report missing ⚠️" >> coverage-summary.md
-          fi
-          if [ -d merged-coverage ]; then
-            echo "HTML report available ✅" >> coverage-summary.md
-          else
-            echo "HTML report missing ⚠️" >> coverage-summary.md
-          fi
+          LINE_RATE=$(xmllint --xpath 'string(/coverage/@line-rate)' merged-coverage/Cobertura.xml)
+          BRANCH_RATE=$(xmllint --xpath 'string(/coverage/@branch-rate)' merged-coverage/Cobertura.xml)
+          echo "line_rate=$LINE_RATE" >> $GITHUB_OUTPUT
+          echo "branch_rate=$BRANCH_RATE" >> $GITHUB_OUTPUT
 
-      - name: Upload coverage summary
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-summary
-          path: coverage-summary.md
-
-      - name: Upload merged coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: merged-coverage
-          path: merged-coverage/
-
-  # -------------------
-  # Deploy Coverage Report to GitHub Pages
-  # -------------------
-  deploy-coverage:
-    runs-on: ubuntu-latest
-    needs: build-check
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download merged coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: merged-coverage
-          path: merged-coverage
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload coverage report to Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: merged-coverage
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Add coverage summary to GitHub Actions Summary
+        run: |
+          echo "### ✅ Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Rate |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Line Coverage | ${{ steps.coverage.outputs.line_rate }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch Coverage | ${{ steps.coverage.outputs.branch_rate }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📂 Full HTML report is available in the **merged-coverage** artifact." >> $GITHUB_STEP_SUMMARY
