@@ -11,19 +11,31 @@ services:
       npm install --legacy-peer-deps
 
       # Run build
-      npm run build
+      npm run build || { echo "❌ Vite build failed"; exit 1; }
 
-      echo "==== dist top-level ===="
+      echo "==== dist top-level (immediately after build) ===="
       ls -lh dist || true
 
-      echo "==== dist recursive listing ===="
-      find dist -type f -maxdepth 3 -print || true
+      echo "==== dist/assets (immediately after build) ===="
+      ls -lh dist/assets || echo "⚠️ dist/assets missing after build"
+
+      echo "==== recursive dist tree (3 levels) ===="
+      find dist -maxdepth 3 -type f -print || true
 
       echo "==== index.html head ===="
       head -n 20 dist/index.html || true
 
-      echo "==== JS bundles (with size) ===="
-      find dist -type f -name "*.js" -exec ls -lh {} \; || true
+      echo "==== JS bundles (with size + SHA256) ===="
+      for f in $(find dist -type f -name "*.js"); do
+        sha=$(sha256sum $f | cut -c1-12)
+        ls -lh $f
+        echo "🔑 hash=$sha"
+      done || true
+
+      echo "==== Environment Info ===="
+      node -v
+      npm -v
+      npx vite --version || true
 
       # Verify required files exist
       test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
