@@ -66,6 +66,7 @@ jobs:
           fail-on-error: true
 
   frontend-tests:
+    name: Frontend Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
