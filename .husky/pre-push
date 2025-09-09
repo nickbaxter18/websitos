@@ -1,4 +1,15 @@
-#!/usr/bin/env sh
-set -e
-# Runs "test" script if present; exits 0 when absent
-npm run -s test --if-present
+#!/bin/sh
+
+# Prevent pushing code that fails lint, format, tests, or type checks
+
+# Run type-check
+npm run type-check || exit 1
+
+# Run linting
+npm run lint || exit 1
+
+# Run prettier formatting check
+npm run format:check || exit 1
+
+# Run tests
+npm test || exit 1
