@@ -1,8 +1,12 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 
-test("renders App without crashing", () => {
-  render(<App />);
-  // Adjusted test to look for actual visible text in the App
+test("renders Home route", () => {
+  render(
+    <MemoryRouter initialEntries={["/websitos"]}>
+      <App />
+    </MemoryRouter>
+  );
   expect(screen.getByText(/home/i)).toBeInTheDocument();
 });
