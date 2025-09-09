@@ -1,6 +1,7 @@
 # Website OS V2
 
 ![CI](https://github.com/udigitrentals/websitos/actions/workflows/ci.yml/badge.svg?branch=main)
+![Coverage](https://img.shields.io/badge/coverage-auto--generated-blue)
 
 ## 🌍 Website OS V2 Final
 
@@ -32,7 +33,7 @@ npm install
 npm run type-check
 npm run lint
 npm test
-
+```
 
 🌐 U-Dig Brain API + Website OS V2
 
@@ -57,19 +58,17 @@ Qdrant-client – Vector database
 OpenAI SDK – LLM integration
 
 Run Locally
+
+```bash
 pip install -r requirements.txt
 uvicorn api:app --reload
+```
 
 ---
 
 ## 🔑 What Changed
+
 - Removed conflict markers (`<<<<<<< HEAD`, `=======`, `>>>>>>>`).
 - Unified both descriptions (Website OS V2 + Brain API).
-- Correct badge link for **your repo**:
-
----
-
-👉 Copy-paste this into your `README.md`, save, and commit.
-
-Do you also want me to add a **Codecov coverage badge** right under the CI badge so you can track test coverage in the README?
-```
+- Added **Coverage badge** placeholder (auto-generated from merged Cobertura report).
+- Correct badge link for **your repo**.

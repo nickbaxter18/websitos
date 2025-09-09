@@ -43,12 +43,13 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        flex-wrap: wrap;
       }
       #tabs {
         display: flex;
         gap: 6px;
         overflow-x: auto;
-        max-width: 70%;
+        max-width: 55%;
       }
       .tab {
         padding: 4px 10px;
@@ -69,6 +70,14 @@
       button {
         padding: 6px 10px;
         font-size: 13px;
+        background: #2b2b2b;
+        color: #eee;
+        border: 1px solid #444;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #444;
       }
       .status {
         margin-left: auto;
@@ -99,7 +108,7 @@
         display: none;
       }
     </style>
-    <!-- ✅ CodeMirror CSS -->
+    <!-- ✅ CodeMirror CSS/JS -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
@@ -108,7 +117,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css"
     />
-    <!-- ✅ CodeMirror JS + Modes -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/jsx/jsx.min.js"></script>
@@ -126,22 +134,38 @@
     <div id="main">
       <header>
         <div id="tabs"></div>
-        <button onclick="saveFile()">Save</button>
+        <button onclick="saveFile()">💾 Save</button>
+        <button onclick="promptNewFile()">📄 New File</button>
+        <button onclick="promptNewFolder()">📂 New Folder</button>
+        <button onclick="promptDelete()">🗑 Delete</button>
+        <button onclick="promptMove()">✂️ Move</button>
+        <button onclick="promptSearch()">🔍 Search</button>
+        <button onclick="promptReplace()">🔁 Replace</button>
+        <button onclick="tailLogs()">📜 Tail Logs</button>
+        <button onclick="startTask()">⚡ Start Task</button>
+        <button onclick="checkTaskStatus()">🛰 Task Status</button>
+        <button onclick="gitStatus()">🌱 Git Status</button>
         <div class="status" id="status">Idle</div>
       </header>
       <textarea id="editor"></textarea>
     </div>
 
-    <!-- ✅ Inline JS -->
     <script>
+      const API_KEY = "1f82a9f4a9d84b8db2d4f6c0e2c5a7b1";
+
+      async function authFetch(url, options = {}) {
+        options.headers = Object.assign({}, options.headers, { "x-api-key": API_KEY });
+        return fetch(url, options);
+      }
+
       const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
         theme: "dracula",
       });
       editor.setSize("100%", "100%");
-
-      let openFiles = {};
-      let activeFile = null;
+      let openFiles = {},
+        activeFile = null,
+        lastTaskId = null;
 
       function detectMode(file) {
         if (!file) return "javascript";
@@ -156,7 +180,7 @@
       }
 
       async function loadTree(dir = ".") {
-        const res = await fetch("/list?dir=" + encodeURIComponent(dir));
+        const res = await authFetch("/list?dir=" + encodeURIComponent(dir));
         const data = await res.json();
         const container = document.createElement("div");
         data.files.forEach((f) => {
@@ -167,9 +191,9 @@
             item.textContent = "📂 " + f.name;
             item.className = "dir";
             item.onclick = async () => {
-              if (item.nextSibling && item.nextSibling.classList.contains("nested")) {
+              if (item.nextSibling && item.nextSibling.classList.contains("nested"))
                 item.nextSibling.remove();
-              } else {
+              else {
                 const nested = await loadTree(data.dir + "/" + f.name);
                 nested.classList.add("nested");
                 item.after(nested);
@@ -188,22 +212,14 @@
       async function renderSidebar() {
         const sidebar = document.getElementById("fileTree");
         sidebar.innerHTML = "";
-        const root = await loadTree(".");
-        sidebar.appendChild(root);
+        sidebar.appendChild(await loadTree("."));
       }
 
       async function openFile(path) {
-        if (openFiles[path]) {
-          setActiveTab(path);
-          return;
-        }
-        const res = await fetch("/file?path=" + encodeURIComponent(path));
-        if (!res.ok) {
-          alert("File not found");
-          return;
-        }
+        if (openFiles[path]) return setActiveTab(path);
+        const res = await authFetch("/file?path=" + encodeURIComponent(path));
+        if (!res.ok) return alert("File not found");
         const data = await res.json();
-
         const tab = document.createElement("div");
         tab.className = "tab";
         tab.textContent = path.split("/").pop();
@@ -217,7 +233,6 @@
         tab.appendChild(closeBtn);
         tab.onclick = () => setActiveTab(path);
         document.getElementById("tabs").appendChild(tab);
-
         openFiles[path] = { content: data.content, tabEl: tab };
         setActiveTab(path);
       }
@@ -231,7 +246,7 @@
         editor.setValue(openFiles[path].content);
         editor.setOption("mode", detectMode(path));
         openFiles[path].tabEl.classList.add("active");
-        document.getElementById("status").innerText = "Opened " + path;
+        setStatus("Opened " + path);
       }
 
       function closeTab(path) {
@@ -245,24 +260,146 @@
           else {
             activeFile = null;
             editor.setValue("");
-            document.getElementById("status").innerText = "Idle";
+            setStatus("Idle");
           }
         }
       }
 
       async function saveFile() {
-        if (!activeFile) {
-          alert("No file open");
-          return;
-        }
+        if (!activeFile) return alert("No file open");
         const content = editor.getValue();
-        const res = await fetch("/file", {
+        const res = await authFetch("/file", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ path: activeFile, content }),
         });
         const data = await res.json();
-        document.getElementById("status").innerText = data.message || "Saved!";
+        setStatus(data.message || "Saved!");
+      }
+
+      // === Cockpit Features ===
+      async function promptNewFile() {
+        const name = prompt("Enter new file path:");
+        if (!name) return;
+        const res = await authFetch("/create/file", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: name }),
+        });
+        const data = await res.json();
+        setStatus(data.message);
+        renderSidebar();
+      }
+
+      async function promptNewFolder() {
+        const name = prompt("Enter new folder path:");
+        if (!name) return;
+        const res = await authFetch("/create/folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: name }),
+        });
+        const data = await res.json();
+        setStatus(data.message);
+        renderSidebar();
+      }
+
+      async function promptDelete() {
+        const target = prompt("Enter file/folder path to delete:");
+        if (!target) return;
+        const res = await authFetch("/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: target, recursive: true }),
+        });
+        const data = await res.json();
+        setStatus(data.message);
+        renderSidebar();
+      }
+
+      async function promptMove() {
+        const src = prompt("Enter source path:");
+        if (!src) return;
+        const dest = prompt("Enter destination path:");
+        if (!dest) return;
+        const res = await authFetch("/move", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ src, dest }),
+        });
+        const data = await res.json();
+        setStatus(data.message);
+        renderSidebar();
+      }
+
+      async function promptSearch() {
+        const query = prompt("Enter search term:");
+        if (!query) return;
+        const res = await authFetch("/search?query=" + encodeURIComponent(query));
+        const data = await res.json();
+        alert(
+          "Found " +
+            data.matches.length +
+            "\\n\\n" +
+            data.matches.map((m) => `${m.path}:${m.line} → ${m.text}`).join("\\n")
+        );
+        setStatus("Search complete");
+      }
+
+      async function promptReplace() {
+        const query = prompt("Find what:");
+        if (!query) return;
+        const replace = prompt("Replace with:");
+        if (replace === null) return;
+        const res = await authFetch("/replace", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, replace }),
+        });
+        const data = await res.json();
+        setStatus(data.message || "Replace done");
+      }
+
+      async function tailLogs() {
+        const logPath = prompt("Enter log file path:");
+        if (!logPath) return;
+        const res = await authFetch(`/logs/tail?path=${encodeURIComponent(logPath)}&lines=50`);
+        const data = await res.json();
+        alert("Last lines:\\n\\n" + (data.content || "No content"));
+        setStatus("Log tailed");
+      }
+
+      async function startTask() {
+        const cmd = prompt("Enter command to run:");
+        if (!cmd) return;
+        const res = await authFetch("/task/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command: cmd }),
+        });
+        const data = await res.json();
+        lastTaskId = data.taskId;
+        alert("Task started with ID: " + lastTaskId);
+        setStatus("Task started");
+      }
+
+      async function checkTaskStatus() {
+        if (!lastTaskId) return alert("No task started yet");
+        const res = await authFetch(`/task/status?taskId=${encodeURIComponent(lastTaskId)}`);
+        const data = await res.json();
+        alert(`Status: ${data.status}\\n\\nSTDOUT:\\n${data.stdout}\\n\\nSTDERR:\\n${data.stderr}`);
+        setStatus("Task checked");
+      }
+
+      async function gitStatus() {
+        const res = await authFetch("/git/status");
+        const data = await res.json();
+        alert(data.stdout || data.stderr || "No output");
+        setStatus("Git status checked");
+      }
+
+      function setStatus(msg) {
+        document.getElementById("status").innerText = msg;
       }
 
       document.getElementById("fileSearch").addEventListener("input", (e) => {

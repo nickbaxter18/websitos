@@ -1,10 +1,11 @@
+@import "./styles/udig.css";
+
 /* === Tailwind base layers === */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* === U-Dig It Rentals Homepage Styles === */
-@import "./styles/udig.css";
 
 /* === Global Resets & Typography === */
 html,
