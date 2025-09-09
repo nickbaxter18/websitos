@@ -9,6 +9,9 @@ services:
       npm install --legacy-peer-deps
       npm run build
 
+      # ✅ Inject build hash for traceability
+      echo "<!-- Build $(git rev-parse --short HEAD) -->" >> dist/index.html
+
       echo "==== dist/index.html (head) ===="
       head -n 15 dist/index.html || true
 

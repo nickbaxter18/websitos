@@ -33,6 +33,11 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # -------------------------------------------------------------------
+# Logging Setup
+# -------------------------------------------------------------------
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+# -------------------------------------------------------------------
 # FastAPI Setup
 # -------------------------------------------------------------------
 app = FastAPI(
@@ -58,26 +63,19 @@ async def security_and_cache_headers(request, call_next):
     response: Response = await call_next(request)
 
     # Security headers
-    if request.url.path.startswith("/api/docs") or request.url.path.startswith("/api/redoc") or request.url.path.startswith("/api/openapi.json"):
-        csp = (
-            "default-src 'self' http://localhost:3000; "
-            "img-src 'self' data: https://fastapi.tiangolo.com; "
-            "script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-            "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
-        )
-    else:
-        csp = "default-src 'self' http://localhost:3000"
-
-    response.headers["Content-Security-Policy"] = csp
+    response.headers["Content-Security-Policy"] = "default-src 'self' http://localhost:3000"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
 
     # Cache-Control
     if request.url.path.endswith((".js", ".css")) or "/assets/" in request.url.path:
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif request.url.path in ["/", "/websitos", "/websitos/"]:
-        response.headers["Cache-Control"] = "no-cache"
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
 
     # MIME override for JS
     if request.url.path.endswith(".js"):
@@ -92,16 +90,16 @@ qc, oai = None, None
 if QDRANT_URL and QDRANT_API_KEY:
     try:
         qc = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
-        print("✅ Qdrant client initialized")
+        logging.info("✅ Qdrant client initialized")
     except Exception as e:
-        print(f"⚠️ Failed to init Qdrant client: {e}")
+        logging.error(f"⚠️ Failed to init Qdrant client: {e}")
 
 if OPENAI_API_KEY:
     try:
         oai = OpenAI(api_key=OPENAI_API_KEY)
-        print("✅ OpenAI client initialized")
+        logging.info("✅ OpenAI client initialized")
     except Exception as e:
-        print(f"⚠️ Failed to init OpenAI client: {e}")
+        logging.error(f"⚠️ Failed to init OpenAI client: {e}")
 
 # -------------------------------------------------------------------
 # Auth
@@ -128,66 +126,45 @@ class IngestRequest(BaseModel):
     texts: List[str]
 
 # -------------------------------------------------------------------
-# API Routes (now under /api/*)
+# Health Endpoints
 # -------------------------------------------------------------------
 @app.get("/api/health")
 def health():
+    return {"ok": True}
+
+@app.get("/api/health/full")
+def full_health():
+    assets_path = os.path.join(BASE_DIR, "dist", "assets")
+    js_bundles = [f for f in os.listdir(assets_path)] if os.path.isdir(assets_path) else []
     return {
         "ok": True,
+        "frontend_index": os.path.exists(os.path.join(BASE_DIR, "dist", "index.html")),
+        "frontend_js": bool(js_bundles),
         "collection": COL,
         "qdrant_ready": bool(qc),
         "openai_ready": bool(oai),
     }
-
-@app.get("/health")
-def root_health():
-    return {"ok": True}
-
-@app.get("/api/version")
-def version():
-    return {"version": app.version, "title": app.title}
-
-@app.post("/api/ingest")
-def ingest(data: IngestRequest, _=Depends(auth)):
-    if not oai or not qc:
-        raise HTTPException(500, "Dependencies not ready")
-    try:
-        response = oai.embeddings.create(model=MODEL, input=data.texts)
-        qc.upsert(
-            collection_name=COL,
-            points=[
-                qm.PointStruct(
-                    id=str(uuid4()),
-                    vector=item.embedding,
-                    payload={"doc_id": str(uuid4()), "text": data.texts[i]},
-                )
-                for i, item in enumerate(response.data)
-            ],
-        )
-    except Exception as ex:
-        raise HTTPException(500, f"ingest_error: {str(ex)[:400]}")
-    return {"status": "ok", "ingested": len(data.texts)}
 
 # -------------------------------------------------------------------
 # Serve Frontend (static + SPA fallback)
 # -------------------------------------------------------------------
 frontend_dir = os.path.join(BASE_DIR, "dist")
 if os.path.isdir(frontend_dir):
-    print("📂 dist folder contents:", os.listdir(frontend_dir))
+    logging.info("📂 dist folder contents: %s", os.listdir(frontend_dir))
     assets_path = os.path.join(frontend_dir, "assets")
     if os.path.isdir(assets_path):
         for f in os.listdir(assets_path):
             path = os.path.join(assets_path, f)
             size = os.path.getsize(path)
-            print(f"📦 asset: {f} ({size} bytes)")
+            logging.info("📦 asset: %s (%d bytes)", f, size)
     else:
-        print("⚠️ dist/assets missing")
+        logging.warning("⚠️ dist/assets missing")
 
     try:
         app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
-        print("✅ Static mount at /websitos successful")
+        logging.info("✅ Static mount at /websitos successful")
     except Exception as e:
-        print("❌ Failed to mount static files:", e)
+        logging.error("❌ Failed to mount static files: %s", e)
 
     @app.api_route("/", methods=["GET", "HEAD"])
     async def serve_root():
@@ -196,28 +173,29 @@ if os.path.isdir(frontend_dir):
             try:
                 with open(index_path, "r", encoding="utf-8") as f:
                     head = "".join([next(f) for _ in range(5)])
-                    print("📝 index.html head:", head)
+                    logging.info("📝 index.html head: %s", head)
             except Exception as e:
-                print("⚠️ Could not read index.html:", e)
+                logging.warning("⚠️ Could not read index.html: %s", e)
             return FileResponse(index_path)
         return {"error": "Frontend not built"}
 
     @app.get("/{full_path:path}")
     async def spa_fallback(full_path: str):
-        print(f"🔄 SPA fallback triggered for: {full_path}")
-        index_path = os.path.join(frontend_dir, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path)
-        return {"error": "Frontend not built"}
+        static_path = os.path.join(frontend_dir, full_path.lstrip("/"))
+        if os.path.exists(static_path) and os.path.isfile(static_path):
+            logging.info("📄 Serving static file: %s", full_path)
+            return FileResponse(static_path)
+        logging.info("🔄 SPA fallback triggered for: %s", full_path)
+        return FileResponse(os.path.join(frontend_dir, "index.html"))
 else:
-    print("⚠️ Frontend dist directory not found — skipping mount")
+    logging.warning("⚠️ Frontend dist directory not found — skipping mount")
 
 # -------------------------------------------------------------------
 # Error Handlers
 # -------------------------------------------------------------------
 @app.exception_handler(404)
 async def not_found(request: Request, exc):
-    print(f"❌ 404 at {request.url.path}")
+    logging.error("❌ 404 at %s", request.url.path)
     return JSONResponse({"error": "Not Found", "path": request.url.path}, status_code=404)
 
 @app.exception_handler(Exception)
