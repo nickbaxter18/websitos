@@ -10,10 +10,19 @@ services:
       npm install --legacy-peer-deps
 
       echo "Current working directory: $(pwd)"
-      npm run build -- --debug
+      node -v && npm -v
+
+      echo "==== package.json ====" && cat package.json
+      echo "==== vite.config.js ====" && cat vite.config.js
+
+      # ✅ Verify Vite entrypoint exists
+      test -f src/main.tsx || (echo "❌ src/main.tsx missing" && exit 1)
+
+      ./node_modules/.bin/vite build --debug
 
       echo "==== FULL PROJECT TREE AFTER BUILD ===="
       ls -R .
+      du -sh dist || true
 
       # ✅ Ensure dist/ and assets survive into runtime
       mkdir -p ./dist/assets
@@ -29,6 +38,10 @@ services:
       else
         echo "✅ dist/assets files found";
         ls -lh dist/assets;
+      fi
+
+      if ! ls dist/assets/*.js 1> /dev/null 2>&1; then
+        echo "❌ No JS bundle generated"; exit 1;
       fi
 
       echo "✅ Final dist contents:" && ls -R dist
