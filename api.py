@@ -215,7 +215,11 @@ def ingest(data: IngestRequest, _=Depends(auth)):
 # -------------------------------------------------------------------
 frontend_dir = os.path.join(BASE_DIR, "dist")
 if os.path.isdir(frontend_dir):
-    # ✅ Mount under /websitos to match vite.config.js base
+    print("📂 dist folder contents:", os.listdir(frontend_dir))
+    assets_path = os.path.join(frontend_dir, "assets")
+    if os.path.isdir(assets_path):
+        print("📂 dist/assets contents:", os.listdir(assets_path))
+
     app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
     print("✅ Frontend dist directory mounted at /websitos")
 else:

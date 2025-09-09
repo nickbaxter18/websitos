@@ -30,9 +30,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend source (ignore dist via .dockerignore)
 COPY . .
 
-# ✅ Explicitly copy built frontend index + assets last so they survive
-COPY --from=frontend-builder /app/dist/index.html ./dist/index.html
-COPY --from=frontend-builder /app/dist/assets ./dist/assets
+# ❌ Remove any stale dist
+RUN rm -rf dist
+
+# ✅ Copy built frontend fresh
+COPY --from=frontend-builder /app/dist ./dist
 
 RUN useradd -m appuser
 USER appuser
