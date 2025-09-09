@@ -177,6 +177,11 @@ def health():
         "openai_ready": bool(oai),
     }
 
+# Alias for Render default health check
+@app.get("/health")
+def root_health():
+    return {"ok": True}
+
 
 @app.get("/api/version")
 def version():
