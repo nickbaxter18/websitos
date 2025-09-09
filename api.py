@@ -64,6 +64,19 @@ app.add_middleware(
 )
 
 # -------------------------------------------------------------------
+# Health Endpoints (restore + log)
+# -------------------------------------------------------------------
+@app.get("/api/health")
+def api_health():
+    logging.info("💓 /api/health hit")
+    return {"ok": True, "status": "api running"}
+
+@app.get("/health")
+def root_health():
+    logging.info("💓 /health hit")
+    return {"ok": True, "status": "root running"}
+
+# -------------------------------------------------------------------
 # Middleware for Security, Cache, and Logging
 # -------------------------------------------------------------------
 @app.middleware("http")
@@ -98,4 +111,12 @@ async def security_and_cache_headers(request: Request, call_next):
 
     return response
 
-# (rest of api.py unchanged)
+# -------------------------------------------------------------------
+# Suggestion: Root Welcome Endpoint
+# -------------------------------------------------------------------
+@app.get("/")
+def root_index():
+    logging.info("🌐 Root index hit")
+    return {"message": "Welcome to U-DIG IT Rentals API"}
+
+# (rest of api.py continues with auth, ingest, frontend mount, etc.)
