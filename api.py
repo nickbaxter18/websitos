@@ -223,8 +223,8 @@ if os.path.isdir(frontend_dir):
     app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
     print("✅ Frontend dist directory mounted at /websitos")
 
-    # ✅ Also serve frontend at root "/"
-    @app.get("/")
+    # ✅ Also serve frontend at root "/" (GET + HEAD)
+    @app.api_route("/", methods=["GET", "HEAD"])
     async def serve_root():
         index_path = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index_path):
