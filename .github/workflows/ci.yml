@@ -191,9 +191,9 @@ jobs:
       - name: Merge coverage reports
         run: |
           REPORTS=""
-          [ -f coverage-frontend/coverage/lcov.info ] && REPORTS="$REPORTS;coverage-frontend/coverage/lcov.info"
-          [ -f coverage-backend-3_10/coverage.xml ] && REPORTS="$REPORTS;coverage-backend-3_10/coverage.xml"
-          [ -f coverage-backend-3_11/coverage.xml ] && REPORTS="$REPORTS;coverage-backend-3_11/coverage.xml"
+          [ -f coverage-frontend/coverage/lcov.info ] && REPORTS="$REPORTS coverage-frontend/coverage/lcov.info"
+          [ -f coverage-backend-3_10/coverage.xml ] && REPORTS="$REPORTS coverage-backend-3_10/coverage.xml"
+          [ -f coverage-backend-3_11/coverage.xml ] && REPORTS="$REPORTS coverage-backend-3_11/coverage.xml"
 
           if [ -z "$REPORTS" ]; then
             echo "⚠️ No coverage reports found, skipping merge."
@@ -202,9 +202,9 @@ jobs:
 
           dotnet tool install dotnet-reportgenerator-globaltool --tool-path reportgeneratortool --version 5.3.7 --ignore-failed-sources
           ./reportgeneratortool/reportgenerator \
-            -reports:"$REPORTS" \
+            -reports:$REPORTS \
             -targetdir:merged-coverage \
-            -reporttypes:Html,Cobertura
+            -reporttypes:Html\;Cobertura
 
       - name: Generate coverage summary
         run: |
