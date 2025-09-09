@@ -10,7 +10,7 @@ from uuid import uuid4
 import numpy as np
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse, FileResponse, Response
+from fastapi.responses import JSONResponse, FileResponse, Response, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
@@ -86,10 +86,11 @@ def register_core_routes(app):
             "frontend_index": os.path.exists(os.path.join(BASE_DIR, "dist", "index.html")),
         }
 
+    # Redirect root to frontend
     @app.get("/")
-    def root_index():
-        logging.info("🌐 Root index hit")
-        return {"message": "Welcome to U-DIG IT Rentals API"}
+    def redirect_root():
+        logging.info("➡️ Redirecting / → /websitos/")
+        return RedirectResponse(url="/websitos/")
 
 register_core_routes(app)
 
@@ -133,6 +134,25 @@ async def security_and_cache_headers(request: Request, call_next):
     return response
 
 # -------------------------------------------------------------------
+# Frontend Mount (with html=True) + Explicit /websitos/ Fallback
+# -------------------------------------------------------------------
+frontend_dir = os.path.join(BASE_DIR, "dist")
+if os.path.isdir(frontend_dir):
+    app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+    logging.info("✅ Frontend dist directory mounted at /websitos")
+
+    @app.get("/websitos")
+    @app.get("/websitos/")
+    async def serve_websitos_index():
+        index_path = os.path.join(frontend_dir, "index.html")
+        if os.path.exists(index_path):
+            logging.info("📝 Serving frontend index.html at /websitos/")
+            return FileResponse(index_path)
+        return {"error": "Frontend not built"}
+else:
+    logging.warning("⚠️ Frontend dist directory not found — skipping mount")
+
+# -------------------------------------------------------------------
 # Custom Error Handling
 # -------------------------------------------------------------------
 @app.exception_handler(500)
@@ -140,4 +160,4 @@ async def server_error_handler(request: Request, exc):
     logging.error(f"💥 500 on {request.method} {request.url.path}: {exc}")
     return JSONResponse(status_code=500, content={"error": "internal_error"})
 
-# (rest of api.py continues with auth, ingest, frontend mount, etc.)
+# (rest of api.py continues with auth, ingest, etc.)
