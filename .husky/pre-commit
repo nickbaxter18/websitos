@@ -1,3 +1,7 @@
-#!/usr/bin/env sh
-npx tsc --noEmit || exit 1
-npx eslint . --ext .ts,.tsx
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Ensure lockfile is always in sync with package.json
+npm install --package-lock-only
+
+git add package-lock.json

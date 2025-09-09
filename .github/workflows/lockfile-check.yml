@@ -1,0 +1,26 @@
+name: Lockfile Consistency Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  lockfile-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies without updating lockfile
+        run: npm install --package-lock-only
+
+      - name: Check if package-lock.json is in sync
+        run: |
+          git diff --exit-code package-lock.json || (echo "❌ package-lock.json is out of sync with package.json. Run 'npm install' locally and commit the changes." && exit 1)
