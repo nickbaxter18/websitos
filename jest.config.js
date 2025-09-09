@@ -1,15 +1,25 @@
 module.exports = {
   preset: "ts-jest/presets/js-with-babel",
-  testEnvironment: "jsdom",
-  transform: {
-    "^.+\\.(ts|tsx|js|jsx|mjs)$": ["ts-jest", { useESM: true }],
-  },
-  extensionsToTreatAsEsm: [".ts", ".tsx"],
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node", "mjs"],
-  moduleNameMapper: {
-    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-  },
-  transformIgnorePatterns: ["/node_modules/(?!recharts)"],
-  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
-  testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  projects: [
+    {
+      displayName: "frontend",
+      testEnvironment: "jsdom",
+      testMatch: [
+        "<rootDir>/src/**/*.test.{ts,tsx,js,jsx}",
+        "<rootDir>/v2/tests/**/*.test.{ts,js}",
+      ],
+      setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+      transform: {
+        "^.+\\.(ts|tsx|js|jsx|mjs)$": "ts-jest",
+      },
+    },
+    {
+      displayName: "backend",
+      testEnvironment: "node",
+      testMatch: ["<rootDir>/v2/core/**/*.spec.ts"],
+      transform: {
+        "^.+\\.(ts|tsx|js|jsx|mjs)$": "ts-jest",
+      },
+    },
+  ],
 };

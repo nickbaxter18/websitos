@@ -1,12 +1,8 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 
-test("renders App inside MemoryRouter with basename", () => {
-  render(
-    <MemoryRouter initialEntries={["/websitos"]}>
-      <App />
-    </MemoryRouter>
-  );
-  expect(screen.getByRole("navigation")).toBeInTheDocument();
+test("renders App shell without crashing", () => {
+  render(<App />);
+  // Look for a stable element always rendered in the shell (like Navbar)
+  expect(screen.getByText(/navbar/i)).toBeInTheDocument();
 });
