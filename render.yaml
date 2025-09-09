@@ -9,6 +9,10 @@ services:
       test -f dist/index.html && test -d dist/assets
     startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
     healthCheckPath: /api/health
+    routes:
+      - type: rewrite
+        source: /websitos/(.*)
+        destination: /websitos
     envVars:
       - key: NODE_VERSION
         value: 20

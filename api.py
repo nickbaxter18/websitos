@@ -213,7 +213,7 @@ def ingest(data: IngestRequest, _=Depends(auth)):
 # -------------------------------------------------------------------
 # Serve Frontend (static + SPA fallback)
 # -------------------------------------------------------------------
-frontend_dir = os.path.join(BASE_DIR, "dist")
+frontend_dir = os.path.join(BASE_DIR, "dist")  # patched: ensure Vite build served under /websitos
 if os.path.isdir(frontend_dir):
     print("📂 dist folder contents:", os.listdir(frontend_dir))
     assets_path = os.path.join(frontend_dir, "assets")
