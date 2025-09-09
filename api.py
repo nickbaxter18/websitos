@@ -2,6 +2,8 @@
 
 import os
 import logging
+import hashlib
+import re
 from typing import List, Optional
 from uuid import uuid4
 
@@ -57,9 +59,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Security Headers + Cache-Control Middleware + MIME override
+# -------------------------------------------------------------------
+# Middleware for Security, Cache, and Logging
+# -------------------------------------------------------------------
 @app.middleware("http")
-async def security_and_cache_headers(request, call_next):
+async def security_and_cache_headers(request: Request, call_next):
+    if request.url.path.startswith("/websitos/assets"):
+        logging.info("📡 Asset request: %s", request.url.path)
+
     response: Response = await call_next(request)
 
     # Security headers
@@ -81,7 +88,27 @@ async def security_and_cache_headers(request, call_next):
     if request.url.path.endswith(".js"):
         response.headers["Content-Type"] = "application/javascript"
 
+    # Log response headers for index.html and JS
+    if request.url.path.endswith("index.html") or request.url.path.endswith(".js"):
+        logging.info("📦 Response headers for %s: %s", request.url.path, dict(response.headers))
+
     return response
+
+# -------------------------------------------------------------------
+# Helpers
+# -------------------------------------------------------------------
+def file_hash(path):
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()[:12]
+
+def log_index_scripts(index_path):
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            html = f.read()
+        scripts = re.findall(r'<script[^>]+src=\"([^\"]+)\"', html)
+        logging.info("📝 Scripts in index.html: %s", scripts)
+    except Exception as e:
+        logging.warning("⚠️ Could not parse index.html scripts: %s", e)
 
 # -------------------------------------------------------------------
 # Clients
@@ -140,6 +167,7 @@ def full_health():
         "ok": True,
         "frontend_index": os.path.exists(os.path.join(BASE_DIR, "dist", "index.html")),
         "frontend_js": bool(js_bundles),
+        "js_files": js_bundles,
         "collection": COL,
         "qdrant_ready": bool(qc),
         "openai_ready": bool(oai),
@@ -156,7 +184,7 @@ if os.path.isdir(frontend_dir):
         for f in os.listdir(assets_path):
             path = os.path.join(assets_path, f)
             size = os.path.getsize(path)
-            logging.info("📦 asset: %s (%d bytes)", f, size)
+            logging.info("📦 asset: %s (%d bytes, hash=%s)", f, size, file_hash(path))
     else:
         logging.warning("⚠️ dist/assets missing")
 
@@ -170,12 +198,7 @@ if os.path.isdir(frontend_dir):
     async def serve_root():
         index_path = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index_path):
-            try:
-                with open(index_path, "r", encoding="utf-8") as f:
-                    head = "".join([next(f) for _ in range(5)])
-                    logging.info("📝 index.html head: %s", head)
-            except Exception as e:
-                logging.warning("⚠️ Could not read index.html: %s", e)
+            log_index_scripts(index_path)
             return FileResponse(index_path)
         return {"error": "Frontend not built"}
 
@@ -186,9 +209,19 @@ if os.path.isdir(frontend_dir):
             logging.info("📄 Serving static file: %s", full_path)
             return FileResponse(static_path)
         logging.info("🔄 SPA fallback triggered for: %s", full_path)
-        return FileResponse(os.path.join(frontend_dir, "index.html"))
+        index_path = os.path.join(frontend_dir, "index.html")
+        log_index_scripts(index_path)
+        return FileResponse(index_path)
 else:
     logging.warning("⚠️ Frontend dist directory not found — skipping mount")
+
+# -------------------------------------------------------------------
+# Capture JS Runtime Errors
+# -------------------------------------------------------------------
+@app.post("/api/log-js-error")
+async def log_js_error(data: dict):
+    logging.error("🛑 JS Runtime Error: %s", data)
+    return {"ok": True}
 
 # -------------------------------------------------------------------
 # Error Handlers
