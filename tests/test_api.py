@@ -5,10 +5,12 @@ client = TestClient(app)
 
 
 def test_healthcheck():
-    """Ensure the /health endpoint returns 200 OK and correct payload."""
-    response = client.get("/health")
+    """Ensure the /api/health endpoint returns 200 OK and correct payload."""
+    response = client.get("/api/health")
     assert response.status_code == 200
-    assert "ok" in response.json()
+    data = response.json()
+    assert "ok" in data
+    assert data["ok"] is True
 
 
 def test_invalid_route():
@@ -18,12 +20,12 @@ def test_invalid_route():
 
 
 def test_version():
-    """Ensure the /version endpoint returns API version and title."""
-    response = client.get("/version")
+    """Ensure the /api/version endpoint returns API version and title."""
+    response = client.get("/api/version")
     assert response.status_code == 200
     data = response.json()
     assert "version" in data
     assert "title" in data
-    # Optional: strict check against FastAPI app metadata
+    # Strict check against FastAPI app metadata
     assert data["version"] == app.version
     assert data["title"] == app.title

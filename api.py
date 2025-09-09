@@ -1,6 +1,7 @@
 # api.py — FastAPI backend + Qdrant + OpenAI + static frontend serving
 
-import os, logging
+import os
+import logging
 from typing import List, Optional
 from uuid import uuid4
 
@@ -26,8 +27,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, ".env"))
 
 APP_KEY = os.getenv("APP_API_KEY", "dev-local-secret")
-COL     = os.getenv("QDRANT_COLLECTION", "u_dig_brain_v1")
-MODEL   = os.getenv("EMBED_MODEL", "text-embedding-3-small")
+COL = os.getenv("QDRANT_COLLECTION", "u_dig_brain_v1")
+MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
@@ -41,7 +42,7 @@ app = FastAPI(
     version="1.3.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
 )
 
 # CORS
@@ -96,9 +97,12 @@ if OPENAI_API_KEY:
 # Auth
 # -------------------------------------------------------------------
 bearer_scheme = HTTPBearer()
+
+
 def auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     if credentials.credentials != APP_KEY:
         raise HTTPException(401, "Unauthorized")
+
 
 # -------------------------------------------------------------------
 # Models
@@ -112,28 +116,44 @@ class Query(BaseModel):
     type_any: Optional[List[str]] = None
     path_contains: Optional[str] = None
 
+
 class IngestRequest(BaseModel):
     texts: List[str]
+
 
 # -------------------------------------------------------------------
 # Helpers
 # -------------------------------------------------------------------
+def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
+    """Cosine similarity with safe denominator."""
+    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8))
+
+
 def mmr(q: np.ndarray, docs: List[np.ndarray], k: int = 6, lam: float = 0.5):
-    if not docs: return []
-    sim = lambda a, b: float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8))
-    q_sims = [sim(q, d) for d in docs]
+    if not docs:
+        return []
+
+    q_sims = [cosine_sim(q, d) for d in docs]
     sel = [int(np.argmax(q_sims))]
     cand = [i for i in range(len(docs)) if i != sel[0]]
+
     while len(sel) < min(k, len(docs)) and cand:
-        best = (-1e9, None)
+        best_score = -1e9
+        best_idx = None
         for c in cand:
             rel = q_sims[c]
-            div = max(sim(docs[c], docs[s]) for s in sel)
+            div = max(cosine_sim(docs[c], docs[s]) for s in sel)
             score = lam * rel - (1 - lam) * div
-            if score > best[0]:
-                best = (score, c)
-        sel.append(best[1]); cand.remove(best[1])
+            if score > best_score:
+                best_score = score
+                best_idx = c
+        if best_idx is None:
+            break
+        sel.append(best_idx)
+        cand.remove(best_idx)
+
     return sel
+
 
 def build_filter(body: Query):
     must = []
@@ -145,16 +165,24 @@ def build_filter(body: Query):
         must.append(qm.FieldCondition(key="section_path", match=qm.MatchText(text=body.path_contains)))
     return qm.Filter(must=must) if must else None
 
+
 # -------------------------------------------------------------------
 # API Routes (now under /api/*)
 # -------------------------------------------------------------------
 @app.get("/api/health")
 def health():
-    return {"ok": True, "collection": COL, "qdrant_ready": bool(qc), "openai_ready": bool(oai)}
+    return {
+        "ok": True,
+        "collection": COL,
+        "qdrant_ready": bool(qc),
+        "openai_ready": bool(oai),
+    }
+
 
 @app.get("/api/version")
 def version():
     return {"version": app.version, "title": app.title}
+
 
 @app.post("/api/ingest")
 def ingest(data: IngestRequest, _=Depends(auth)):
@@ -162,16 +190,21 @@ def ingest(data: IngestRequest, _=Depends(auth)):
         raise HTTPException(500, "Dependencies not ready")
     try:
         response = oai.embeddings.create(model=MODEL, input=data.texts)
-        qc.upsert(collection_name=COL, points=[
-            qm.PointStruct(
-                id=str(uuid4()), vector=item.embedding,
-                payload={"doc_id": str(uuid4()), "text": data.texts[i]}
-            )
-            for i, item in enumerate(response.data)
-        ])
+        qc.upsert(
+            collection_name=COL,
+            points=[
+                qm.PointStruct(
+                    id=str(uuid4()),
+                    vector=item.embedding,
+                    payload={"doc_id": str(uuid4()), "text": data.texts[i]},
+                )
+                for i, item in enumerate(response.data)
+            ],
+        )
     except Exception as ex:
         raise HTTPException(500, f"ingest_error: {str(ex)[:400]}")
     return {"status": "ok", "ingested": len(data.texts)}
+
 
 # -------------------------------------------------------------------
 # Serve Frontend (static + SPA fallback)
@@ -183,6 +216,7 @@ if os.path.isdir(static_dir):
 else:
     print("⚠️ Static directory not found — skipping mount")
 
+
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
     index_path = os.path.join(static_dir, "index.html")
@@ -190,10 +224,14 @@ async def serve_spa(full_path: str):
         return FileResponse(index_path)
     return {"error": "Frontend not built"}
 
+
 # -------------------------------------------------------------------
 # Global Error Handler
 # -------------------------------------------------------------------
 @app.exception_handler(Exception)
 async def _unhandled(request, exc):
     logging.exception("Unhandled exception")
-    return JSONResponse(status_code=500, content={"error": "internal_error", "detail": str(exc)[:500]})
+    return JSONResponse(
+        status_code=500,
+        content={"error": "internal_error", "detail": str(exc)[:500]},
+    )

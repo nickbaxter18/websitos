@@ -19,6 +19,6 @@ jobs:
 
       - name: Upload snapshot (U-DIG IT ingest)
         run: |
-          curl -X POST "https://your-udigit-endpoint.com/analyze" \
+          curl -X POST "https://websitos.onrender.com/ingest_file" \
           -H "Authorization: Bearer ${{ secrets.UDIGIT_GITHUB_TOKEN }}" \
           -F "file=@repo-snapshot.zip"

@@ -26,4 +26,4 @@ jobs:
             Write-Error "OpsPipeline.ps1 not found at repo root"
             exit 1
           }
-          .\OpsPipeline.ps1
+          ./OpsPipeline.ps1 -FailFast

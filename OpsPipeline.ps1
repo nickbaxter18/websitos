@@ -1,29 +1,50 @@
-name: OpsPipeline
+param(
+    [switch]$FailFast
+)
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+Write-Host "🚀 Starting OpsPipeline..."
 
-jobs:
-  ops-pipeline:
-    runs-on: windows-latest
+# -----------------------------
+# Gate: Lint
+# -----------------------------
+if (Test-Path .\LintGate.ps1) {
+    Write-Host "▶ Running LintGate..."
+    & .\LintGate.ps1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "❌ LintGate failed"
+        if ($FailFast) { exit 1 }
+    }
+} else {
+    Write-Warning "⚠️ LintGate.ps1 not found, skipping..."
+}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+# -----------------------------
+# Gate: Headers
+# -----------------------------
+if (Test-Path .\HeadersGate.ps1) {
+    Write-Host "▶ Running HeadersGate..."
+    & .\HeadersGate.ps1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "❌ HeadersGate failed"
+        if ($FailFast) { exit 1 }
+    }
+} else {
+    Write-Warning "⚠️ HeadersGate.ps1 not found, skipping..."
+}
 
-      # PowerShell Core (pwsh) is already on the runner — no setup action needed.
-      - name: Run OpsPipeline
-        shell: pwsh
-        run: |
-          pwsh -v
-          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-          if (-not (Test-Path .\OpsPipeline.ps1)) {
-            Write-Error "OpsPipeline.ps1 not found at repo root"
-            exit 1
-          }
-          .\OpsPipeline.ps1
+# -----------------------------
+# Gate: Dockerfile
+# -----------------------------
+if (Test-Path .\DockerfileGate.ps1) {
+    Write-Host "▶ Running DockerfileGate..."
+    & .\DockerfileGate.ps1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "❌ DockerfileGate failed"
+        if ($FailFast) { exit 1 }
+    }
+} else {
+    Write-Warning "⚠️ DockerfileGate.ps1 not found, skipping..."
+}
+
+Write-Host "✅ OpsPipeline completed successfully."
+exit 0
