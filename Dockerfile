@@ -12,7 +12,7 @@ RUN npm ci
 # Copy frontend source
 COPY . .
 
-# Build frontend
+# Build frontend into /app/dist
 RUN npm run build
 
 # -------------------------
@@ -34,9 +34,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend source
 COPY . .
 
-# Copy built frontend into FastAPI dist folder
-RUN mkdir -p /app/dist
-COPY --from=frontend-builder /app/dist /app/dist
+# ✅ Copy built frontend last so it can’t be overwritten
+COPY --from=frontend-builder /app/dist ./dist
 
 # Add non-root user
 RUN useradd -m appuser
