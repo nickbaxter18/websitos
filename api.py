@@ -222,6 +222,14 @@ if os.path.isdir(frontend_dir):
 
     app.mount("/websitos", StaticFiles(directory=frontend_dir, html=True), name="frontend")
     print("✅ Frontend dist directory mounted at /websitos")
+
+    # ✅ Also serve frontend at root "/"
+    @app.get("/")
+    async def serve_root():
+        index_path = os.path.join(frontend_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"error": "Frontend not built"}
 else:
     print("⚠️ Frontend dist directory not found — skipping mount")
 
