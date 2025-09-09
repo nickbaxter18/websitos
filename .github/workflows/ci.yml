@@ -176,7 +176,7 @@ jobs:
       - name: Download backend coverage (3.11)
         uses: actions/download-artifact@v4
         with:
-          name: coverage-backend-3.11.9
+          name: coverage-backend
           path: coverage-backend-3_11
       - name: Download backend coverage (3.12)
         uses: actions/download-artifact@v4
