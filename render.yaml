@@ -3,29 +3,36 @@ services:
     name: websiteos
     env: python
     buildCommand: |
+      # Clean caches
       rm -rf dist node_modules .vite .cache || true
 
+      # Install backend + frontend deps
       pip install -r requirements.txt
       npm install --legacy-peer-deps
+
+      # Run build
       npm run build
 
-      # ✅ Inject build hash for traceability
-      echo "<!-- Build $(git rev-parse --short HEAD) -->" >> dist/index.html
+      echo "==== dist top-level ===="
+      ls -lh dist || true
 
-      echo "==== dist/index.html (head) ===="
-      head -n 15 dist/index.html || true
+      echo "==== dist recursive listing ===="
+      find dist -type f -maxdepth 3 -print || true
 
-      echo "==== dist/assets listing ===="
-      ls -lh dist/assets || true
+      echo "==== index.html head ===="
+      head -n 20 dist/index.html || true
 
+      echo "==== JS bundles (with size) ===="
+      find dist -type f -name "*.js" -exec ls -lh {} \; || true
+
+      # Verify required files exist
       test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
       test -s dist/index.html || (echo "❌ index.html exists but is empty" && exit 1)
-      test -d dist/assets || (echo "❌ dist/assets missing" && exit 1)
-      if ! ls dist/assets/*.js 1> /dev/null 2>&1; then
+      if ! find dist -type f -name "*.js" | grep -q .; then
         echo "❌ No JS bundle generated"; exit 1;
       fi
 
-      echo "✅ Final dist contents:" && ls -R dist
+      echo "✅ Final dist structure:" && ls -R dist
     startCommand: uvicorn api:app --host 0.0.0.0 --port 10000
     healthCheckPath: /api/health
     routes:
