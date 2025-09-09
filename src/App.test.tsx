@@ -1,12 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 
-test("renders Home route", () => {
-  render(
-    <MemoryRouter initialEntries={["/websitos"]}>
-      <App />
-    </MemoryRouter>
-  );
+test("renders App route", () => {
+  render(<App />);
   expect(screen.getByText(/home/i)).toBeInTheDocument();
 });

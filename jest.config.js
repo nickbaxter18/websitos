@@ -11,4 +11,9 @@ module.exports = {
   transformIgnorePatterns: ["/node_modules/(?!recharts)"],
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  globals: {
+    "ts-jest": {
+      tsconfig: "tsconfig.json",
+    },
+  },
 };
