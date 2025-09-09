@@ -127,7 +127,6 @@
   "bugs": {
     "url": "https://github.com/udigitrentals/websitos/issues"
   },
-  "homepage": "https://github.com/udigitrentals/websitos#readme",
   "engines": {
     "node": ">=20",
     "npm": ">=10"
