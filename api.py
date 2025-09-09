@@ -148,6 +148,7 @@ if os.path.isdir(frontend_dir):
         if os.path.exists(index_path):
             logging.info("📝 Serving frontend index.html at /websitos/")
             return FileResponse(index_path)
+        logging.error("❌ index.html missing at /websitos/")
         return {"error": "Frontend not built"}
 else:
     logging.warning("⚠️ Frontend dist directory not found — skipping mount")
