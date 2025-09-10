@@ -1,4 +1,3 @@
-# Dummy update to force GitHub re-index
 name: Test Failure Workflow
 
 on:
@@ -10,6 +9,7 @@ jobs:
   always-fail:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4   # ✅ Checkout before local action
       - uses: ./.github/actions/setup-deps
       - name: Force failure
         run: |

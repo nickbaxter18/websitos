@@ -1,4 +1,3 @@
-# Dummy update to force GitHub re-index
 name: Collect Failed Logs
 
 on:
@@ -16,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4   # ✅ Checkout before local action
       - uses: ./.github/actions/setup-deps
 
       - name: Authenticate GitHub CLI
