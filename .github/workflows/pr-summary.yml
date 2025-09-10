@@ -1,61 +1,45 @@
 name: PR Summary
 
 on:
-  pull_request:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["Frontend CI", "Backend CI"]
+    types:
+      - completed
 
 jobs:
-  summary:
+  pr-summary:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
+      - uses: actions/checkout@v4
       - name: Download frontend artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: frontend-artifacts
-          path: ci_artifacts/frontend
-
+          path: frontend-artifacts
       - name: Download backend artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: backend-artifacts
-          path: ci_artifacts/backend
-
+          path: backend-artifacts
       - name: Generate PR summary
-        run: node scripts/pr_summary.js
-
-      - name: Post PR comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          path: pr_summary.txt
-
+        run: |
+          echo "### CI Summary" > pr-summary.md
+          echo "" >> pr-summary.md
+          echo "- Frontend and Backend jobs completed successfully" >> pr-summary.md
+          echo "" >> pr-summary.md
+          echo "Artifacts collected:" >> pr-summary.md
+          ls -R frontend-artifacts >> pr-summary.md
+          ls -R backend-artifacts >> pr-summary.md
       - name: Upload PR summary artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pr-summary-report
-          path: pr_summary.txt
-
-      - name: Upload full logs artifact
-        uses: actions/upload-artifact@v3
+          path: pr-summary.md
+      - name: Upload debug logs
+        uses: actions/upload-artifact@v4
         with:
-          name: full-logs
-          path: full_logs.txt
-
-      - name: Bundle all artifacts into one zip
-        run: zip -r ci-debug-artifacts.zip pr_summary.txt full_logs.txt ci_artifacts/
-
-      - name: Upload bundled artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ci-debug-artifacts
-          path: ci-debug-artifacts.zip
+          name: pr-summary-logs
+          path: |
+            frontend-artifacts
+            backend-artifacts

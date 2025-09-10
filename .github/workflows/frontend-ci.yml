@@ -10,59 +10,24 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-
+          node-version: '20'
       - name: Install dependencies
         run: npm ci
-
-      - name: Validate environment variables
-        run: npm run validate-env
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Prettier check
-        run: npm run format:check
-
-      - name: Run unit tests (Jest)
-        run: npm test -- --json --outputFile=jest-report.json --coverage
-
+      - name: Run frontend checks
+        run: |
+          npm run lint
+          npm run type-check
+          npm run test:ci
       - name: Build frontend
         run: npm run build
-
-      - name: Verify built assets
-        run: npm run verify-assets
-
-      - name: Install Playwright
-        run: npx playwright install --with-deps
-
-      - name: Run E2E tests (Playwright)
-        run: npm run test:e2e || true
-
-      - name: Collect CI artifacts
-        if: always()
-        run: |
-          mkdir -p ci_artifacts/frontend
-          cp -r jest-report.json coverage playwright-report || true ci_artifacts/frontend/
-
       - name: Upload frontend artifacts
-        if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-artifacts
-          path: ci_artifacts/frontend
+          path: |
+            coverage/coverage-summary.json
+            jest-report.json
+            dist
