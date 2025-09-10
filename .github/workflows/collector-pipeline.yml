@@ -1,0 +1,84 @@
+# workflow refresh
+# register
+name: Collector Pipeline v2
+
+on:
+  push:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [
+      "Backend CI",
+      "Frontend CI",
+      "Coverage",
+      "CodeQL",
+      "OpsPipeline",
+      "Secret Scanning",
+      "Test Failure Workflow",
+      "Uptime Check"
+    ]
+    types:
+      - completed
+
+jobs:
+  sanity-check:
+    name: Sanity Check Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo sanity
+        run: echo "👋 Sanity check passed" | tee sanity.txt
+
+      - name: Upload sanity artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sanity-artifact
+          path: sanity.txt
+
+  collector:
+    name: Collector Job
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup tools (jq + gh)
+        uses: ./.github/actions/setup-tools
+
+      - name: Verify installs
+        run: |
+          jq --version
+          gh --version
+
+      - name: Fetch workflow runs
+        run: |
+          mkdir -p collected_logs
+          echo "Fetching runs for commit: ${{ github.sha }}"
+          gh run list \
+            --repo "${{ github.repository }}" \
+            --json databaseId,headSha,conclusion,name \
+            --limit 20 > collected_logs/all_runs.json
+
+      - name: Summarize failures
+        run: |
+          jq --arg sha "${{ github.sha }}" \
+             '.[] | select(.headSha==$sha and .conclusion=="failure")' \
+             collected_logs/all_runs.json > collected_logs/failed_runs.json
+
+          if [[ -s collected_logs/failed_runs.json ]]; then
+            echo "## Failure Summary" >> $GITHUB_STEP_SUMMARY
+            jq -r '.[] | "- " + .name + " (Run ID: " + (.databaseId|tostring) + ")"' \
+              collected_logs/failed_runs.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "All workflows passed ✅" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload collector artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: collector-artifacts
+          path: collected_logs"# dummy change $(date)"  
