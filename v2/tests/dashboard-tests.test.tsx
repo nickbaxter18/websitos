@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import Dashboard from "@/pages/Dashboard";
 
 jest.mock("recharts", () => ({
-  ResponsiveContainer: ({ children }: PropsWithChildren<{}>) => (
+  ResponsiveContainer: ({ children }: PropsWithChildren<Record<string, never>>) => (
     <div data-testid="health-chart">{children}</div>
   ),
   LineChart: () => <div>LineChart</div>,
