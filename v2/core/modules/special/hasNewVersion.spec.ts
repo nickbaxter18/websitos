@@ -14,7 +14,7 @@ jest.mock("./cache", () => ({
 
 jest.mock("./getDistVersion", () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue("1.0.0" as any),
+  default: jest.fn().mockResolvedValue("1.0.0" as unknown as any),
 }));
 
 describe("hasNewVersion", () => {

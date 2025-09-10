@@ -9,12 +9,12 @@ jest.mock("express", () => ({
 // Mock local modules
 jest.mock("./hasNewVersion", () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue(false as any),
+  default: jest.fn().mockResolvedValue(false as unknown as any),
 }));
 
 jest.mock("./getDistVersion", () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue("1.0.0" as any),
+  default: jest.fn().mockResolvedValue("1.0.0" as unknown as any),
 }));
 
 jest.mock("./cache", () => ({
