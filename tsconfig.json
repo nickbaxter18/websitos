@@ -7,7 +7,12 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["vite/client", "@playwright/test"]
   },
   "include": ["src", "tests", "scripts"],
   "exclude": ["node_modules", "dist"]

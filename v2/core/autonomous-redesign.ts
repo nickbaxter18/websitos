@@ -4,5 +4,4 @@ export function decideAutonomy(input: any) {
   return { status: "ok", input };
 }
 
-// keep existing exports if any
-export * from "./self-governance";
+// Removed re-export of self-governance to avoid missing module errors during CI
