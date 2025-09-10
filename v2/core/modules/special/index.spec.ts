@@ -3,18 +3,18 @@ import { jest } from "@jest/globals";
 // Mock ESM deps first
 jest.mock("express", () => ({
   __esModule: true,
-  default: jest.fn((_opts: unknown) => ({})),
+  default: jest.fn((_opts: any) => ({})),
 }));
 
 // Mock local modules
 jest.mock("./hasNewVersion", () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue(false as unknown),
+  default: jest.fn().mockResolvedValue(false as any),
 }));
 
 jest.mock("./getDistVersion", () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue("1.0.0" as unknown),
+  default: jest.fn().mockResolvedValue("1.0.0" as any),
 }));
 
 jest.mock("./cache", () => ({

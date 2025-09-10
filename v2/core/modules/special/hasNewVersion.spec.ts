@@ -3,7 +3,7 @@ import { jest } from "@jest/globals";
 // Mock semver before requiring file
 jest.mock("semver", () => ({
   __esModule: true,
-  gt: jest.fn((_a: unknown, _b: unknown) => false),
+  gt: jest.fn((_a: any, _b: any) => false),
 }));
 
 jest.mock("./cache", () => ({
@@ -14,7 +14,7 @@ jest.mock("./cache", () => ({
 
 jest.mock("./getDistVersion", () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue("1.0.0" as unknown),
+  default: jest.fn().mockResolvedValue("1.0.0" as any),
 }));
 
 describe("hasNewVersion", () => {
