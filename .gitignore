@@ -56,4 +56,6 @@ Thumbs.db
 # Project-specific
 # ------------------------
 docs/meta/archive/
+# ignore declaration files except vite-env.d.ts
 *.d.ts
+!src/vite-env.d.ts

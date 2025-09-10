@@ -12,7 +12,6 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["vite/client"],
     "typeRoots": ["./node_modules/@types", "./node_modules/@playwright"]
   },
   "include": ["src", "tests", "scripts"],
