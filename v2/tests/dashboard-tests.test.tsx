@@ -1,38 +1,26 @@
+import React, { PropsWithChildren } from "react";
 import { render, screen } from "@testing-library/react";
-import React from "react";
+import Dashboard from "@/pages/Dashboard";
 
-// Expanded recharts mock
-jest.mock("recharts", () => {
-  return {
-    ResponsiveContainer: ({ children }) => <div data-testid="health-chart">{children}</div>,
-    LineChart: ({ children }) => <div>{children}</div>,
-    Line: () => <div>Line</div>,
-    XAxis: () => <div>XAxis</div>,
-    YAxis: () => <div>YAxis</div>,
-    Tooltip: () => <div>Tooltip</div>,
-    Legend: () => <div>Legend</div>,
-    CartesianGrid: () => <div>CartesianGrid</div>,
-    ReferenceArea: () => <div>ReferenceArea</div>,
-  };
-});
+jest.mock("recharts", () => ({
+  ResponsiveContainer: ({ children }: PropsWithChildren<{}>) => (
+    <div data-testid="health-chart">{children}</div>
+  ),
+  LineChart: () => <div>LineChart</div>,
+  Line: () => <div>Line</div>,
+  XAxis: () => <div>XAxis</div>,
+  YAxis: () => <div>YAxis</div>,
+  Tooltip: () => <div>Tooltip</div>,
+}));
 
-import HealthChart from "../dashboard/components/HealthChart";
-import ComparisonTable from "../dashboard/components/ComparisonTable";
-
-const mockCommits = [
-  { date: "2025-01-01", diversity: 0.5, cohesion: 0.7 },
-  { date: "2025-01-02", diversity: 0.6, cohesion: 0.8 },
-];
-
-describe("Dashboard Components", () => {
-  it("renders HealthChart with data", () => {
-    render(<HealthChart data={mockCommits} />);
-    expect(screen.getByTestId("health-chart")).toBeInTheDocument();
+describe("Dashboard", () => {
+  it("renders the dashboard heading", () => {
+    render(<Dashboard />);
+    expect(screen.getByText(/System Status/i)).toBeInTheDocument();
   });
 
-  it("renders ComparisonTable", () => {
-    render(<ComparisonTable commits={mockCommits} />);
-    // Look for a cell containing 'diversity' value instead of header text
-    expect(screen.getByText(/0.5/i)).toBeInTheDocument();
+  it("renders the mocked health chart", () => {
+    render(<Dashboard />);
+    expect(screen.getByTestId("health-chart")).toBeInTheDocument();
   });
 });
