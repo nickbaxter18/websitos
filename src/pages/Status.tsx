@@ -11,12 +11,10 @@ function StatusBadge({ ok }: { ok: boolean }) {
   return (
     <span className="flex items-center space-x-2">
       <span
-        className={`w-3 h-3 rounded-full animate-pulse ${
-          ok ? "bg-green-500" : "bg-red-500"
-        }`}
+        className={`h-3 w-3 animate-pulse rounded-full ${ok ? "bg-green-500" : "bg-red-500"}`}
       ></span>
       <span
-        className={`px-3 py-1 rounded-full text-sm font-semibold ${
+        className={`rounded-full px-3 py-1 text-sm font-semibold ${
           ok ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
         }`}
       >
@@ -63,16 +61,16 @@ export default function Status() {
   const overallOk = apiHealth?.ok && rootHealth?.ok && status?.ok;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold mb-2">📊 System Status</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6">
+      <h1 className="mb-2 text-3xl font-bold">📊 System Status</h1>
       {lastUpdated && (
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="mb-4 text-sm text-gray-500">
           Last updated: {lastUpdated.toLocaleTimeString()}
         </p>
       )}
 
-      <div className="mb-6 p-4 bg-white rounded shadow w-full max-w-2xl text-center">
-        <h2 className="text-xl font-semibold mb-2">Overall System Status</h2>
+      <div className="mb-6 w-full max-w-2xl rounded bg-white p-4 text-center shadow">
+        <h2 className="mb-2 text-xl font-semibold">Overall System Status</h2>
         {overallOk !== undefined ? (
           <StatusBadge ok={!!overallOk} />
         ) : (
@@ -83,46 +81,46 @@ export default function Status() {
       <button
         onClick={fetchStatus}
         disabled={loading}
-        className={`mb-6 px-4 py-2 rounded shadow text-white transition ${
-          loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+        className={`mb-6 rounded px-4 py-2 text-white shadow transition ${
+          loading ? "cursor-not-allowed bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
         {loading ? "Refreshing..." : "🔄 Refresh Now"}
       </button>
 
       {error && (
-        <div className="bg-red-100 text-red-700 p-4 rounded mb-6">
+        <div className="mb-6 rounded bg-red-100 p-4 text-red-700">
           <p>❌ {error}</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="font-semibold text-lg mb-2 flex items-center justify-between">
+      <div className="grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="rounded bg-white p-4 shadow">
+          <h2 className="mb-2 flex items-center justify-between text-lg font-semibold">
             API Health
             {apiHealth && <StatusBadge ok={apiHealth.ok} />}
           </h2>
-          <pre className="text-sm overflow-x-auto">
+          <pre className="overflow-x-auto text-sm">
             {apiHealth ? JSON.stringify(apiHealth, null, 2) : "Loading..."}
           </pre>
         </div>
 
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="font-semibold text-lg mb-2 flex items-center justify-between">
+        <div className="rounded bg-white p-4 shadow">
+          <h2 className="mb-2 flex items-center justify-between text-lg font-semibold">
             Root Health
             {rootHealth && <StatusBadge ok={rootHealth.ok} />}
           </h2>
-          <pre className="text-sm overflow-x-auto">
+          <pre className="overflow-x-auto text-sm">
             {rootHealth ? JSON.stringify(rootHealth, null, 2) : "Loading..."}
           </pre>
         </div>
 
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="font-semibold text-lg mb-2 flex items-center justify-between">
+        <div className="rounded bg-white p-4 shadow">
+          <h2 className="mb-2 flex items-center justify-between text-lg font-semibold">
             Extended Status
             {status && <StatusBadge ok={status.ok} />}
           </h2>
-          <pre className="text-sm overflow-x-auto">
+          <pre className="overflow-x-auto text-sm">
             {status ? JSON.stringify(status, null, 2) : "Loading..."}
           </pre>
         </div>

@@ -12,7 +12,7 @@ services:
       - .env
     depends_on:
       - qdrant
-    
+
   frontend:
     build:
       context: .
