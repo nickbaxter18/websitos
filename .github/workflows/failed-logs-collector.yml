@@ -2,6 +2,8 @@
 name: Collect Failed Logs
 
 on:
+  push:
+  pull_request:
   workflow_run:
     workflows: ["CI", "Build", "Test", "Deploy"] # 🔹 update with real workflow names
     types:
@@ -10,7 +12,7 @@ on:
 
 jobs:
   collect-logs:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +24,7 @@ jobs:
       - name: Fetch jobs JSON for this workflow run
         run: |
           mkdir -p collected_logs
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "pull_request" ]]; then
             echo "{}" > collected_logs/jobs.json
           else
             gh run view ${{ github.event.workflow_run.id }} \
@@ -36,7 +38,7 @@ jobs:
             jq '.jobs[] | select(.conclusion=="failure")' collected_logs/jobs.json > collected_logs/failed_jobs.json || echo "No failed jobs"
             cat collected_logs/failed_jobs.json || true
           else
-            echo "Manual trigger: skipping failed jobs extraction"
+            echo "Manual or push/PR trigger: skipping failed jobs extraction"
           fi
 
       - name: Collect failed step logs
@@ -50,8 +52,8 @@ jobs:
                 --job $job_id --log > collected_logs/steps/job-${job_id}.log || true
             done
           else
-            echo "Manual trigger: creating dummy log"
-            echo "No workflow_run context, manual trigger executed" > collected_logs/steps/manual-trigger.log
+            echo "Push/PR or manual trigger: creating dummy log"
+            echo "No workflow_run context, push/PR/manual trigger executed" > collected_logs/steps/manual-trigger.log
           fi
 
       - name: Compress failed logs
