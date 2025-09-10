@@ -3,24 +3,24 @@ import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
-    <nav aria-label="Main navigation" className="bg-gray-100 shadow">
-      <ul className="flex space-x-6 p-4">
-        <li>
-          <Link to="/" className="text-blue-600 hover:underline">
-            Home
-          </Link>
-        </li>
-        <li>
-          <Link to="/about" className="text-blue-600 hover:underline">
-            About
-          </Link>
-        </li>
-        <li>
-          <Link to="/contact" className="text-blue-600 hover:underline">
-            Contact
-          </Link>
-        </li>
-      </ul>
+    <nav className="w-full bg-white shadow-md py-4 px-6 flex justify-between items-center">
+      <Link to="/" className="text-xl font-bold text-blue-700">
+        U-DIG IT Rentals
+      </Link>
+      <div className="flex space-x-6">
+        <Link
+          to="/"
+          className="text-gray-700 hover:text-blue-700 transition font-medium"
+        >
+          Home
+        </Link>
+        <Link
+          to="/status"
+          className="text-gray-700 hover:text-blue-700 transition font-medium"
+        >
+          System Status
+        </Link>
+      </div>
     </nav>
   );
 }

@@ -8,8 +8,16 @@ npm run type-check || exit 1
 # Run linting
 npm run lint || exit 1
 
-# Run prettier formatting check
+# Run prettier formatting check (JS/TS/JSON/YAML)
 npm run format:check || exit 1
+
+# Run Black formatting check for Python (optional, non-blocking)
+if command -v black >/dev/null 2>&1; then
+  echo "🔍 Running Black on Python files..."
+  black --check . || exit 1
+else
+  echo "⚠️ Black not installed locally. Skipping Python format check (will be enforced in CI)."
+fi
 
 # Run tests
 npm test || exit 1
