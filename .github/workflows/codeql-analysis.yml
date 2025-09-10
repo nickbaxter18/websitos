@@ -7,6 +7,7 @@ on:
     branches: [ main ]
   schedule:
     - cron: '0 3 * * 0'  # every Sunday at 3am UTC
+  workflow_dispatch:
 
 jobs:
   analyze:
@@ -23,6 +24,7 @@ jobs:
         language: [ 'javascript', 'python' ]
 
     steps:
+      - uses: ./.github/actions/setup-deps
       - name: Checkout repository
         uses: actions/checkout@v4
 

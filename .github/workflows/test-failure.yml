@@ -1,0 +1,14 @@
+name: Test Failure Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  always-fail:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/setup-deps
+      - name: Force failure
+        run: |
+          echo "This job is designed to fail to test the failed-logs-collector"
+          exit 1

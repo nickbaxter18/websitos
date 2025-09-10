@@ -9,6 +9,8 @@ jobs:
   uptime:
     runs-on: ubuntu-latest
     steps:
+      - uses: ./.github/actions/setup-deps
+
       - name: Check API health
         run: |
           curl -f https://websitos.onrender.com/api/health || exit 1
