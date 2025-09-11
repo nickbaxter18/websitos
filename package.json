@@ -1,6 +1,6 @@
 {
   "name": "website-os-v2",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "WebsiteOS v2 – Unified frontend, backend, and editor stack",
   "main": "server.js",
@@ -123,13 +123,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/udigitrentals/websitos.git"
+    "url": "git+https://github.com/nickbaxter18/websitos.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/udigitrentals/websitos/issues"
+    "url": "https://github.com/nickbaxter18/websitos/issues"
   },
   "engines": {
     "node": ">=20",

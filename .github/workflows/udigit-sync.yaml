@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo with PAT
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.UDIGIT_GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Zip repo snapshot
         run: zip -r repo-snapshot.zip .
@@ -20,5 +20,5 @@ jobs:
       - name: Upload snapshot (U-DIG IT ingest)
         run: |
           curl -X POST "https://websitos.onrender.com/ingest_file" \
-          -H "Authorization: Bearer ${{ secrets.UDIGIT_GITHUB_TOKEN }}" \
+          -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
           -F "file=@repo-snapshot.zip"
