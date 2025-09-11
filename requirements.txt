@@ -22,7 +22,7 @@ grpcio==1.62.2
 protobuf==4.25.3
 
 # ---- Vector DB client
-qdrant-client==1.9.1
+qdrant-client==1.15.1
 
 # ---- OpenAI SDK (patched to avoid proxies bug)
 openai>=1.42.0
