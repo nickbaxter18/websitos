@@ -32,7 +32,7 @@ tqdm==4.66.5
 portalocker==2.10.1
 
 # ---- PDF parsing / rendering (wheel available for cp311 manylinux)
-pymupdf==1.24.10   # provides 'fitz'
+pymupdf==1.26.4   # provides 'fitz'
 
 # ---- Form parsing (FastAPI file uploads)
 python-multipart==0.0.9
