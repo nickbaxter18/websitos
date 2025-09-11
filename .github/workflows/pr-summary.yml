@@ -10,36 +10,26 @@ jobs:
   pr-summary:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-artifacts
           path: frontend-artifacts
+
       - name: Download backend artifacts
         uses: actions/download-artifact@v4
         with:
           name: backend-artifacts
           path: backend-artifacts
+
       - name: Generate PR summary
         run: |
-          echo "### CI Summary" > pr-summary.md
-          echo "" >> pr-summary.md
-          echo "- Frontend and Backend jobs completed successfully" >> pr-summary.md
-          echo "" >> pr-summary.md
-          echo "Artifacts collected:" >> pr-summary.md
-          ls -R frontend-artifacts >> pr-summary.md
-          ls -R backend-artifacts >> pr-summary.md
-      - name: Upload PR summary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr-summary-report
-          path: pr-summary.md
-      - name: Upload debug logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr-summary-logs
-          path: |
-            frontend-artifacts
-            backend-artifacts
+          echo "### CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend and Backend jobs completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts collected:" >> $GITHUB_STEP_SUMMARY
+          ls -R frontend-artifacts >> $GITHUB_STEP_SUMMARY
+          ls -R backend-artifacts >> $GITHUB_STEP_SUMMARY

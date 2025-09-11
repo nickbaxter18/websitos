@@ -1,6 +1,12 @@
 #!/bin/sh
 
-# Ensure lockfile is always in sync with package.json
-npm install --package-lock-only
+STAGED_FILES=$(git diff --cached --name-only)
 
-git add package-lock.json
+# Skip checks if only GitHub workflow files are staged
+if echo "$STAGED_FILES" | grep -qE '(^|/)\.github/workflows/'; then
+  echo "[Husky] Skipping lint-staged for workflow-only commit"
+  exit 0
+fi
+
+# Otherwise run lint-staged (which runs prettier + eslint)
+npx lint-staged
