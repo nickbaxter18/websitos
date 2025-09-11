@@ -36,3 +36,4 @@ npm run dev
 - `/health` – root health
 - `/api/status` – extended status
   "\n<!-- test commit -->"
+  "# Dummy patch to trigger clean workflows"
