@@ -38,7 +38,7 @@ pymupdf==1.24.10   # provides 'fitz'
 python-multipart==0.0.9
 
 # ---- Database drivers
-pyodbc==4.0.39   # ⚠️ Incompatible with Python 3.12, upgrade to >=5.0.0 if moving off 3.11
+pyodbc==5.2.0   # ⚠️ Incompatible with Python 3.12, upgrade to >=5.0.0 if moving off 3.11
 sqlalchemy~=2.0.31
 psycopg2-binary==2.9.9   # PostgreSQL driver (for CI/CD and local dev)
 
