@@ -19,15 +19,15 @@ jobs:
       - name: Collect failure info (only if run failed)
         if: failure()
         run: |
-          mkdir -p summary
+          mkdir -p summary logs
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           EXIT_CODE_FILE="exit_code.log"
           EXIT_CODE=$(cat $EXIT_CODE_FILE 2>/dev/null || echo "unknown")
 
-          # Safe tails (capture last 50 lines)
-          TAIL_STDERR=$(tail -n 50 stderr.log 2>/dev/null || echo "No stderr captured")
-          TAIL_STDOUT=$(tail -n 50 stdout.log 2>/dev/null || echo "No stdout captured")
+          # Aggregate logs if present
+          ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 20 {} + 2>/dev/null || echo "No stderr captured")
+          ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 20 {} + 2>/dev/null || echo "No stdout captured")
 
           cat > summary/failure-summary-${{ inputs.job_name }}.json <<EOF
           {
@@ -35,9 +35,9 @@ jobs:
             "job": "${{ inputs.job_name }}",
             "step": "${{ inputs.step_name }}",
             "exit_code": "$EXIT_CODE",
-            "error": "$(echo "$TAIL_STDERR" | head -n 1)",
-            "stdout_tail": $(echo "$TAIL_STDOUT" | jq -R -s -c 'split("\n")'),
-            "stderr_tail": $(echo "$TAIL_STDERR" | jq -R -s -c 'split("\n")'),
+            "error": "$(echo "$ALL_STDERR" | head -n 1)",
+            "stdout_tail": $(echo "$ALL_STDOUT" | jq -R -s -c 'split("\n")'),
+            "stderr_tail": $(echo "$ALL_STDERR" | jq -R -s -c 'split("\n")'),
             "git": {
               "commit": "${{ github.sha }}",
               "branch": "${{ github.ref_name }}",
@@ -49,15 +49,23 @@ jobs:
               "node": "$(node -v || echo 'not installed')",
               "python": "$(python3 --version 2>/dev/null || echo 'not installed')"
             },
-            "duration_seconds": $(( ( $(date +%s) - $(date -d "$GITHUB_RUN_STARTED_AT" +%s) ) 2>/dev/null || echo -1 )),
             "timestamp": "$TIMESTAMP"
           }
           EOF
 
-          # Validate JSON
-          cat summary/failure-summary-${{ inputs.job_name }}.json | jq . >/dev/null || echo "⚠️ Invalid JSON generated"
+          # Validate JSON (warn but do not fail)
+          if ! cat summary/failure-summary-${{ inputs.job_name }}.json | jq . >/dev/null; then
+            echo "⚠️ Invalid JSON generated, uploading raw file anyway"
+          fi
 
-      - name: Upload failure summary
+      - name: Debug artifact contents
+        if: failure()
+        run: |
+          echo "Listing generated files:"
+          ls -R summary || true
+          cat summary/failure-summary-${{ inputs.job_name }}.json || true
+
+      - name: Upload failure summary (always attempt)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
