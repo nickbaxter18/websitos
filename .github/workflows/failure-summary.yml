@@ -14,20 +14,22 @@ on:
 jobs:
   failure-summary:
     runs-on: ubuntu-latest
-    if: ${{ failure() }}
+    if: always()
     steps:
-      - name: Collect failure info
+      - name: Collect failure info (only if run failed)
+        if: failure()
         run: |
           mkdir -p summary
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          EXIT_CODE="${{ job.status }}"
+          EXIT_CODE_FILE="exit_code.log"
+          EXIT_CODE=$(cat $EXIT_CODE_FILE 2>/dev/null || echo "unknown")
 
-          # Safe tail (fallback if no logs exist)
+          # Safe tails (capture last 50 lines)
           TAIL_STDERR=$(tail -n 50 stderr.log 2>/dev/null || echo "No stderr captured")
           TAIL_STDOUT=$(tail -n 50 stdout.log 2>/dev/null || echo "No stdout captured")
 
-          cat > summary/failure-summary.json <<EOF
+          cat > summary/failure-summary-${{ inputs.job_name }}.json <<EOF
           {
             "run_id": $GITHUB_RUN_ID,
             "job": "${{ inputs.job_name }}",
@@ -47,13 +49,18 @@ jobs:
               "node": "$(node -v || echo 'not installed')",
               "python": "$(python3 --version 2>/dev/null || echo 'not installed')"
             },
+            "duration_seconds": $(( ( $(date +%s) - $(date -d "$GITHUB_RUN_STARTED_AT" +%s) ) 2>/dev/null || echo -1 )),
             "timestamp": "$TIMESTAMP"
           }
           EOF
 
+          # Validate JSON
+          cat summary/failure-summary-${{ inputs.job_name }}.json | jq . >/dev/null || echo "⚠️ Invalid JSON generated"
+
       - name: Upload failure summary
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: failure-summary
-          path: summary/failure-summary.json
+          name: failure-summary-${{ inputs.job_name }}
+          path: summary/failure-summary-${{ inputs.job_name }}.json
           retention-days: 7
