@@ -55,20 +55,37 @@ jobs:
 
           # Validate JSON (warn but do not fail)
           if ! cat summary/failure-summary-${{ inputs.job_name }}.json | jq . >/dev/null; then
-            echo "⚠️ Invalid JSON generated, uploading raw file anyway"
+            echo "⚠️ Invalid JSON generated"
           fi
+
+          # Create fallback debug log
+          {
+            echo "Run ID: $GITHUB_RUN_ID"
+            echo "Job: ${{ inputs.job_name }}"
+            echo "Step: ${{ inputs.step_name }}"
+            echo "Exit Code: $EXIT_CODE"
+            echo "Timestamp: $TIMESTAMP"
+            echo "Git SHA: ${{ github.sha }}"
+            echo "Branch: ${{ github.ref_name }}"
+            echo "Actor: ${{ github.actor }}"
+            echo "--- STDERR ---"
+            echo "$ALL_STDERR"
+            echo "--- STDOUT ---"
+            echo "$ALL_STDOUT"
+          } > summary/failure-debug-${{ inputs.job_name }}.log
 
       - name: Debug artifact contents
         if: failure()
         run: |
           echo "Listing generated files:"
           ls -R summary || true
-          cat summary/failure-summary-${{ inputs.job_name }}.json || true
+          echo "--- JSON Preview ---"
+          cat summary/failure-summary-${{ inputs.job_name }}.json || echo "No JSON generated"
 
-      - name: Upload failure summary (always attempt)
+      - name: Upload failure summary folder (always attempt)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: failure-summary-${{ inputs.job_name }}
-          path: summary/failure-summary-${{ inputs.job_name }}.json
+          path: summary/
           retention-days: 7
