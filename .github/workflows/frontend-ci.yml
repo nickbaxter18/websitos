@@ -24,7 +24,7 @@ jobs:
           exit ${exit_code:-0}
 
   capture-failure:
-    if: ${{ failure() }}
+    if: always()
     needs: [frontend]
     uses: ./.github/workflows/failure-summary.yml
     with:
