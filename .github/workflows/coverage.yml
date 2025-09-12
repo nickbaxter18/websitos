@@ -51,10 +51,10 @@ jobs:
       - name: Run frontend coverage (Jest, optional)
         run: |
           if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            if npm run | grep -q "test:ci"; then npm run test:ci; else npm test || true; fi
+            npm run test:ci || npm test || true
           elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
             cd frontend
-            if npm run | grep -q "test:ci"; then npm run test:ci; else npm test || true; fi
+            npm run test:ci || npm test || true
           else
             echo "No frontend tests"
           fi
