@@ -21,17 +21,31 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pytest pytest-json-report mypy black
       - name: Run backend checks
         run: |
-          black --check .
-          mypy .
-          pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-report.json || true
+          black --check . --exclude '(Lib|venv|node_modules)'
+          mypy . --exclude '(Lib|venv|node_modules)'
+          pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || true
       - name: Upload backend artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-artifacts
           path: |
             pytest-report.json
+            .pytest_cache
             uvicorn.log
             uvicorn_openapi.log
           retention-days: 7
+      - name: Upload pytest console log
+        if: always()
+        run: |
+          pytest -vv --maxfail=1 --disable-warnings > pytest-console.log 2>&1 || true
+        shell: bash
+      - name: Upload console log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-console-log
+          path: pytest-console.log
