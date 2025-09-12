@@ -10,21 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
-      - name: Checkout repo with PAT
+      - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          token: ${{ env.GH_TOKEN }}
 
-      - name: Debug GH_TOKEN presence
+      - name: Debug GITHUB_TOKEN presence
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "❌ GH_TOKEN not available"
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "❌ GITHUB_TOKEN not available"
             exit 1
           else
-            echo "✅ GH_TOKEN is available (masked)"
+            echo "✅ GITHUB_TOKEN is available (masked)"
           fi
 
       - name: Zip repo snapshot
@@ -33,5 +29,5 @@ jobs:
       - name: Upload snapshot (U-DIG IT ingest)
         run: |
           curl -X POST "https://websitos.onrender.com/ingest_file" \
-            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -F "file=@repo-snapshot.zip"
