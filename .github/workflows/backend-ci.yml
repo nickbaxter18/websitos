@@ -22,11 +22,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-json-report mypy black
-      - name: Run backend checks
-        run: |
-          black --check . --exclude '(Lib|venv|node_modules)'
-          mypy . --exclude '(Lib|venv|node_modules)'
-          pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || true
+
+      - name: Black Check
+        run: black --check . --exclude '(Lib|venv|node_modules)'
+
+      - name: Mypy Check
+        run: mypy . --exclude '(Lib|venv|node_modules)'
+
+      - name: Run Pytest
+        run: pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || true
+
       - name: Upload backend artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,11 +43,12 @@ jobs:
             uvicorn.log
             uvicorn_openapi.log
           retention-days: 7
+
       - name: Upload pytest console log
         if: always()
-        run: |
-          pytest -vv --maxfail=1 --disable-warnings > pytest-console.log 2>&1 || true
+        run: pytest -vv --maxfail=1 --disable-warnings > pytest-console.log 2>&1 || true
         shell: bash
+
       - name: Upload console log artifact
         if: always()
         uses: actions/upload-artifact@v4

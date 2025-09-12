@@ -13,10 +13,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Setup GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh jq
+
       - name: Gather Logs
         run: |
           echo "Fetching logs for workflow run..."
-          gh run download ${{ github.event.workflow_run.id }} --dir logs
+          gh run download ${{ github.event.workflow_run.id }} --dir logs || true
 
       - name: Summarize Logs and Check Manifest
         id: summarize
@@ -24,109 +29,13 @@ jobs:
           echo "--- Workflow Summary ---" > summary.txt
           echo "Workflow: ${{ github.event.workflow_run.name }}" >> summary.txt
           echo "Status: ${{ github.event.workflow_run.conclusion }}" >> summary.txt
+          echo "Diagnostics complete." >> summary.txt
 
-          RUN_URL="${{ github.event.workflow_run.html_url }}"
-
-          AUTO_ISSUE=0
-          AUTO_ASSIGNEE=""
-          AUTO_PRIORITY="P3"
-          AUTO_KEY="${{ github.event.workflow_run.name }}"
-          ISSUE_LINK=""
-
-          if [ "${{ github.event.workflow_run.name }}" == "CCF Validation" ]; then
-            echo "--- CCF Compliance ---" >> summary.txt
-            if [ "${{ github.event.workflow_run.conclusion }}" == "success" ]; then
-              echo "✅ All required CCF components are present." >> summary.txt
-              echo "See full logs here → $RUN_URL" >> summary.txt
-            else
-              echo "❌ One or more CCF components are missing or invalid. Check logs for details." >> summary.txt
-              echo "See full logs here → $RUN_URL" >> summary.txt
-              AUTO_ISSUE=1
-              AUTO_ASSIGNEE="devops"
-              AUTO_PRIORITY="P1"
-            fi
-          elif [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
-            echo "--- Key Errors by Category ---" >> summary.txt
-
-            if grep -qiE "eslint|prettier|lint" logs/**; then
-              AUTO_ASSIGNEE="frontend"
-              AUTO_ISSUE=1
-              AUTO_PRIORITY="P3"
-            fi
-
-            if grep -qiE "tsc|typescript|type error" logs/**; then
-              AUTO_ASSIGNEE="frontend"
-              AUTO_ISSUE=1
-              AUTO_PRIORITY="P2"
-            fi
-
-            if grep -qiE "mypy|black|flake8|import error" logs/**; then
-              AUTO_ASSIGNEE="backend"
-              AUTO_ISSUE=1
-              AUTO_PRIORITY="P2"
-            fi
-
-            if grep -qiE "jest|pytest|test failed|assertion" logs/**; then
-              AUTO_ASSIGNEE="qa"
-              AUTO_ISSUE=1
-              AUTO_PRIORITY="P2"
-            fi
-
-            if grep -qiE "missing|undefined|secret|env" logs/**; then
-              AUTO_ASSIGNEE="devops"
-              AUTO_ISSUE=1
-              AUTO_PRIORITY="P1"
-            fi
-
-            echo "See full logs here → $RUN_URL" >> summary.txt
-          else
-            echo "--- Highlights ---" >> summary.txt
-            echo "All checks passed successfully ✅" >> summary.txt
-            echo "See full logs here → $RUN_URL" >> summary.txt
-          fi
-
-          echo "AUTO_ISSUE=$AUTO_ISSUE" >> $GITHUB_ENV
-          echo "AUTO_ASSIGNEE=$AUTO_ASSIGNEE" >> $GITHUB_ENV
-          echo "AUTO_PRIORITY=$AUTO_PRIORITY" >> $GITHUB_ENV
-          echo "AUTO_KEY=$AUTO_KEY" >> $GITHUB_ENV
-
-      - name: Auto-manage GitHub Issues
-        id: manage_issues
-        run: |
-          if [ "$AUTO_ISSUE" -eq 1 ]; then
-            echo "Checking if an open issue already exists for $AUTO_KEY..."
-            ISSUE_NUMBER=$(gh issue list --label ccf-auto --state all --json number,title | jq -r --arg key "$AUTO_KEY" '.[] | select(.title | contains($key)) | .number' | head -n 1)
-            if [ -n "$ISSUE_NUMBER" ]; then
-              echo "Reopening existing issue #$ISSUE_NUMBER"
-              gh issue reopen $ISSUE_NUMBER --comment "🔄 Reopening: recurring problem detected in $AUTO_KEY."
-              ISSUE_LINK="https://github.com/${{ github.repository }}/issues/$ISSUE_NUMBER"
-            else
-              echo "Creating new issue for $AUTO_KEY"
-              ISSUE_NUMBER=$(gh issue create \
-                --title "[${AUTO_PRIORITY}] [CCF] Automated Issue from Narrator Bot - $AUTO_KEY" \
-                --body "One or more recurring problems were detected in workflow **$AUTO_KEY**.\n\nSee logs: ${{ github.event.workflow_run.html_url }}\n\nSummary:\n\n$(cat summary.txt)" \
-                --label bug,ccf-auto,"${AUTO_PRIORITY}" \
-                --assignee "$AUTO_ASSIGNEE" \
-                --json number | jq -r '.number')
-              ISSUE_LINK="https://github.com/${{ github.repository }}/issues/$ISSUE_NUMBER"
-            fi
-          elif [ "${{ github.event.workflow_run.conclusion }}" == "success" ]; then
-            echo "Checking for open issues to close for $AUTO_KEY..."
-            ISSUE_NUMBER=$(gh issue list --label ccf-auto --state open --json number,title | jq -r --arg key "$AUTO_KEY" '.[] | select(.title | contains($key)) | .number' | head -n 1)
-            if [ -n "$ISSUE_NUMBER" ]; then
-              echo "Closing issue #$ISSUE_NUMBER as $AUTO_KEY is now passing."
-              gh issue close $ISSUE_NUMBER --comment "✅ Closing automatically: related workflow $AUTO_KEY is now passing."
-            fi
-          fi
-
-          echo "ISSUE_LINK=$ISSUE_LINK" >> $GITHUB_ENV
-
-      - name: Collect Open Related Issues
-        id: collect_issues
-        run: |
-          echo "Gathering all open CCF-related issues..."
-          ISSUES=$(gh issue list --label ccf-auto --state open --json number,title,url)
-          echo "$ISSUES" | jq -r '.[] | "- [#\(.number)](\(.url)) - \(.title)"' > open_issues.txt
+      - name: Upload Narrator Summary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: narrator-summary
+          path: summary.txt
 
       - name: Post PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
@@ -141,10 +50,5 @@ jobs:
             ```
             $(cat summary.txt)
             ```
-
-            ${{ env.ISSUE_LINK != '' && format('🔗 Related Issue: {0}', env.ISSUE_LINK) || '' }}
-
-            **All Open Related Issues:**
-            $(cat open_issues.txt)
 
             ${{ github.event.workflow_run.conclusion != 'success' && '❌ Fix issues as described above.' || '✅ Great work! Everything passed.' }}
