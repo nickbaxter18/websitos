@@ -35,3 +35,5 @@ npm run dev
 - `/api/health` – API health
 - `/health` – root health
 - `/api/status` – extended status
+
+<!-- retrigger Frontend CI -->
