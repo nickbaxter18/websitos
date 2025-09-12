@@ -6,11 +6,11 @@ services:
     dockerfilePath: ./Dockerfile
     autoDeploy: true
     envVars:
-      - key: APP_API_KEY
+      - key: APP_APT_KEY
         sync: false
       - key: QDRANT_URL
         sync: false
       - key: QDRANT_API_KEY
         sync: false
-      - key: OPENAI_API_KEY
+      - key: OPEN_AI_API_KEY
         sync: false

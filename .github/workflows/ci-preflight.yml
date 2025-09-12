@@ -1,0 +1,98 @@
+name: CI Preflight
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Path Filter
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            frontend:
+              - 'src/frontend/**'
+              - 'public/**'
+            backend:
+              - 'api/**'
+              - 'server.js'
+              - 'requirements.txt'
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+
+      - name: Setup Node.js
+        if: steps.changes.outputs.frontend == 'true' || steps.changes.outputs.docs == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Python
+        if: steps.changes.outputs.backend == 'true' || steps.changes.outputs.docs == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies (frontend)
+        if: steps.changes.outputs.frontend == 'true'
+        run: npm install
+
+      - name: Install dependencies (backend)
+        if: steps.changes.outputs.backend == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+
+      - name: Run Preflight Checks
+        id: preflight
+        run: |
+          echo "--- Running Preflight Checks ---"
+          mkdir -p preflight-results
+
+          if [[ "${{ steps.changes.outputs.frontend }}" == 'true' ]]; then
+            echo "Lint Results:" > preflight-results/lint.txt
+            npm run lint >> preflight-results/lint.txt 2>&1 || true
+            npm run format:check >> preflight-results/lint.txt 2>&1 || true
+
+            echo "TS Type Check Results:" > preflight-results/ts.txt
+            npm run type-check >> preflight-results/ts.txt 2>&1 || true
+
+            echo "Jest Test Discovery:" > preflight-results/jest.txt
+            npm run test -- --listTests >> preflight-results/jest.txt 2>&1 || true
+          fi
+
+          if [[ "${{ steps.changes.outputs.backend }}" == 'true' ]]; then
+            echo "Python Static Check Results:" > preflight-results/python.txt
+            mypy . >> preflight-results/python.txt 2>&1 || true
+            black --check . >> preflight-results/python.txt 2>&1 || true
+
+            echo "Pytest Discovery:" > preflight-results/pytest.txt
+            pytest --collect-only >> preflight-results/pytest.txt 2>&1 || true
+          fi
+
+      - name: Aggregate Report
+        run: |
+          echo "--- CI Multi-Issue Report ---"
+          if [[ "${{ steps.changes.outputs.frontend }}" == 'true' ]]; then
+            echo "\n❌ Lint Results:" && cat preflight-results/lint.txt
+            echo "\n❌ TypeScript Results:" && cat preflight-results/ts.txt
+            echo "\n❌ Jest Test Discovery:" && cat preflight-results/jest.txt
+          fi
+          if [[ "${{ steps.changes.outputs.backend }}" == 'true' ]]; then
+            echo "\n❌ Python Static Checks:" && cat preflight-results/python.txt
+            echo "\n❌ Pytest Test Discovery:" && cat preflight-results/pytest.txt
+          fi
+          if [[ "${{ steps.changes.outputs.docs }}" == 'true' ]]; then
+            echo "\n✅ Docs-only change detected: no code checks required."
+          fi
+          echo "\n--- End of Report ---"
