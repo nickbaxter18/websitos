@@ -1,8 +1,6 @@
 #!/bin/sh
 
-# Simplified Husky pre-commit hook
-
-echo "[Husky] Running lint-staged..."
-npx lint-staged || true
+echo "[Husky] Running lint-staged with root config..."
+npx lint-staged --config package.json || true
 
 exit 0
