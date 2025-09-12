@@ -13,15 +13,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug list scripts dir
+      - name: Debug list key directories
         run: |
-          echo "Listing contents of scripts/ before validation..."
-          ls -R scripts || echo "scripts directory not found"
+          echo "Workspace: $GITHUB_WORKSPACE"
+          echo "Listing repo root:"
+          ls -R | head -50
 
       - name: Ensure validate-secrets.js is executable
         run: |
           if [ -f "scripts/validate-secrets.js" ]; then
+            git update-index --chmod=+x scripts/validate-secrets.js || true
             chmod +x scripts/validate-secrets.js
+            echo "✅ validate-secrets.js marked executable"
           else
             echo "❌ scripts/validate-secrets.js is missing!"
             exit 1
@@ -32,15 +35,15 @@ jobs:
           echo "Checking for required Continuous Confidence Framework components..."
 
           REQUIRED_FILES=( \
-            ".github/ccf-manifest.md" \
-            ".github/workflows/ci-preflight.yml" \
-            ".github/workflows/pr-narrator.yml" \
-            ".github/workflows/post-deploy-smoke.yml" \
-            ".github/workflows/render-deploy.yml" \
-            ".github/workflows/branch-protection.yml" \
-            ".github/branch-protection-rules.yml" \
-            "config/secrets.schema.json" \
-            "scripts/validate-secrets.js" \
+            "$GITHUB_WORKSPACE/.github/ccf-manifest.md" \
+            "$GITHUB_WORKSPACE/.github/workflows/ci-preflight.yml" \
+            "$GITHUB_WORKSPACE/.github/workflows/pr-narrator.yml" \
+            "$GITHUB_WORKSPACE/.github/workflows/post-deploy-smoke.yml" \
+            "$GITHUB_WORKSPACE/.github/workflows/render-deploy.yml" \
+            "$GITHUB_WORKSPACE/.github/workflows/branch-protection.yml" \
+            "$GITHUB_WORKSPACE/.github/branch-protection-rules.yml" \
+            "$GITHUB_WORKSPACE/config/secrets.schema.json" \
+            "$GITHUB_WORKSPACE/scripts/validate-secrets.js" \
           )
 
           MISSING=0
