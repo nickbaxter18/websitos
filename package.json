@@ -112,10 +112,8 @@
     "vitest": "3.2.4"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,md,yml,yaml,html}": [
-      "prettier --write --allow-empty",
-      "eslint --fix --allow-empty"
-    ]
+    "*.{js,jsx,ts,tsx,json,css,md,yml,yaml,html}": "prettier --write --allow-empty",
+    "*.{js,jsx,ts,tsx}": "eslint --fix --allow-empty"
   },
   "directories": {
     "doc": "docs",
