@@ -2,7 +2,7 @@ name: U-DIG IT Repo Sync
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
 jobs:
@@ -20,5 +20,5 @@ jobs:
       - name: Upload snapshot (U-DIG IT ingest)
         run: |
           curl -X POST "https://websitos.onrender.com/ingest_file" \
-          -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-          -F "file=@repo-snapshot.zip"
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
+            -F "file=@repo-snapshot.zip"

@@ -1,1 +1,2 @@
-triggering CI at $(date)
+The current date is: 2025-09-11 
+Enter the new date: (yy-mm-dd) 
