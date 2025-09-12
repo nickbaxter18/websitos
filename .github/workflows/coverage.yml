@@ -41,7 +41,7 @@ jobs:
       - name: Debug workspace
         run: |
           echo "Current directory: $(pwd)"
-          ls -R | head -50
+          ls -al --max-depth=2
 
       - name: Install frontend dependencies (if found)
         run: |
