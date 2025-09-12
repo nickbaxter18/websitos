@@ -66,10 +66,8 @@ jobs:
           }
           EOF
 
-          # Validate JSON (warn but do not fail)
-          if ! cat summary/failure-summary-${{ inputs.job_name }}.json | jq . >/dev/null; then
-            echo "⚠️ Invalid JSON generated"
-          fi
+          # Ensure file exists even if content is broken
+          touch summary/failure-summary-${{ inputs.job_name }}.json
 
           # Create fallback debug log
           {
@@ -91,9 +89,9 @@ jobs:
 
       - name: Debug artifact contents
         run: |
-          echo "Listing files in workspace:"
-          ls -R || true
-          echo "Listing files in summary/:"
+          echo "Listing workspace files:"
+          ls -R /home/runner/work || true
+          echo "Listing summary files:"
           ls -R summary || true
           echo "--- JSON Preview ---"
           cat summary/failure-summary-${{ inputs.job_name }}.json || echo "No JSON generated"
@@ -105,3 +103,11 @@ jobs:
           name: failure-summary-${{ inputs.job_name }}
           path: summary/**
           retention-days: 7
+
+      - name: Upload workspace snapshot (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-debug-${{ inputs.job_name }}
+          path: /home/runner/work
+          retention-days: 1
