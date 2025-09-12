@@ -16,8 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Collect failure info (only if run failed)
-        if: failure()
+      - name: Collect failure info (always runs)
         run: |
           mkdir -p summary logs
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -39,7 +38,7 @@ jobs:
 
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID"
 
-          # Always generate JSON, even with defaults
+          # Always generate JSON, even if no failure
           cat > summary/failure-summary-${{ inputs.job_name }}.json <<EOF
           {
             "run_id": $GITHUB_RUN_ID,
@@ -66,7 +65,7 @@ jobs:
           }
           EOF
 
-          # Ensure file exists even if content is broken
+          # Ensure JSON always exists
           touch summary/failure-summary-${{ inputs.job_name }}.json
 
           # Create fallback debug log
@@ -89,9 +88,9 @@ jobs:
 
       - name: Debug artifact contents
         run: |
-          echo "Listing workspace files:"
+          echo "Listing files in workspace:"
           ls -R /home/runner/work || true
-          echo "Listing summary files:"
+          echo "Listing files in summary/:"
           ls -R summary || true
           echo "--- JSON Preview ---"
           cat summary/failure-summary-${{ inputs.job_name }}.json || echo "No JSON generated"
@@ -103,11 +102,3 @@ jobs:
           name: failure-summary-${{ inputs.job_name }}
           path: summary/**
           retention-days: 7
-
-      - name: Upload workspace snapshot (debug)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: workspace-debug-${{ inputs.job_name }}
-          path: /home/runner/work
-          retention-days: 1
