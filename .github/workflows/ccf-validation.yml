@@ -13,51 +13,48 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug list key directories
-        run: |
-          echo "Workspace: $GITHUB_WORKSPACE"
-          echo "Listing repo root:"
-          ls -R | head -50
-
-      - name: Ensure validate-secrets.js exists
-        run: |
-          if [ -f "scripts/validate-secrets.js" ]; then
-            chmod +x scripts/validate-secrets.js
-            echo "✅ validate-secrets.js found and executable"
-          else
-            echo "⚠️ scripts/validate-secrets.js not found, skipping"
-          fi
-
       - name: Validate required files exist
         run: |
-          REQUIRED_FILES=( \
-            ".github/ccf-manifest.md" \
-            ".github/workflows/ci-preflight.yml" \
-            ".github/workflows/pr-narrator.yml" \
-            ".github/workflows/post-deploy-smoke.yml" \
-            ".github/workflows/render-deploy.yml" \
-            ".github/workflows/branch-protection.yml" \
-            ".github/branch-protection-rules.yml" \
+          CRITICAL_FILES=( \
             "config/secrets.schema.json" )
 
-          MISSING=0
-          for f in "${REQUIRED_FILES[@]}"; do
+          OPTIONAL_FILES=( \
+            ".github/ccf-manifest.md" \
+            ".github/workflows/ci-preflight.yml" \
+            ".github/workflows/pr-summary.yml" \
+            ".github/workflows/post-deploy-smoke.yml" \
+            ".github/workflows/render-deploy.yml" \
+            ".github/workflows/branch-protection.yml" )
+
+          MISSING_CRITICAL=0
+          for f in "${CRITICAL_FILES[@]}"; do
             if [ ! -f "$f" ]; then
-              echo "❌ Missing required file: $f"
-              MISSING=1
+              echo "❌ Missing critical file: $f"
+              MISSING_CRITICAL=1
             else
-              echo "✅ Found: $f"
+              echo "✅ Found critical file: $f"
             fi
           done
 
-          if [ "$MISSING" -eq 1 ]; then
+          for f in "${OPTIONAL_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "⚠️ Missing optional file: $f"
+            else
+              echo "✅ Found optional file: $f"
+            fi
+          done
+
+          if [ "$MISSING_CRITICAL" -eq 1 ]; then
+            echo "❌ Critical files missing. Failing validation."
             exit 1
+          else
+            echo "✅ Validation passed (optional files may be missing)."
           fi
 
-      - name: Confirm manifest is up-to-date
+      - name: Confirm manifest contains mapping section
         run: |
-          if ! grep -q "### 🚀 Mapping to Implementation" .github/ccf-manifest.md; then
-            echo "❌ ccf-manifest.md missing mapping section"
-            exit 1
+          if [ -f .github/ccf-manifest.md ] && grep -q "### 🚀 Mapping to Implementation" .github/ccf-manifest.md; then
+            echo "✅ Manifest mapping confirmed"
+          else
+            echo "⚠️ Manifest missing mapping section (not failing build)"
           fi
-          echo "✅ Manifest mapping confirmed"

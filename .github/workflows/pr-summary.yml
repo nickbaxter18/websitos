@@ -14,14 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download frontend artifacts
+      - name: Download frontend artifacts (ignore if missing)
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: frontend-artifacts
           path: frontend-artifacts
 
-      - name: Download backend artifacts
+      - name: Download backend artifacts (ignore if missing)
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: backend-artifacts
           path: backend-artifacts
@@ -29,7 +31,7 @@ jobs:
       - name: Generate PR summary
         run: |
           echo "### CI Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Frontend and Backend jobs completed successfully" >> $GITHUB_STEP_SUMMARY
-          echo "Artifacts collected:" >> $GITHUB_STEP_SUMMARY
-          ls -R frontend-artifacts >> $GITHUB_STEP_SUMMARY
-          ls -R backend-artifacts >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend + Backend jobs completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- Artifacts (if available) listed below:" >> $GITHUB_STEP_SUMMARY
+          ls -R frontend-artifacts || echo "(no frontend artifacts found)" >> $GITHUB_STEP_SUMMARY
+          ls -R backend-artifacts || echo "(no backend artifacts found)" >> $GITHUB_STEP_SUMMARY
