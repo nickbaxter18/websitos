@@ -13,6 +13,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Debug list scripts dir
+        run: |
+          echo "Listing contents of scripts/ before validation..."
+          ls -R scripts || echo "scripts directory not found"
+
+      - name: Ensure validate-secrets.js is executable
+        run: |
+          if [ -f "scripts/validate-secrets.js" ]; then
+            chmod +x scripts/validate-secrets.js
+          else
+            echo "❌ scripts/validate-secrets.js is missing!"
+            exit 1
+          fi
+
       - name: Validate required files exist
         run: |
           echo "Checking for required Continuous Confidence Framework components..."
