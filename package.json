@@ -30,8 +30,8 @@
     "opscycle": "ts-node -P tsconfig.ops.json scripts/opsCycle.ts",
     "secscan": "ts-node -T -P tsconfig.ops.json scripts/scan-secrets.ts"
   },
-  "dependencies": { ... },
-  "devDependencies": { ... },
+  "dependencies": {},
+  "devDependencies": {},
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,html}": "prettier --write",
     "*.{md,yml,yaml}": "prettier --write --parser yaml",
