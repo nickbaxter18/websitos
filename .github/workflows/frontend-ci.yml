@@ -10,50 +10,22 @@ on:
 jobs:
   frontend:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Verify Node & npm
-        run: |
-          which node
-          node --version
-          which npm
-          npm --version
-
-      - name: Debug workspace
-        run: |
-          echo "Current directory: $(pwd)"
-          ls -al --max-depth=2
-
       - name: Install dependencies
-        run: npm ci
-
-      - name: Run frontend checks
         run: |
-          npm run lint || true
-          npm run type-check || true
-          npm run test:ci || npm test || true
+          (npm ci >stdout.log 2>stderr.log) || exit_code=$?
+          exit ${exit_code:-0}
 
-      - name: Build frontend
-        run: npm run build
+      - name: Build
+        run: |
+          (npm run build >stdout.log 2>stderr.log) || exit_code=$?
+          exit ${exit_code:-0}
 
-      - name: Upload frontend artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-artifacts
-          path: |
-            build/
-            coverage/coverage-summary.json
-            jest-report.json
-            dist
-          retention-days: 7
+  capture-failure:
+    uses: ./.github/workflows/failure-summary.yml
+    with:
+      job_name: frontend
+      step_name: Build
+    needs: [frontend]

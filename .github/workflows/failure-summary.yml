@@ -1,0 +1,59 @@
+name: Capture Failure Summary
+
+on:
+  workflow_call:
+    inputs:
+      job_name:
+        required: true
+        type: string
+      step_name:
+        required: false
+        type: string
+        default: "unknown-step"
+
+jobs:
+  failure-summary:
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Collect failure info
+        run: |
+          mkdir -p summary
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          EXIT_CODE="${{ job.status }}"
+
+          # Safe tail (fallback if no logs exist)
+          TAIL_STDERR=$(tail -n 50 stderr.log 2>/dev/null || echo "No stderr captured")
+          TAIL_STDOUT=$(tail -n 50 stdout.log 2>/dev/null || echo "No stdout captured")
+
+          cat > summary/failure-summary.json <<EOF
+          {
+            "run_id": $GITHUB_RUN_ID,
+            "job": "${{ inputs.job_name }}",
+            "step": "${{ inputs.step_name }}",
+            "exit_code": "$EXIT_CODE",
+            "error": "$(echo "$TAIL_STDERR" | head -n 1)",
+            "stdout_tail": $(echo "$TAIL_STDOUT" | jq -R -s -c 'split("\n")'),
+            "stderr_tail": $(echo "$TAIL_STDERR" | jq -R -s -c 'split("\n")'),
+            "git": {
+              "commit": "${{ github.sha }}",
+              "branch": "${{ github.ref_name }}",
+              "pr_number": "${{ github.event.pull_request.number || '' }}"
+            },
+            "triggered_by": "${{ github.actor }}",
+            "environment": {
+              "os": "${{ runner.os }}",
+              "node": "$(node -v || echo 'not installed')",
+              "python": "$(python3 --version 2>/dev/null || echo 'not installed')"
+            },
+            "timestamp": "$TIMESTAMP"
+          }
+          EOF
+
+      - name: Upload failure summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-summary
+          path: summary/failure-summary.json
+          retention-days: 7
