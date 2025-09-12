@@ -27,6 +27,11 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      - name: Debug workspace
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -R | head -50
+
       - name: Detect frontend directory
         id: detect-frontend
         run: |
