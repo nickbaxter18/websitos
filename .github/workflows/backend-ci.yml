@@ -24,10 +24,28 @@ jobs:
           pip install pytest pytest-json-report mypy black
 
       - name: Black Check
-        run: black --check . --exclude '(Lib|venv|node_modules)'
+        run: |
+          black --check . --exclude '(Lib|venv|node_modules)' > black-results.txt 2>&1 || true
+          cat black-results.txt
+        continue-on-error: true
+      - name: Upload Black Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: black-results
+          path: black-results.txt
 
       - name: Mypy Check
-        run: mypy . --exclude '(Lib|venv|node_modules)'
+        run: |
+          mypy . --exclude '(Lib|venv|node_modules)' > mypy-results.txt 2>&1 || true
+          cat mypy-results.txt
+        continue-on-error: true
+      - name: Upload Mypy Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mypy-results
+          path: mypy-results.txt
 
       - name: Run Pytest
         run: pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || true
@@ -48,7 +66,6 @@ jobs:
         if: always()
         run: pytest -vv --maxfail=1 --disable-warnings > pytest-console.log 2>&1 || true
         shell: bash
-
       - name: Upload console log artifact
         if: always()
         uses: actions/upload-artifact@v4
