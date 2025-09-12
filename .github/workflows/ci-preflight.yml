@@ -11,6 +11,10 @@ jobs:
   preflight:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./
     steps:
       - uses: actions/checkout@v4
 
@@ -26,62 +30,31 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      - name: Verify Node & npm
+        run: |
+          which node
+          node --version
+          which npm
+          npm --version
+
       - name: Debug workspace
         run: |
           echo "Current directory: $(pwd)"
           ls -R | head -50
 
-      - name: Detect frontend directory
-        id: detect-frontend
-        run: |
-          if [ -f package.json ]; then
-            echo "found-root=true" >> $GITHUB_OUTPUT
-          elif [ -f frontend/package.json ]; then
-            echo "found-frontend=true" >> $GITHUB_OUTPUT
-          else
-            echo "no-frontend=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Install dependencies
         run: |
-          if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            npm ci
-          elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
-            cd frontend && npm ci
-          else
-            echo "No frontend found"
-          fi
+          npm ci || echo "No package.json found"
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run lint (if available)
-        run: |
-          if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            npm run lint || true
-          elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
-            cd frontend && npm run lint || true
-          else
-            echo "No lint script"
-          fi > lint-results.txt
+        run: npm run lint || echo "No lint script" > lint-results.txt
 
       - name: Run type-check (if available)
-        run: |
-          if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            npm run type-check || true
-          elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
-            cd frontend && npm run type-check || true
-          else
-            echo "No type-check script"
-          fi > ts-results.txt
+        run: npm run type-check || echo "No type-check script" > ts-results.txt
 
       - name: Run JS tests (if available)
-        run: |
-          if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            npm test || true
-          elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
-            cd frontend && npm test || true
-          else
-            echo "No JS tests"
-          fi > jest-results.txt
+        run: npm test || echo "No JS tests" > jest-results.txt
 
       - name: Run Python tests (if available)
         run: |

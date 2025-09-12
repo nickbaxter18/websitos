@@ -11,6 +11,10 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./
     steps:
       - uses: actions/checkout@v4
 
@@ -19,56 +23,29 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Verify Node & npm
+        run: |
+          which node
+          node --version
+          which npm
+          npm --version
+
       - name: Debug workspace
         run: |
           echo "Current directory: $(pwd)"
           ls -R | head -50
 
-      - name: Detect frontend directory
-        id: detect-frontend
-        run: |
-          if [ -f package.json ]; then
-            echo "found-root=true" >> $GITHUB_OUTPUT
-          elif [ -f frontend/package.json ]; then
-            echo "found-frontend=true" >> $GITHUB_OUTPUT
-          else
-            echo "no-frontend=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Install dependencies
-        run: |
-          if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            npm ci
-          elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
-            cd frontend && npm ci
-          else
-            echo "No frontend found"
-          fi
+        run: npm ci
 
       - name: Run frontend checks
         run: |
-          if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            npm run lint || true
-            npm run type-check || true
-            npm run test:ci || npm test || true
-          elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
-            cd frontend
-            npm run lint || true
-            npm run type-check || true
-            npm run test:ci || npm test || true
-          else
-            echo "No frontend to check"
-          fi
+          npm run lint || true
+          npm run type-check || true
+          npm run test:ci || npm test || true
 
       - name: Build frontend
-        run: |
-          if [ "${{ steps.detect-frontend.outputs.found-root }}" == "true" ]; then
-            npm run build
-          elif [ "${{ steps.detect-frontend.outputs.found-frontend }}" == "true" ]; then
-            cd frontend && npm run build
-          else
-            echo "No frontend to build"
-          fi
+        run: npm run build
 
       - name: Upload frontend artifacts
         uses: actions/upload-artifact@v4
