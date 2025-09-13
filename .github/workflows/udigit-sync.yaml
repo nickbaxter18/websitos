@@ -38,14 +38,17 @@ jobs:
             -x "venv/*" \
             -x "__pycache__/*"
 
-      - name: Upload snapshot to U-DIG IT ingest API
+      - name: Upload snapshot to U-DIG IT ingest API (with debug)
         run: |
-          RESPONSE=$(curl -s -o response.txt -w "%{http_code}" -X POST "https://websitos.onrender.com/ingest_file" \
+          echo "🔎 Sending request to ingest API..."
+          RESPONSE=$(curl -v -s -o response.txt -w "%{http_code}" -X POST "https://websitos.onrender.com/ingest_file" \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             -F "file=@repo-snapshot.zip")
 
-          echo "HTTP Response: $RESPONSE"
-          cat response.txt
+          echo "--- HTTP Status Code ---"
+          echo "$RESPONSE"
+          echo "--- HTTP Response Body ---"
+          cat response.txt || echo "(no body)"
 
           if [ "$RESPONSE" -ne 200 ]; then
             echo "❌ U-DIG IT ingest API returned error"
