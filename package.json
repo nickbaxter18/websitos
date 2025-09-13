@@ -30,12 +30,12 @@
     "opscycle": "ts-node -P tsconfig.ops.json scripts/opsCycle.ts",
     "secscan": "ts-node -T -P tsconfig.ops.json scripts/scan-secrets.ts"
   },
-  "dependencies": {},
   "devDependencies": {
     "@babel/preset-env": "^7.25.0",
+    "@babel/preset-flow": "^7.25.0",
     "@babel/preset-react": "^7.25.0",
     "@babel/preset-typescript": "^7.25.0",
-    "@babel/preset-flow": "^7.25.0"
+    "husky": "9.1.7"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,html}": [
