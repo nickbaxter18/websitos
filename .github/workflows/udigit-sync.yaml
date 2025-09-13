@@ -11,13 +11,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Verify GH_TOKEN presence
+      - name: Verify APP_API_KEY presence
         run: |
-          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
-            echo "❌ GH_TOKEN not available"
+          if [ -z "${{ secrets.APP_API_KEY }}" ]; then
+            echo "❌ APP_API_KEY not available"
             exit 1
           else
-            echo "✅ GH_TOKEN is available (masked)"
+            echo "✅ APP_API_KEY is available (masked)"
           fi
 
       - name: Download repo archive
@@ -40,9 +40,9 @@ jobs:
 
       - name: Upload snapshot to U-DIG IT ingest API (with debug)
         run: |
-          echo "🔎 Sending request to ingest API..."
+          echo "🔎 Sending request with APP_API_KEY..."
           RESPONSE=$(curl -v -s -o response.txt -w "%{http_code}" -X POST "https://websitos.onrender.com/ingest_file" \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
+            -H "x-api-key: ${{ secrets.APP_API_KEY }}" \
             -F "file=@repo-snapshot.zip")
 
           echo "--- HTTP Status Code ---"
