@@ -10,17 +10,26 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Verify GITHUB_TOKEN presence
+      - name: Verify GH_TOKEN presence
         run: |
-          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
-            echo "❌ GITHUB_TOKEN not available"
+          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
+            echo "❌ GH_TOKEN not available"
             exit 1
           else
-            echo "✅ GITHUB_TOKEN is available (masked)"
+            echo "✅ GH_TOKEN is available (masked)"
           fi
+
+      - name: Debug repo state
+        run: |
+          echo "📂 Listing files"
+          ls -la
+          echo "🔎 Git status"
+          git status
 
       - name: Zip repo snapshot (excluding sensitive files)
         run: |
@@ -34,7 +43,7 @@ jobs:
       - name: Upload snapshot to U-DIG IT ingest API
         run: |
           RESPONSE=$(curl -s -o response.txt -w "%{http_code}" -X POST "https://websitos.onrender.com/ingest_file" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             -F "file=@repo-snapshot.zip")
 
           echo "HTTP Response: $RESPONSE"
