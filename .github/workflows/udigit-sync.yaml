@@ -8,12 +8,13 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout repo (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          show-progress: true
 
       - name: Verify GH_TOKEN presence
         run: |
@@ -27,9 +28,9 @@ jobs:
       - name: Debug repo state
         run: |
           echo "📂 Listing files"
-          ls -la
+          ls -la || echo "⚠️ ls failed"
           echo "🔎 Git status"
-          git status
+          git status || echo "⚠️ git status failed"
 
       - name: Zip repo snapshot (excluding sensitive files)
         run: |
