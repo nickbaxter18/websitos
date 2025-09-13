@@ -41,7 +41,7 @@ jobs:
           pip install pytest pytest-json-report mypy black
 
       - name: Enable problem matchers
-        uses: ./.github/workflows/setup-matchers.yml
+        uses: ./.github/actions/setup-matchers
 
       - name: Run ${{ matrix.task }}
         run: |

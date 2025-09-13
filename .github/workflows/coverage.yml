@@ -57,7 +57,7 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Enable problem matchers
-        uses: ./.github/workflows/setup-matchers.yml
+        uses: ./.github/actions/setup-matchers
 
       - name: Run frontend coverage (Jest)
         if: matrix.task == 'frontend'

@@ -46,7 +46,7 @@ jobs:
           path: summary.txt
 
       - name: Post PR Comment
-        uses: marocchino/sticky-pull-request-comment@3e5e28f2a0d5c56603c55a0c30cf6741f25e6da9 # pinned SHA for v2
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: workflow-narrator
           path: summary.txt

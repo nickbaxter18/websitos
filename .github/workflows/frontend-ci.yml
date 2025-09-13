@@ -34,7 +34,7 @@ jobs:
         run: npm ci
 
       - name: Enable problem matchers
-        uses: ./.github/workflows/setup-matchers.yml
+        uses: ./.github/actions/setup-matchers
 
       - name: Run ${{ matrix.task }}
         run: npm run ${{ matrix.task }}
