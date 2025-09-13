@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     steps:
       - name: Checkout repo (full history)
         uses: actions/checkout@v4
@@ -29,6 +30,13 @@ jobs:
         run: |
           echo "📂 Listing files"
           ls -la || echo "⚠️ ls failed"
+
+          echo "🔎 Checking .git directory"
+          ls -la .git || echo "⚠️ .git directory missing"
+
+          echo "🔎 Git HEAD"
+          git rev-parse HEAD || echo "⚠️ Could not resolve HEAD"
+
           echo "🔎 Git status"
           git status || echo "⚠️ git status failed"
 
