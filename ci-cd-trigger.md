@@ -13,3 +13,4 @@
 "# Dummy commit after udigit-sync persist-credentials fix"  
 "# Dummy commit after simplifying udigit-sync workflow"  
 "# Dummy commit after restoring checkout for sync workflow"  
+"# Dummy commit after adding GH_TOKEN to checkout"  
