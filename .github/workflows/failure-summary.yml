@@ -25,11 +25,22 @@ jobs:
           EXIT_CODE=$(cat $EXIT_CODE_FILE 2>/dev/null || echo "unknown")
 
           # Aggregate logs if present
-          ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 20 {} + 2>/dev/null || echo "No stderr captured")
-          ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 20 {} + 2>/dev/null || echo "No stdout captured")
+          ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stderr captured")
+          ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stdout captured")
 
           # Try to detect failed step (best effort)
           FAILED_STEP=$(grep -i "Error" -m1 stderr.log 2>/dev/null || echo "${{ inputs.step_name }}")
+
+          # Custom tagging for deploy-related failures
+          if echo "$ALL_STDERR" | grep -qi "API health check failed"; then
+            TAGGED_ERROR="🚨 API health check failed during deployment"
+          elif echo "$ALL_STDERR" | grep -qi "API extended status check failed"; then
+            TAGGED_ERROR="🚨 API extended status endpoint failed"
+          elif echo "$ALL_STDERR" | grep -qi "Root health check failed"; then
+            TAGGED_ERROR="🚨 Root health check failed"
+          else
+            TAGGED_ERROR=$(echo "$ALL_STDERR" | head -n 1)
+          fi
 
           # Calculate job duration (fallback -1 if unavailable)
           START_TIME=$(date -d "$GITHUB_RUN_STARTED_AT" +%s 2>/dev/null || echo 0)
@@ -45,7 +56,7 @@ jobs:
             "job": "${{ inputs.job_name }}",
             "step": "$FAILED_STEP",
             "exit_code": "$EXIT_CODE",
-            "error": "$(echo "$ALL_STDERR" | head -n 1)",
+            "error": "$TAGGED_ERROR",
             "stdout_tail": $(echo "$ALL_STDOUT" | jq -R -s -c 'split("\n")'),
             "stderr_tail": $(echo "$ALL_STDERR" | jq -R -s -c 'split("\n")'),
             "git": {
@@ -65,8 +76,10 @@ jobs:
           }
           EOF
 
-          # Ensure JSON always exists
-          touch summary/failure-summary-${{ inputs.job_name }}.json
+          # Create annotation for GitHub UI
+          if echo "$TAGGED_ERROR" | grep -qi "failed"; then
+            echo "::error file=summary/failure-summary-${{ inputs.job_name }}.json,title=Job ${{ inputs.job_name }} failed::$TAGGED_ERROR"
+          fi
 
           # Create fallback debug log
           {
@@ -86,14 +99,14 @@ jobs:
             echo "$ALL_STDOUT"
           } > summary/failure-debug-${{ inputs.job_name }}.log
 
-      - name: Debug artifact contents
+      - name: Generate PR-friendly summary table
         run: |
-          echo "Listing files in workspace:"
-          ls -R /home/runner/work || true
-          echo "Listing files in summary/:"
-          ls -R summary || true
-          echo "--- JSON Preview ---"
-          cat summary/failure-summary-${{ inputs.job_name }}.json || echo "No JSON generated"
+          {
+            echo "### 🚨 Failure Summary for ${{ inputs.job_name }}"
+            echo "| Step | Exit Code | Error Message |"
+            echo "|------|-----------|---------------|"
+            echo "| $FAILED_STEP | $EXIT_CODE | $TAGGED_ERROR |"
+          } > summary/pr-summary-${{ inputs.job_name }}.md
 
       - name: Upload failure summary folder (always attempt)
         if: always()

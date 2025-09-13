@@ -13,16 +13,22 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # PowerShell Core (pwsh) is already on the runner — no setup action needed.
+      - name: Enable problem matchers
+        uses: ./.github/workflows/setup-matchers.yml
+
+      # Ensure PowerShell Core is available and validate environment
+      - name: Verify pwsh availability
+        shell: pwsh
+        run: pwsh -v
+
       - name: Run OpsPipeline
         shell: pwsh
         run: |
-          pwsh -v
           Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
           if (-not (Test-Path .\OpsPipeline.ps1)) {
             Write-Error "OpsPipeline.ps1 not found at repo root"

@@ -3,51 +3,57 @@ name: Frontend CI
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
   workflow_dispatch:
 
 jobs:
-  frontend:
+  checks:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        task: [lint, type-check, test]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Ensure Node.js is set up from .nvmrc (preferred) or fallback to 20
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          node-version: '20'
           cache: 'npm'
 
-      # Verify environment before proceeding
-      - name: Verify Node & npm availability
-        run: |
-          node --version
-          npm --version
+      - name: Install dependencies (npm ci)
+        run: npm ci
 
-      # Clean cache before install to avoid corruption
-      - name: Clean npm cache
-        run: npm cache clean --force
+      - name: Enable problem matchers
+        uses: ./.github/workflows/setup-matchers.yml
 
-      - name: Install dependencies (capture logs)
-        shell: bash
-        run: |
-          npm ci 2>&1 | tee npm-install.log
+      - name: Run ${{ matrix.task }}
+        run: npm run ${{ matrix.task }}
 
-      - name: Upload npm install log
-        uses: actions/upload-artifact@v4
+  build:
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
         with:
-          name: npm-install-log
-          path: npm-install.log
-          retention-days: 7
+          fetch-depth: 0
 
-      - name: Run frontend checks
-        run: |
-          npm run lint
-          npm run type-check
-          npm run test:ci
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
 
       - name: Build frontend
         run: npm run build
@@ -64,8 +70,8 @@ jobs:
 
   capture-failure:
     if: always()
-    needs: [frontend]
+    needs: [build]
     uses: ./.github/workflows/failure-summary.yml
     with:
-      job_name: frontend
+      job_name: build
       step_name: Build

@@ -3,80 +3,89 @@ name: Coverage
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'api/**'
+      - '.github/workflows/coverage.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'api/**'
+      - '.github/workflows/coverage.yml'
   workflow_dispatch:
 
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        task: [frontend, backend]
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Node.js (for frontend)
+        if: matrix.task == 'frontend'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
-      - name: Setup Python
+      - name: Setup Python (for backend)
+        if: matrix.task == 'backend'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Verify Node & npm
-        run: |
-          which node
-          node --version
-          which npm
-          npm --version
+      - name: Install frontend dependencies
+        if: matrix.task == 'frontend'
+        run: npm ci
 
-      - name: Debug workspace
+      - name: Install backend dependencies
+        if: matrix.task == 'backend'
         run: |
-          echo "Current directory: $(pwd)"
-          ls -al --max-depth=2
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
 
-      - name: Install frontend dependencies (if found)
-        run: |
-          if [ -f package.json ]; then
-            npm ci
-          elif [ -f frontend/package.json ]; then
-            cd frontend && npm ci
-          else
-            echo "No frontend found"
-          fi
+      - name: Enable problem matchers
+        uses: ./.github/workflows/setup-matchers.yml
 
-      - name: Run frontend coverage (Jest, optional)
-        run: |
-          if [ -f package.json ]; then
-            npm run test:ci || npm test || true
-          elif [ -f frontend/package.json ]; then
-            cd frontend
-            npm run test:ci || npm test || true
-          else
-            echo "No frontend tests"
-          fi
+      - name: Run frontend coverage (Jest)
+        if: matrix.task == 'frontend'
+        run: npm run test:ci -- --coverage || true
 
-      - name: Install backend dependencies (if exists)
-        run: |
-          if [ -f requirements.txt ]; then
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
-            pip install pytest pytest-cov
-          else
-            echo "No backend requirements.txt found"
-          fi
+      - name: Run backend coverage (Pytest)
+        if: matrix.task == 'backend'
+        run: pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings || true
 
-      - name: Run backend coverage (Pytest, optional)
-        run: |
-          if [ -f requirements.txt ]; then pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings || true; else echo "No backend tests"; fi
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.task }}
+          path: |
+            coverage
+            coverage.xml
+            coverage/coverage-final.json
+          retention-days: 7
+
+  upload-codecov:
+    needs: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

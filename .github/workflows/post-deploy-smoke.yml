@@ -9,6 +9,14 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enable problem matchers
+        uses: ./.github/workflows/setup-matchers.yml
+
       - name: Check API Health
         run: |
           echo "Hitting /api/health..."
@@ -20,7 +28,7 @@ jobs:
               echo "Retrying..."
               sleep 10
             fi
-          done
+          done || (echo "::error::API health check failed" && exit 1)
 
       - name: Check Extended Status
         run: |
@@ -33,7 +41,7 @@ jobs:
               echo "Retrying..."
               sleep 10
             fi
-          done
+          done || (echo "::error::API extended status check failed" && exit 1)
 
       - name: Check Root Health
         run: |
@@ -46,4 +54,11 @@ jobs:
               echo "Retrying..."
               sleep 10
             fi
-          done
+          done || (echo "::error::Root health check failed" && exit 1)
+
+      - name: Capture Failure Summary (always)
+        if: failure()
+        uses: ./.github/workflows/failure-summary.yml
+        with:
+          job_name: post-deploy-smoke
+          step_name: Smoke Tests

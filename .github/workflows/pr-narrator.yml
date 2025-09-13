@@ -2,7 +2,7 @@ name: PR Narrator Bot
 
 on:
   workflow_run:
-    workflows: ["CI Preflight", "Render Deploy with Smoke Test", "CCF Validation"]
+    workflows: ["CI Preflight", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests", "CCF Validation", "Frontend CI", "Backend CI", "Coverage"]
     types:
       - completed
 
@@ -10,26 +10,34 @@ jobs:
   narrate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repository (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup GitHub CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y gh jq
 
-      - name: Gather Logs
-        run: |
-          echo "Fetching logs for workflow run..."
-          gh run download ${{ github.event.workflow_run.id }} --dir logs || true
+      - name: Download failure summaries (ignore if missing)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: failure-summaries
 
-      - name: Summarize Logs and Check Manifest
+      - name: Summarize Logs and Failure Tables
         id: summarize
         run: |
           echo "--- Workflow Summary ---" > summary.txt
           echo "Workflow: ${{ github.event.workflow_run.name }}" >> summary.txt
           echo "Status: ${{ github.event.workflow_run.conclusion }}" >> summary.txt
-          echo "Diagnostics complete." >> summary.txt
+          echo "--- Failure Tables ---" >> summary.txt
+          for f in failure-summaries/pr-summary-*.md; do
+            echo "\n" >> summary.txt
+            cat "$f" >> summary.txt
+            echo "\n" >> summary.txt
+          done || echo "No failure summaries found" >> summary.txt
 
       - name: Upload Narrator Summary Artifact
         uses: actions/upload-artifact@v4
@@ -38,17 +46,7 @@ jobs:
           path: summary.txt
 
       - name: Post PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@3e5e28f2a0d5c56603c55a0c30cf6741f25e6da9 # pinned SHA for v2
         with:
-          header: workflow-report
-          message: |
-            ### 📝 Workflow Report
-            - Workflow: `${{ github.event.workflow_run.name }}`
-            - Status: `${{ github.event.workflow_run.conclusion }}`
-
-            **Summary:**
-            ```
-            $(cat summary.txt)
-            ```
-
-            ${{ github.event.workflow_run.conclusion != 'success' && '❌ Fix issues as described above.' || '✅ Great work! Everything passed.' }}
+          header: workflow-narrator
+          path: summary.txt

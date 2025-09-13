@@ -1,0 +1,19 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "pytest",
+      "pattern": [
+        {
+          "regexp": "^E\s+(.+)$",
+          "message": 1
+        },
+        {
+          "regexp": "^(.+):(\\d+):\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        }
+      ]
+    }
+  ]
+}

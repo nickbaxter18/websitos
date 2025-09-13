@@ -1,0 +1,17 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "eslint",
+      "pattern": [
+        {
+          "regexp": "^(.*):(\\d+):(\\d+):\s+([a-zA-Z]+)\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      ]
+    }
+  ]
+}

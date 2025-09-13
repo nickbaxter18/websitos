@@ -2,17 +2,19 @@ name: PR Summary
 
 on:
   workflow_run:
-    workflows: ["Frontend CI", "Backend CI"]
+    workflows: ["Frontend CI", "Backend CI", "Coverage", "Preflight Checks", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests"]
     types:
       - completed
 
 jobs:
   pr-summary:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: always()
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download frontend artifacts (ignore if missing)
         uses: actions/download-artifact@v4
@@ -28,10 +30,29 @@ jobs:
           name: backend-artifacts
           path: backend-artifacts
 
-      - name: Generate PR summary
+      - name: Download failure summaries (ignore if missing)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: failure-summaries
+
+      - name: Generate PR Summary
         run: |
-          echo "### CI Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Frontend + Backend jobs completed successfully" >> $GITHUB_STEP_SUMMARY
-          echo "- Artifacts (if available) listed below:" >> $GITHUB_STEP_SUMMARY
-          ls -R frontend-artifacts || echo "(no frontend artifacts found)" >> $GITHUB_STEP_SUMMARY
-          ls -R backend-artifacts || echo "(no backend artifacts found)" >> $GITHUB_STEP_SUMMARY
+          echo "### CI & Deploy Summary" >> summary.md
+          echo "- Frontend, Backend, Preflight, Coverage, and Deploy jobs completed" >> summary.md
+          echo "- Artifacts (if available) listed below:" >> summary.md
+          ls -R frontend-artifacts || echo "(no frontend artifacts found)" >> summary.md
+          ls -R backend-artifacts || echo "(no backend artifacts found)" >> summary.md
+          echo "---" >> summary.md
+          echo "### Failure Tables" >> summary.md
+          for f in failure-summaries/pr-summary-*.md; do
+            echo "\n" >> summary.md
+            cat "$f" >> summary.md
+            echo "\n" >> summary.md
+          done || echo "No failure summaries found" >> summary.md
+
+      - name: Post PR Comment
+        uses: marocchino/sticky-pull-request-comment@3e5e28f2a0d5c56603c55a0c30cf6741f25e6da9 # pinned SHA for v2
+        with:
+          header: workflow-report
+          path: summary.md
