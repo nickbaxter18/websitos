@@ -18,3 +18,4 @@
 "# Dummy commit after adding GH_TOKEN debug step"  
 "# Dummy commit after adding ingest_file route"  
 "# Dummy commit after simplifying sync checkout"  
+"# Dummy commit after disabling submodules in sync checkout"  

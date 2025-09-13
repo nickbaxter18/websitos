@@ -11,11 +11,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout repo (shallow, no credentials)
+      - name: Checkout repo (shallow, no submodules)
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
+          submodules: false
 
       - name: Verify GH_TOKEN presence
         run: |
