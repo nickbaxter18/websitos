@@ -13,21 +13,21 @@ jobs:
       actions: read
       packages: read
     steps:
+      - name: Verify GH_TOKEN injection
+        run: |
+          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
+            echo "❌ GH_TOKEN not available in job"
+            exit 1
+          else
+            echo "✅ GH_TOKEN injected correctly"
+          fi
+
       - name: Checkout repo (full history with GH_TOKEN)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
           token: ${{ secrets.GH_TOKEN }}
-
-      - name: Verify GH_TOKEN presence
-        run: |
-          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
-            echo "❌ GH_TOKEN not available"
-            exit 1
-          else
-            echo "✅ GH_TOKEN is available (masked)"
-          fi
 
       - name: Prepare snapshot
         run: |

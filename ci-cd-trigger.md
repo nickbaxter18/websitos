@@ -15,3 +15,4 @@
 "# Dummy commit after restoring checkout for sync workflow"  
 "# Dummy commit after adding GH_TOKEN to checkout"  
 "# Dummy commit after adding Websitos environment to sync workflow"  
+"# Dummy commit after adding GH_TOKEN debug step"  
