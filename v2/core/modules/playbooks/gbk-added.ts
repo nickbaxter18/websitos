@@ -7,7 +7,7 @@ export const GbkAdded = {
   myth_alignment: "growth",
   cultural_tags: ["gbk-added"],
   apply() {
-    return require("./gbk-added.json");
+    return await import("./gbk-added.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const GbkAdded = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

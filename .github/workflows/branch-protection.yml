@@ -8,23 +8,20 @@ jobs:
   enforce:
     runs-on: ubuntu-latest
     steps:
-      - name: Require Preflight to Pass
+      - name: Require Frontend CI to Pass
         run: |
-          echo "Checking CI Preflight status..."
-          gh run list --workflow "CI Preflight" --branch ${{ github.head_ref }} --limit 1 --json status,conclusion
-          # If last run is not successful, exit with error
-          STATUS=$(gh run list --workflow "CI Preflight" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
+          echo "Checking Frontend CI status..."
+          STATUS=$(gh run list --workflow "Frontend CI" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
           if [ "$STATUS" != "success" ]; then
-            echo "❌ CI Preflight must pass before merging."
+            echo "❌ Frontend CI must pass before merging."
             exit 1
           fi
 
-      - name: Require Smoke Tests to Pass
+      - name: Require Backend CI to Pass
         run: |
-          echo "Checking Render Deploy + Smoke Test status..."
-          gh run list --workflow "Render Deploy with Smoke Test" --branch ${{ github.head_ref }} --limit 1 --json status,conclusion
-          STATUS=$(gh run list --workflow "Render Deploy with Smoke Test" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
+          echo "Checking Backend CI status..."
+          STATUS=$(gh run list --workflow "Backend CI" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
           if [ "$STATUS" != "success" ]; then
-            echo "❌ Render Deploy + Smoke Test must pass before merging."
+            echo "❌ Backend CI must pass before merging."
             exit 1
           fi

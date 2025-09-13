@@ -7,7 +7,7 @@ export const ProductBundlePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["product", "bundle", "playbook"],
   apply() {
-    return require("./product_bundle_playbook.json");
+    return await import("./product_bundle_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ProductBundlePlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

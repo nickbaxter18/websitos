@@ -7,7 +7,7 @@ export const Package20210527204621 = {
   myth_alignment: "growth",
   cultural_tags: ["package", "20210527204621"],
   apply() {
-    return require("./package_20210527204621.json");
+    return await import("./package_20210527204621.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Package20210527204621 = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

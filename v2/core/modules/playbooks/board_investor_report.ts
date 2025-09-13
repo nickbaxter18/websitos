@@ -7,7 +7,7 @@ export const BoardInvestorReport = {
   myth_alignment: "growth",
   cultural_tags: ["board", "investor", "report"],
   apply() {
-    return require("./board_investor_report.json");
+    return await import("./board_investor_report.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const BoardInvestorReport = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

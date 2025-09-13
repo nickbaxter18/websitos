@@ -4,16 +4,20 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'frontend/**'
-      - 'backend/**'
+      - 'src/**'
+      - 'v2/**'
       - 'api/**'
+      - 'requirements.txt'
+      - 'package.json'
       - '.github/workflows/coverage.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'frontend/**'
-      - 'backend/**'
+      - 'src/**'
+      - 'v2/**'
       - 'api/**'
+      - 'requirements.txt'
+      - 'package.json'
       - '.github/workflows/coverage.yml'
   workflow_dispatch:
 
@@ -61,11 +65,11 @@ jobs:
 
       - name: Run frontend coverage (Jest)
         if: matrix.task == 'frontend'
-        run: npm run test:ci -- --coverage || true
+        run: npm run test:ci -- --coverage
 
       - name: Run backend coverage (Pytest)
         if: matrix.task == 'backend'
-        run: pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings || true
+        run: pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings
 
       - name: Upload coverage reports
         if: always()
@@ -76,7 +80,7 @@ jobs:
             coverage
             coverage.xml
             coverage/coverage-final.json
-          retention-days: 7
+          retention-days: 1
 
   upload-codecov:
     needs: coverage

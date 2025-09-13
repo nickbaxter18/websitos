@@ -7,7 +7,7 @@ export const Types = {
   myth_alignment: "growth",
   cultural_tags: ["types"],
   apply() {
-    return require("./types.json");
+    return await import("./types.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Types = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

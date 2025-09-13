@@ -7,7 +7,7 @@ export const Db = {
   myth_alignment: "growth",
   cultural_tags: [],
   apply() {
-    return require("./db.json");
+    return await import("./db.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Db = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

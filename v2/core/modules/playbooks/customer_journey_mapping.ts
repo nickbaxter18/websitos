@@ -7,7 +7,7 @@ export const CustomerJourneyMapping = {
   myth_alignment: "growth",
   cultural_tags: ["customer", "journey", "mapping"],
   apply() {
-    return require("./customer_journey_mapping.json");
+    return await import("./customer_journey_mapping.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CustomerJourneyMapping = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

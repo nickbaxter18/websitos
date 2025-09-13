@@ -7,7 +7,7 @@ export const Flags = {
   myth_alignment: "growth",
   cultural_tags: ["flags"],
   apply() {
-    return require("./flags.json");
+    return await import("./flags.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Flags = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

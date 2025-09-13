@@ -7,7 +7,7 @@ export const Schema = {
   myth_alignment: "growth",
   cultural_tags: ["schema"],
   apply() {
-    return require("./schema.json");
+    return await import("./schema.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Schema = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

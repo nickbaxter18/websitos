@@ -7,7 +7,7 @@ export const ContentMarketingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["content", "marketing", "playbook"],
   apply() {
-    return require("./content_marketing_playbook.json");
+    return await import("./content_marketing_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ContentMarketingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

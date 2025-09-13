@@ -7,7 +7,7 @@ export const VideoMarketingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["video", "marketing", "playbook"],
   apply() {
-    return require("./video_marketing_playbook.json");
+    return await import("./video_marketing_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const VideoMarketingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

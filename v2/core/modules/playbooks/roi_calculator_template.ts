@@ -7,7 +7,7 @@ export const RoiCalculatorTemplate = {
   myth_alignment: "growth",
   cultural_tags: ["calculator", "template"],
   apply() {
-    return require("./roi_calculator_template.json");
+    return await import("./roi_calculator_template.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const RoiCalculatorTemplate = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

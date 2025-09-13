@@ -7,7 +7,7 @@ export const TsdocMetadata = {
   myth_alignment: "growth",
   cultural_tags: ["tsdoc-metadata"],
   apply() {
-    return require("./tsdoc-metadata.json");
+    return await import("./tsdoc-metadata.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const TsdocMetadata = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

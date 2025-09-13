@@ -7,7 +7,7 @@ export const SeasonalCampaignsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["seasonal", "campaigns", "playbook"],
   apply() {
-    return require("./seasonal_campaigns_playbook.json");
+    return await import("./seasonal_campaigns_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const SeasonalCampaignsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

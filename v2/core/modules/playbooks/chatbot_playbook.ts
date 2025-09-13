@@ -7,7 +7,7 @@ export const ChatbotPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["chatbot", "playbook"],
   apply() {
-    return require("./chatbot_playbook.json");
+    return await import("./chatbot_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ChatbotPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

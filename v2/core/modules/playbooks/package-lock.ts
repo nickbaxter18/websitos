@@ -7,7 +7,7 @@ export const PackageLock = {
   myth_alignment: "growth",
   cultural_tags: ["package-lock"],
   apply() {
-    return require("./package-lock.json");
+    return await import("./package-lock.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PackageLock = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

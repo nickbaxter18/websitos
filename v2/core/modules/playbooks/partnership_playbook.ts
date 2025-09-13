@@ -7,7 +7,7 @@ export const PartnershipPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["partnership", "playbook"],
   apply() {
-    return require("./partnership_playbook.json");
+    return await import("./partnership_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PartnershipPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

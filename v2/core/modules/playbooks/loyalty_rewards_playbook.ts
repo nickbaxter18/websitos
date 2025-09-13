@@ -7,7 +7,7 @@ export const LoyaltyRewardsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["loyalty", "rewards", "playbook"],
   apply() {
-    return require("./loyalty_rewards_playbook.json");
+    return await import("./loyalty_rewards_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const LoyaltyRewardsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -7,7 +7,7 @@ export const Format = {
   myth_alignment: "growth",
   cultural_tags: ["format"],
   apply() {
-    return require("./format.json");
+    return await import("./format.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Format = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

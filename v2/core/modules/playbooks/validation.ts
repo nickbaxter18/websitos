@@ -7,7 +7,7 @@ export const Validation = {
   myth_alignment: "growth",
   cultural_tags: ["validation"],
   apply() {
-    return require("./validation.json");
+    return await import("./validation.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Validation = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

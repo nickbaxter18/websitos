@@ -7,7 +7,7 @@ export const PricingExperimentsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["pricing", "experiments", "playbook"],
   apply() {
-    return require("./pricing_experiments_playbook.json");
+    return await import("./pricing_experiments_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PricingExperimentsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -7,7 +7,7 @@ export const UpsellDownsellMatrix = {
   myth_alignment: "growth",
   cultural_tags: ["upsell", "downsell", "matrix"],
   apply() {
-    return require("./upsell_downsell_matrix.json");
+    return await import("./upsell_downsell_matrix.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const UpsellDownsellMatrix = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

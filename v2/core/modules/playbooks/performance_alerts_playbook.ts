@@ -7,7 +7,7 @@ export const PerformanceAlertsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["performance", "alerts", "playbook"],
   apply() {
-    return require("./performance_alerts_playbook.json");
+    return await import("./performance_alerts_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PerformanceAlertsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

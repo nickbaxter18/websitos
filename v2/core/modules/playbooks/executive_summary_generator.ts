@@ -7,7 +7,7 @@ export const ExecutiveSummaryGenerator = {
   myth_alignment: "growth",
   cultural_tags: ["executive", "summary", "generator"],
   apply() {
-    return require("./executive_summary_generator.json");
+    return await import("./executive_summary_generator.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ExecutiveSummaryGenerator = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

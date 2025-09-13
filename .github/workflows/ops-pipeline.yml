@@ -3,8 +3,6 @@ name: OpsPipeline
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -19,7 +17,7 @@ jobs:
           fetch-depth: 0
 
       - name: Enable problem matchers
-        uses: ./.github/workflows/setup-matchers.yml
+        uses: ./.github/actions/setup-matchers
 
       # Ensure PowerShell Core is available and validate environment
       - name: Verify pwsh availability
@@ -27,11 +25,20 @@ jobs:
         run: pwsh -v
 
       - name: Run OpsPipeline
+        id: run_ops
         shell: pwsh
         run: |
           Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-          if (-not (Test-Path .\OpsPipeline.ps1)) {
+          if (-not (Test-Path ./OpsPipeline.ps1)) {
             Write-Error "OpsPipeline.ps1 not found at repo root"
             exit 1
           }
-          ./OpsPipeline.ps1 -FailFast
+          ./OpsPipeline.ps1 -FailFast *>&1 | Tee-Object -FilePath ops-pipeline.log
+
+      - name: Upload OpsPipeline logs (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops-pipeline-logs
+          path: ops-pipeline.log
+          retention-days: 1

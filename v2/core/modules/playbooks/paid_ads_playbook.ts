@@ -7,7 +7,7 @@ export const PaidAdsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["paid", "playbook"],
   apply() {
-    return require("./paid_ads_playbook.json");
+    return await import("./paid_ads_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PaidAdsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

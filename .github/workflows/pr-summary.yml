@@ -2,7 +2,7 @@ name: PR Summary
 
 on:
   workflow_run:
-    workflows: ["Frontend CI", "Backend CI", "Coverage", "Preflight Checks", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests"]
+    workflows: ["Frontend CI", "Backend CI", "Coverage", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests"]
     types:
       - completed
 
@@ -30,22 +30,38 @@ jobs:
           name: backend-artifacts
           path: backend-artifacts
 
+      - name: Download coverage artifacts (ignore if missing)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-frontend
+          path: coverage-frontend
+
+      - name: Download backend coverage artifacts (ignore if missing)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-backend
+          path: coverage-backend
+
       - name: Download failure summaries (ignore if missing)
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
+          name: failure-summary
           path: failure-summaries
 
       - name: Generate PR Summary
         run: |
-          echo "### CI & Deploy Summary" >> summary.md
-          echo "- Frontend, Backend, Preflight, Coverage, and Deploy jobs completed" >> summary.md
-          echo "- Artifacts (if available) listed below:" >> summary.md
-          ls -R frontend-artifacts || echo "(no frontend artifacts found)" >> summary.md
-          ls -R backend-artifacts || echo "(no backend artifacts found)" >> summary.md
+          echo "### ✅ CI & Deploy Summary" >> summary.md
+          echo "- Frontend, Backend, Coverage, and Deploy jobs completed" >> summary.md
           echo "---" >> summary.md
-          echo "### Failure Tables" >> summary.md
-          for f in failure-summaries/pr-summary-*.md; do
+          echo "### 📊 Coverage Reports" >> summary.md
+          ls coverage-frontend || echo "(no frontend coverage found)" >> summary.md
+          ls coverage-backend || echo "(no backend coverage found)" >> summary.md
+          echo "---" >> summary.md
+          echo "### 🚨 Failure Summaries" >> summary.md
+          for f in failure-summaries/*.md; do
             echo "\n" >> summary.md
             cat "$f" >> summary.md
             echo "\n" >> summary.md

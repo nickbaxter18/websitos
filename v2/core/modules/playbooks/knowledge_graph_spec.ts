@@ -7,7 +7,7 @@ export const KnowledgeGraphSpec = {
   myth_alignment: "growth",
   cultural_tags: ["knowledge", "graph", "spec"],
   apply() {
-    return require("./knowledge_graph_spec.json");
+    return await import("./knowledge_graph_spec.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const KnowledgeGraphSpec = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -7,7 +7,7 @@ export const Cp950 = {
   myth_alignment: "growth",
   cultural_tags: ["cp950"],
   apply() {
-    return require("./cp950.json");
+    return await import("./cp950.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Cp950 = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

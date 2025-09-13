@@ -7,7 +7,7 @@ export const ProductAnnouncementUpdateSequence = {
   myth_alignment: "growth",
   cultural_tags: ["product", "announcement", "update", "sequence"],
   apply() {
-    return require("./product_announcement_update_sequence.json");
+    return await import("./product_announcement_update_sequence.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ProductAnnouncementUpdateSequence = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

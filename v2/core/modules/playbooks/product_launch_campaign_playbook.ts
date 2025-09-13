@@ -7,7 +7,7 @@ export const ProductLaunchCampaignPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["product", "launch", "campaign", "playbook"],
   apply() {
-    return require("./product_launch_campaign_playbook.json");
+    return await import("./product_launch_campaign_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ProductLaunchCampaignPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

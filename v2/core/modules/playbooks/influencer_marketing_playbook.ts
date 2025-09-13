@@ -7,7 +7,7 @@ export const InfluencerMarketingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["influencer", "marketing", "playbook"],
   apply() {
-    return require("./influencer_marketing_playbook.json");
+    return await import("./influencer_marketing_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const InfluencerMarketingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

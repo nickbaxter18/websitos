@@ -7,7 +7,7 @@ export const SupportKnowledgeBase = {
   myth_alignment: "growth",
   cultural_tags: ["support", "knowledge", "base"],
   apply() {
-    return require("./support_knowledge_base.json");
+    return await import("./support_knowledge_base.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const SupportKnowledgeBase = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

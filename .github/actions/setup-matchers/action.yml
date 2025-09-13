@@ -1,12 +1,21 @@
 name: "Setup Problem Matchers"
-description: "Enable Jest, ESLint, Mypy, and Pytest problem matchers"
-author: "WebsiteOS CI/CD Copilot"
+description: "Enable problem matchers for Jest, ESLint, Mypy, and Pytest"
+
 runs:
   using: "composite"
   steps:
-    - run: |
-        echo "::add-matcher::.github/matchers/jest.json"
-        echo "::add-matcher::.github/matchers/eslint.json"
-        echo "::add-matcher::.github/matchers/mypy.json"
-        echo "::add-matcher::.github/matchers/pytest.json"
+    - name: Enable Jest matcher
+      run: echo "::add-matcher::.github/matchers/jest.json"
+      shell: bash
+
+    - name: Enable ESLint matcher
+      run: echo "::add-matcher::.github/matchers/eslint.json"
+      shell: bash
+
+    - name: Enable Mypy matcher
+      run: echo "::add-matcher::.github/matchers/mypy.json"
+      shell: bash
+
+    - name: Enable Pytest matcher
+      run: echo "::add-matcher::.github/matchers/pytest.json"
       shell: bash

@@ -7,7 +7,7 @@ export const CustomerSegmentationPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["customer", "segmentation", "playbook"],
   apply() {
-    return require("./customer_segmentation_playbook.json");
+    return await import("./customer_segmentation_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CustomerSegmentationPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

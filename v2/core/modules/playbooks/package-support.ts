@@ -7,7 +7,7 @@ export const PackageSupport = {
   myth_alignment: "growth",
   cultural_tags: ["package-support"],
   apply() {
-    return require("./package-support.json");
+    return await import("./package-support.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PackageSupport = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

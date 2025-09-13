@@ -7,7 +7,7 @@ export const UriJsParse = {
   myth_alignment: "growth",
   cultural_tags: ["uri-js-parse"],
   apply() {
-    return require("./uri-js-parse.json");
+    return await import("./uri-js-parse.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const UriJsParse = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

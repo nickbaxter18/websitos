@@ -7,7 +7,7 @@ export const Gb18030Ranges = {
   myth_alignment: "growth",
   cultural_tags: ["gb18030-ranges"],
   apply() {
-    return require("./gb18030-ranges.json");
+    return await import("./gb18030-ranges.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Gb18030Ranges = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

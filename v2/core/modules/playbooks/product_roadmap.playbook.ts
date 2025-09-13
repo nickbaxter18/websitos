@@ -7,7 +7,7 @@ export const ProductRoadmapPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["product", "roadmap.playbook"],
   apply() {
-    return require("./product_roadmap.playbook.json");
+    return await import("./product_roadmap.playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ProductRoadmapPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

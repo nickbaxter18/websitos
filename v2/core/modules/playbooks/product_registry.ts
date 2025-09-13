@@ -7,7 +7,7 @@ export const ProductRegistry = {
   myth_alignment: "growth",
   cultural_tags: ["product", "registry"],
   apply() {
-    return require("./product_registry.json");
+    return await import("./product_registry.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ProductRegistry = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

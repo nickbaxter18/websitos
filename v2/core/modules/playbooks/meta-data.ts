@@ -7,7 +7,7 @@ export const MetaData = {
   myth_alignment: "growth",
   cultural_tags: ["meta-data"],
   apply() {
-    return require("./meta-data.json");
+    return await import("./meta-data.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const MetaData = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

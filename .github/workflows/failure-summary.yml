@@ -14,9 +14,9 @@ on:
 jobs:
   failure-summary:
     runs-on: ubuntu-latest
-    if: always()
+    if: failure()
     steps:
-      - name: Collect failure info (always runs)
+      - name: Collect failure info (runs only if job failed)
         run: |
           mkdir -p summary logs
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -29,7 +29,7 @@ jobs:
           ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stdout captured")
 
           # Try to detect failed step (best effort)
-          FAILED_STEP=$(grep -i "Error" -m1 stderr.log 2>/dev/null || echo "${{ inputs.step_name }}")
+          FAILED_STEP=$(grep -i "Error" -m1 logs/*.stderr.log 2>/dev/null || echo "${{ inputs.step_name }}")
 
           # Custom tagging for deploy-related failures
           if echo "$ALL_STDERR" | grep -qi "API health check failed"; then
@@ -49,7 +49,7 @@ jobs:
 
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID"
 
-          # Always generate JSON, even if no failure
+          # Always generate JSON if failure occurs
           cat > summary/failure-summary-${{ inputs.job_name }}.json <<EOF
           {
             "run_id": $GITHUB_RUN_ID,
@@ -108,10 +108,10 @@ jobs:
             echo "| $FAILED_STEP | $EXIT_CODE | $TAGGED_ERROR |"
           } > summary/pr-summary-${{ inputs.job_name }}.md
 
-      - name: Upload failure summary folder (always attempt)
+      - name: Upload failure summary folder (only if failure)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: failure-summary-${{ inputs.job_name }}
           path: summary/**
-          retention-days: 7
+          retention-days: 1

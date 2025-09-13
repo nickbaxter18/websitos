@@ -7,7 +7,7 @@ export const CommunityEngagementPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["community", "engagement", "playbook"],
   apply() {
-    return require("./community_engagement_playbook.json");
+    return await import("./community_engagement_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CommunityEngagementPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -7,7 +7,7 @@ export const Typesmap = {
   myth_alignment: "growth",
   cultural_tags: ["typesMap"],
   apply() {
-    return require("./typesMap.json");
+    return await import("./typesMap.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Typesmap = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

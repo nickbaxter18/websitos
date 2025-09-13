@@ -1,4 +1,0 @@
-# Dummy patch file to trigger Frontend CI workflow
-This is a no-op change to retrigger workflows.
-
-Timestamp: 2025-09-12T11:05 UTC

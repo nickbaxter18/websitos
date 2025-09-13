@@ -5,34 +5,44 @@ import HealthChart from "./components/HealthChart";
 import CommitSelector from "./components/CommitSelector";
 import ComparisonTable from "./components/ComparisonTable";
 
+export interface HealthEntry {
+  id: string;
+  value: number;
+  status: string;
+  timestamp: string;
+}
+
 export default function CulturalHealthDashboard() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<HealthEntry[]>([]);
   const [alerts, setAlerts] = useState<string[]>([]);
-  const [selectedCommit, setSelectedCommit] = useState<any | null>(null);
-  const [compareCommit, setCompareCommit] = useState<any | null>(null);
+  const [selectedCommit, setSelectedCommit] = useState<HealthEntry | null>(null);
+  const [compareCommit, setCompareCommit] = useState<HealthEntry | null>(null);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
 
   useEffect(() => {
     fetchData();
-    let interval: any;
+    let interval: NodeJS.Timeout | null = null;
     if (autoRefresh) {
       interval = setInterval(fetchData, 5000);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [autoRefresh]);
 
-  function fetchData() {
-    fetch("/docs/meta/health-history.json")
-      .then((res) => res.json())
-      .then((json) => {
-        const formatted = json.map((entry: any) => ({
-          ...entry,
-          timestamp: new Date(entry.timestamp).toLocaleString(),
-        }));
-        setData(formatted);
-        setSelectedCommit(formatted[formatted.length - 1]);
-      })
-      .catch(() => setData([]));
+  async function fetchData() {
+    try {
+      const res = await fetch("/docs/meta/health-history.json");
+      const json: HealthEntry[] = await res.json();
+      const formatted: HealthEntry[] = json.map((entry) => ({
+        ...entry,
+        timestamp: new Date(entry.timestamp).toLocaleString(),
+      }));
+      setData(formatted);
+      setSelectedCommit(formatted[formatted.length - 1]);
+    } catch {
+      setData([]);
+    }
   }
 
   return (
@@ -62,7 +72,10 @@ export default function CulturalHealthDashboard() {
         setCompareCommit={setCompareCommit}
       />
 
-      <ComparisonTable selectedCommit={selectedCommit} compareCommit={compareCommit} />
+      <ComparisonTable
+        selectedCommit={selectedCommit}
+        compareCommit={compareCommit}
+      />
     </div>
   );
 }

@@ -7,7 +7,7 @@ export const CrossSellMap = {
   myth_alignment: "growth",
   cultural_tags: ["cross", "sell"],
   apply() {
-    return require("./cross_sell_map.json");
+    return await import("./cross_sell_map.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CrossSellMap = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

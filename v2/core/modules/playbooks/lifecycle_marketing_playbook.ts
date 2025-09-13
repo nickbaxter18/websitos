@@ -7,7 +7,7 @@ export const LifecycleMarketingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["lifecycle", "marketing", "playbook"],
   apply() {
-    return require("./lifecycle_marketing_playbook.json");
+    return await import("./lifecycle_marketing_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const LifecycleMarketingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

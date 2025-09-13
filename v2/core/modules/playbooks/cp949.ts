@@ -7,7 +7,7 @@ export const Cp949 = {
   myth_alignment: "growth",
   cultural_tags: ["cp949"],
   apply() {
-    return require("./cp949.json");
+    return await import("./cp949.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Cp949 = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

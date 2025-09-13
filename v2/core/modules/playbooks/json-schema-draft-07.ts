@@ -7,7 +7,7 @@ export const JsonSchemaDraft07 = {
   myth_alignment: "growth",
   cultural_tags: ["json-schema-draft-07"],
   apply() {
-    return require("./json-schema-draft-07.json");
+    return await import("./json-schema-draft-07.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const JsonSchemaDraft07 = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

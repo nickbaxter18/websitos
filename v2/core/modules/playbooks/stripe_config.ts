@@ -7,7 +7,7 @@ export const StripeConfig = {
   myth_alignment: "growth",
   cultural_tags: ["stripe", "config"],
   apply() {
-    return require("./stripe_config.json");
+    return await import("./stripe_config.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const StripeConfig = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

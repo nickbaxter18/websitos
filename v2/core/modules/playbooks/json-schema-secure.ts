@@ -7,7 +7,7 @@ export const JsonSchemaSecure = {
   myth_alignment: "growth",
   cultural_tags: ["json-schema-secure"],
   apply() {
-    return require("./json-schema-secure.json");
+    return await import("./json-schema-secure.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const JsonSchemaSecure = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

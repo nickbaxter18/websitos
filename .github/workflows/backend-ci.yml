@@ -6,12 +6,16 @@ on:
     paths:
       - 'api/**'
       - 'backend/**'
+      - 'v2/**'
+      - 'src/**'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'api/**'
       - 'backend/**'
+      - 'v2/**'
+      - 'src/**'
       - '.github/workflows/backend-ci.yml'
   workflow_dispatch:
 
@@ -48,7 +52,7 @@ jobs:
           if [ "${{ matrix.task }}" == "black" ]; then black --check . --exclude '(Lib|venv|node_modules)'; fi
           if [ "${{ matrix.task }}" == "mypy" ]; then mypy . --exclude '(Lib|venv|node_modules)'; fi
           if [ "${{ matrix.task }}" == "pytest" ]; then pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json; fi
-        continue-on-error: true
+        continue-on-error: ${{ matrix.task == 'black' }}
 
       - name: Upload results artifact
         if: always()
@@ -56,9 +60,7 @@ jobs:
         with:
           name: backend-${{ matrix.task }}-results
           path: |
-            *.txt
             pytest-report.json
-            .pytest_cache
           retention-days: 7
 
   capture-failure:

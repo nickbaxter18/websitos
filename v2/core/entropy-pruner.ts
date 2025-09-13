@@ -1,85 +1,23 @@
-// v2/core/entropy-pruner.ts
-import fs from "fs";
-import path from "path";
+// entropy-pruner.ts
+// Utility for pruning unused or redundant schema elements based on entropy calculations.
 
-interface PruneRecord {
-  file: string;
-  reason: string;
-  action: "archived" | "deleted" | "merged";
-  timestamp: string;
-}
+export function pruneEntropy(schema: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
 
-export class EntropyPruner {
-  private logs: PruneRecord[] = [];
-  private archiveDir = path.resolve("docs/meta/archive/");
-  private pruneLog = path.resolve("docs/meta/pruned.md");
-
-  constructor() {
-    if (!fs.existsSync(this.archiveDir)) fs.mkdirSync(this.archiveDir, { recursive: true });
-  }
-
-  prune(file: string, reason: string, action: "archived" | "deleted" | "merged" = "archived") {
-    const record: PruneRecord = {
-      file,
-      reason,
-      action,
-      timestamp: new Date().toISOString(),
-    };
-
-    if (fs.existsSync(file)) {
-      if (action === "archived") {
-        const baseName = path.basename(file);
-        fs.renameSync(file, path.join(this.archiveDir, baseName));
-      } else if (action === "deleted") {
-        fs.unlinkSync(file);
-      }
+  for (const [key, value] of Object.entries(schema)) {
+    // Example pruning condition: drop empty objects or arrays
+    if (
+      value === null ||
+      value === undefined ||
+      (Array.isArray(value) && value.length === 0) ||
+      (typeof value === "object" && Object.keys(value as object).length === 0)
+    ) {
+      continue;
     }
 
-    this.logs.push(record);
-    this.logRecord(record);
+    // Otherwise keep it
+    result[key] = value;
   }
 
-  private logRecord(record: PruneRecord) {
-    const entry = `- ${record.timestamp}: ${record.file} → ${record.action} (reason: ${record.reason})\n`;
-    fs.appendFileSync(this.pruneLog, entry);
-  }
-
-  summarize() {
-    return this.logs;
-  }
-
-  autoDetectDuplicates(dir: string, patterns: string[] = ["Navbar", "Footer", "SEO"]) {
-    const files = fs.readdirSync(dir);
-    const groups: Record<string, string[]> = {};
-
-    for (const f of files) {
-      for (const pattern of patterns) {
-        if (f.toLowerCase().includes(pattern.toLowerCase())) {
-          groups[pattern] = groups[pattern] || [];
-          groups[pattern].push(path.join(dir, f));
-        }
-      }
-    }
-
-    for (const [pattern, group] of Object.entries(groups)) {
-      if (group.length > 1) {
-        // Keep the newest, prune the rest
-        const sorted = group.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
-        const [keep, ...pruneTargets] = sorted;
-        for (const file of pruneTargets) {
-          this.prune(file, `duplicate of ${keep}`, "archived");
-        }
-      }
-    }
-  }
-}
-
-// Example runner
-if (require.main === module) {
-  const pruner = new EntropyPruner();
-
-  // Auto-detect duplicates in partial templates
-  pruner.autoDetectDuplicates("v2/templates/partials");
-
-  console.log("Auto-detection entropy pruning complete.");
+  return result;
 }

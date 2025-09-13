@@ -1,11 +1,12 @@
 import React from "react";
+import { HealthEntry } from "../CulturalHealthDashboard";
 
 interface CommitSelectorProps {
-  data: any[];
-  selectedCommit: any | null;
-  setSelectedCommit: (commit: any) => void;
-  compareCommit: any | null;
-  setCompareCommit: (commit: any) => void;
+  data: HealthEntry[];
+  selectedCommit: HealthEntry | null;
+  setSelectedCommit: (commit: HealthEntry | null) => void;
+  compareCommit: HealthEntry | null;
+  setCompareCommit: (commit: HealthEntry | null) => void;
 }
 
 export default function CommitSelector({
@@ -15,46 +16,41 @@ export default function CommitSelector({
   compareCommit,
   setCompareCommit,
 }: CommitSelectorProps) {
-  if (!data || data.length === 0) return <p className="text-gray-500">No commits available.</p>;
-
   return (
-    <div className="mt-6 rounded-xl bg-gray-100 p-4 shadow-sm">
-      <h2 className="mb-2 text-lg font-semibold">Commit Navigation</h2>
-      <div className="flex flex-wrap gap-4">
-        {/* Primary commit selector */}
+    <div className="mt-6">
+      <h2 className="mb-2 text-lg font-semibold">Select Commits</h2>
+      <div className="flex gap-4">
         <select
-          className="rounded border p-2 text-sm"
-          value={selectedCommit?.commit || ""}
+          className="rounded border p-2"
+          value={selectedCommit?.id ?? ""}
           onChange={(e) => {
-            const commit = data.find((d) => d.commit === e.target.value);
-            if (commit) setSelectedCommit(commit);
+            const commit = data.find((d) => d.id === e.target.value) || null;
+            setSelectedCommit(commit);
           }}
         >
-          {data.map((entry) => (
-            <option key={entry.commit} value={entry.commit}>
-              {entry.timestamp} — {entry.commit.slice(0, 7)}
+          <option value="">Select Primary Commit</option>
+          {data.map((commit) => (
+            <option key={commit.id} value={commit.id}>
+              {commit.id} — {commit.timestamp}
             </option>
           ))}
         </select>
 
-        {/* Comparison commit selector */}
-        {data.length > 1 && (
-          <select
-            className="rounded border p-2 text-sm"
-            value={compareCommit?.commit || ""}
-            onChange={(e) => {
-              const commit = data.find((d) => d.commit === e.target.value);
-              if (commit) setCompareCommit(commit);
-            }}
-          >
-            <option value="">-- Compare with --</option>
-            {data.map((entry) => (
-              <option key={entry.commit} value={entry.commit}>
-                {entry.timestamp} — {entry.commit.slice(0, 7)}
-              </option>
-            ))}
-          </select>
-        )}
+        <select
+          className="rounded border p-2"
+          value={compareCommit?.id ?? ""}
+          onChange={(e) => {
+            const commit = data.find((d) => d.id === e.target.value) || null;
+            setCompareCommit(commit);
+          }}
+        >
+          <option value="">Select Comparison Commit</option>
+          {data.map((commit) => (
+            <option key={commit.id} value={commit.id}>
+              {commit.id} — {commit.timestamp}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

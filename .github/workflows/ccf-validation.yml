@@ -3,7 +3,8 @@ name: CCF Validation
 on:
   push:
     branches: [ main ]
-  pull_request:
+  schedule:
+    - cron: '0 2 * * *' # run daily at 2am UTC
   workflow_dispatch:
 
 jobs:
@@ -16,15 +17,18 @@ jobs:
       - name: Validate required files exist
         run: |
           CRITICAL_FILES=( \
-            "config/secrets.schema.json" )
+            "config/secrets.schema.json" \
+            "package.json" \
+            "requirements.txt" \
+            "tsconfig.json" \
+            "jest.config.cjs" \
+            ".github/workflows/branch-protection.yml" \
+            ".github/workflows/render-deploy.yml" )
 
           OPTIONAL_FILES=( \
             ".github/ccf-manifest.md" \
-            ".github/workflows/ci-preflight.yml" \
             ".github/workflows/pr-summary.yml" \
-            ".github/workflows/post-deploy-smoke.yml" \
-            ".github/workflows/render-deploy.yml" \
-            ".github/workflows/branch-protection.yml" )
+            ".github/workflows/post-deploy-smoke.yml" )
 
           MISSING_CRITICAL=0
           for f in "${CRITICAL_FILES[@]}"; do

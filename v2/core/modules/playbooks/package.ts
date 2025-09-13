@@ -7,7 +7,7 @@ export const Package = {
   myth_alignment: "growth",
   cultural_tags: ["package"],
   apply() {
-    return require("./package.json");
+    return await import("./package.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Package = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

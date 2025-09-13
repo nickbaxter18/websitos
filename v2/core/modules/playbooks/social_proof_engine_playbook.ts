@@ -7,7 +7,7 @@ export const SocialProofEnginePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["social", "proof", "engine", "playbook"],
   apply() {
-    return require("./social_proof_engine_playbook.json");
+    return await import("./social_proof_engine_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const SocialProofEnginePlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

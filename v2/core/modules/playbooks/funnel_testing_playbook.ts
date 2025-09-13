@@ -7,7 +7,7 @@ export const FunnelTestingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["funnel", "testing", "playbook"],
   apply() {
-    return require("./funnel_testing_playbook.json");
+    return await import("./funnel_testing_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const FunnelTestingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

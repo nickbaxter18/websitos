@@ -7,7 +7,7 @@ export const CrmAutomationPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["automation", "playbook"],
   apply() {
-    return require("./crm_automation_playbook.json");
+    return await import("./crm_automation_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CrmAutomationPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

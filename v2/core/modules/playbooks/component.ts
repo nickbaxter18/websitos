@@ -7,7 +7,7 @@ export const Component = {
   myth_alignment: "growth",
   cultural_tags: ["component"],
   apply() {
-    return require("./component.json");
+    return await import("./component.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Component = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -7,7 +7,7 @@ export const Jsconfig = {
   myth_alignment: "growth",
   cultural_tags: ["jsconfig"],
   apply() {
-    return require("./jsconfig.json");
+    return await import("./jsconfig.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Jsconfig = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

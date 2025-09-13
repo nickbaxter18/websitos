@@ -7,7 +7,7 @@ export const Unevaluated = {
   myth_alignment: "growth",
   cultural_tags: ["unevaluated"],
   apply() {
-    return require("./unevaluated.json");
+    return await import("./unevaluated.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Unevaluated = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

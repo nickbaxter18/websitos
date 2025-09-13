@@ -3,18 +3,17 @@ name: U-DIG IT Repo Sync
 on:
   push:
     branches: [ main ]
-  pull_request:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug GITHUB_TOKEN presence
+      - name: Verify GITHUB_TOKEN presence
         run: |
           if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
             echo "❌ GITHUB_TOKEN not available"
@@ -23,11 +22,27 @@ jobs:
             echo "✅ GITHUB_TOKEN is available (masked)"
           fi
 
-      - name: Zip repo snapshot
-        run: zip -r repo-snapshot.zip .
-
-      - name: Upload snapshot (U-DIG IT ingest)
+      - name: Zip repo snapshot (excluding sensitive files)
         run: |
-          curl -X POST "https://websitos.onrender.com/ingest_file" \
+          zip -r repo-snapshot.zip . \
+            -x "*.git*" \
+            -x ".env*" \
+            -x "node_modules/*" \
+            -x "venv/*" \
+            -x "__pycache__/*"
+
+      - name: Upload snapshot to U-DIG IT ingest API
+        run: |
+          RESPONSE=$(curl -s -o response.txt -w "%{http_code}" -X POST "https://websitos.onrender.com/ingest_file" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -F "file=@repo-snapshot.zip"
+            -F "file=@repo-snapshot.zip")
+
+          echo "HTTP Response: $RESPONSE"
+          cat response.txt
+
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "❌ U-DIG IT ingest API returned error"
+            exit 1
+          else
+            echo "✅ Sync successful"
+          fi

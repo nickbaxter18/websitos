@@ -7,7 +7,7 @@ export const DesignTokens = {
   myth_alignment: "growth",
   cultural_tags: ["design", "tokens"],
   apply() {
-    return require("./design_tokens.json");
+    return await import("./design_tokens.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const DesignTokens = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

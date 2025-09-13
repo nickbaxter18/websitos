@@ -2,9 +2,6 @@ name: Lockfile Consistency Check
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 jobs:
   lockfile-check:
@@ -23,7 +20,7 @@ jobs:
           cache: 'npm'
 
       - name: Enable problem matchers
-        uses: ./.github/workflows/setup-matchers.yml
+        uses: ./.github/actions/setup-matchers
 
       - name: Install dependencies without updating lockfile
         run: npm ci --ignore-scripts

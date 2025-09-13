@@ -7,7 +7,7 @@ export const RententionEmailSequence = {
   myth_alignment: "growth",
   cultural_tags: ["rentention", "email", "sequence"],
   apply() {
-    return require("./rentention_email_sequence.json");
+    return await import("./rentention_email_sequence.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const RententionEmailSequence = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

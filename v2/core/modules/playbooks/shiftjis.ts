@@ -7,7 +7,7 @@ export const Shiftjis = {
   myth_alignment: "growth",
   cultural_tags: ["shiftjis"],
   apply() {
-    return require("./shiftjis.json");
+    return await import("./shiftjis.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Shiftjis = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

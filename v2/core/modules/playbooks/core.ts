@@ -7,7 +7,7 @@ export const Core = {
   myth_alignment: "growth",
   cultural_tags: ["core"],
   apply() {
-    return require("./core.json");
+    return await import("./core.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Core = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

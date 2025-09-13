@@ -7,7 +7,7 @@ export const CompetitiorComparisonPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["competitior", "comparison", "playbook"],
   apply() {
-    return require("./competitior_comparison_playbook.json");
+    return await import("./competitior_comparison_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CompetitiorComparisonPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

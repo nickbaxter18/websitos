@@ -12,6 +12,12 @@ interface HealthMetrics {
   beauty: number; // -1 to +1
 }
 
+interface HealthHistoryEntry extends HealthMetrics {
+  timestamp: string;
+  commit: string;
+  branch: string;
+}
+
 // Diversity → based on number of modules/templates
 function calcDiversity(): number {
   try {
@@ -94,7 +100,7 @@ export function logHealth(metrics: HealthMetrics) {
   fs.appendFileSync(HEALTH_FILE, entry);
 
   // Append to JSON history
-  let history: any[] = [];
+  let history: HealthHistoryEntry[] = [];
   if (fs.existsSync(HISTORY_FILE)) {
     try {
       history = JSON.parse(fs.readFileSync(HISTORY_FILE, "utf-8"));

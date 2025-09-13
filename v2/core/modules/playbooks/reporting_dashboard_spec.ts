@@ -7,7 +7,7 @@ export const ReportingDashboardSpec = {
   myth_alignment: "growth",
   cultural_tags: ["reporting", "dashboard", "spec"],
   apply() {
-    return require("./reporting_dashboard_spec.json");
+    return await import("./reporting_dashboard_spec.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ReportingDashboardSpec = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

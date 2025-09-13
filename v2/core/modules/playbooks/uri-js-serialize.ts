@@ -7,7 +7,7 @@ export const UriJsSerialize = {
   myth_alignment: "growth",
   cultural_tags: ["uri-js-serialize"],
   apply() {
-    return require("./uri-js-serialize.json");
+    return await import("./uri-js-serialize.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const UriJsSerialize = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

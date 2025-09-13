@@ -7,7 +7,7 @@ export const SustainabilityEsgPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["sustainability", "playbook"],
   apply() {
-    return require("./sustainability_esg_playbook.json");
+    return await import("./sustainability_esg_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const SustainabilityEsgPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

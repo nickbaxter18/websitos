@@ -7,7 +7,7 @@ export const UserGeneratedContentPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["user", "generated", "content", "playbook"],
   apply() {
-    return require("./user_generated_content_playbook.json");
+    return await import("./user_generated_content_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const UserGeneratedContentPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -7,7 +7,7 @@ export const Eucjp = {
   myth_alignment: "growth",
   cultural_tags: ["eucjp"],
   apply() {
-    return require("./eucjp.json");
+    return await import("./eucjp.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Eucjp = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

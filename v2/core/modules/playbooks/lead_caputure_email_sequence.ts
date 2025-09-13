@@ -7,7 +7,7 @@ export const LeadCaputureEmailSequence = {
   myth_alignment: "growth",
   cultural_tags: ["lead", "caputure", "email", "sequence"],
   apply() {
-    return require("./lead_caputure_email_sequence.json");
+    return await import("./lead_caputure_email_sequence.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const LeadCaputureEmailSequence = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

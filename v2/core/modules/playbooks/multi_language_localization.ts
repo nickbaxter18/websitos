@@ -7,7 +7,7 @@ export const MultiLanguageLocalization = {
   myth_alignment: "growth",
   cultural_tags: ["multi", "language", "localization"],
   apply() {
-    return require("./multi_language_localization.json");
+    return await import("./multi_language_localization.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const MultiLanguageLocalization = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

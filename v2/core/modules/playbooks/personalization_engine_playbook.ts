@@ -7,7 +7,7 @@ export const PersonalizationEnginePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["personalization", "engine", "playbook"],
   apply() {
-    return require("./personalization_engine_playbook.json");
+    return await import("./personalization_engine_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PersonalizationEnginePlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

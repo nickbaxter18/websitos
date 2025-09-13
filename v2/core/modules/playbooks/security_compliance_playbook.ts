@@ -7,7 +7,7 @@ export const SecurityCompliancePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["security", "compliance", "playbook"],
   apply() {
-    return require("./security_compliance_playbook.json");
+    return await import("./security_compliance_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const SecurityCompliancePlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

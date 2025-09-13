@@ -7,7 +7,7 @@ export const RefferalEmailSequence = {
   myth_alignment: "growth",
   cultural_tags: ["refferal", "email", "sequence"],
   apply() {
-    return require("./refferal_email_sequence.json");
+    return await import("./refferal_email_sequence.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const RefferalEmailSequence = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -7,7 +7,7 @@ export const DiagnosticmessagesGenerated = {
   myth_alignment: "growth",
   cultural_tags: ["diagnosticMessages.generated"],
   apply() {
-    return require("./diagnosticMessages.generated.json");
+    return await import("./diagnosticMessages.generated.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const DiagnosticmessagesGenerated = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

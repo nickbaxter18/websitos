@@ -2,6 +2,6 @@ import { render } from "@testing-library/react";
 import React from "react";
 import App from "./App";
 
-test.skip("renders App shell without crashing", () => {
+test("renders App shell without crashing", () => {
   render(<App />);
 });

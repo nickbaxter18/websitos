@@ -7,7 +7,7 @@ export const FormatAnnotation = {
   myth_alignment: "growth",
   cultural_tags: ["format-annotation"],
   apply() {
-    return require("./format-annotation.json");
+    return await import("./format-annotation.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const FormatAnnotation = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

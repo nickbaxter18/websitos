@@ -7,7 +7,7 @@ export const ChurnSurveyTemplate = {
   myth_alignment: "growth",
   cultural_tags: ["churn", "survey", "template"],
   apply() {
-    return require("./churn_survey_template.json");
+    return await import("./churn_survey_template.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ChurnSurveyTemplate = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

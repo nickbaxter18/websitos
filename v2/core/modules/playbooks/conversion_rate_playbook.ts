@@ -7,7 +7,7 @@ export const ConversionRatePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["conversion", "rate", "playbook"],
   apply() {
-    return require("./conversion_rate_playbook.json");
+    return await import("./conversion_rate_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const ConversionRatePlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -1,4 +1,4 @@
-// v2/core/pipeline.ts — v3.1 Covenant Compliant (Fixed for Dotfiles)
+// v2/core/pipeline.ts — v3.1 Covenant Compliant (Refactored)
 
 import fs from "fs";
 import path from "path";
@@ -34,7 +34,25 @@ const extended = [
   "sublimity_index",
 ];
 
-function validateModule(mod: any): boolean {
+interface PlaybookModule {
+  id: string;
+  function: string;
+  dependencies: string[];
+  gardener_role: string;
+  archetype: string;
+  myth_alignment: string;
+  cultural_tags: string[];
+  collective_awe_gates?: { users?: number };
+  sublimity_index?: {
+    harmony: number;
+    resonance: number;
+    awe: number;
+    transcendence: number;
+  };
+  [key: string]: unknown;
+}
+
+function validateModule(mod: PlaybookModule): boolean {
   return (
     required.every((k) => Object.prototype.hasOwnProperty.call(mod, k)) &&
     extended.every((k) => Object.prototype.hasOwnProperty.call(mod, k))
@@ -42,12 +60,12 @@ function validateModule(mod: any): boolean {
 }
 
 // Helper: derive myths from modules
-function extractMyth(mod: any): string {
+function extractMyth(mod: PlaybookModule): string {
   return `- Myth aligned with **${mod.myth_alignment}** → archetype: ${mod.archetype}`;
 }
 
 // Helper: create reconciliation treaties
-function reconcile(mod: any): string {
+function reconcile(mod: PlaybookModule): string {
   if (mod.gardener_role === "reconciler") {
     return `- Treaty: ${mod.id} reconciles diversity → coherence [${new Date().toISOString()}]`;
   }
@@ -55,7 +73,7 @@ function reconcile(mod: any): string {
 }
 
 // Helper: sublimity scoring log
-function sublimityScore(mod: any): string {
+function sublimityScore(mod: PlaybookModule): string {
   if (mod.sublimity_index) {
     const s = mod.sublimity_index;
     return `- ${mod.id} → Harmony: ${s.harmony} | Resonance: ${s.resonance} | Awe: ${s.awe} | Transcendence: ${s.transcendence}`;
@@ -63,7 +81,7 @@ function sublimityScore(mod: any): string {
   return `- ${mod.id} → Sublimity score missing`;
 }
 
-export function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn") {
+export async function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn") {
   const files = fs.readdirSync(modulesDir);
   let validCount = 0,
     invalidCount = 0;
@@ -73,12 +91,13 @@ export function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn
   const treaties: string[] = [];
   const sublimityEntries: string[] = [];
 
-  files.forEach((file) => {
+  for (const file of files) {
     // ✅ Skip hidden/dotfiles and junk
-    if (file.startsWith(".")) return;
-    if (!file.endsWith(".ts")) return;
+    if (file.startsWith(".")) continue;
+    if (!file.endsWith(".ts")) continue;
 
-    const mod = require(path.join(modulesDir, file));
+    const modImport = await import(path.join(modulesDir, file));
+    const mod: PlaybookModule = (modImport.default || modImport) as PlaybookModule;
 
     if (validateModule(mod)) {
       validCount++;
@@ -106,7 +125,7 @@ export function runPipeline(tenantActiveUsers: number = 0, phase: string = "dawn
       fs.mkdirSync(archiveDir, { recursive: true });
       fs.renameSync(path.join(modulesDir, file), path.join(archiveDir, file));
     }
-  });
+  }
 
   // Write logs
   fs.writeFileSync(logPath, logEntries.join("\n") + "\n", { flag: "a" });

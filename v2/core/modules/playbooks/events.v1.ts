@@ -7,7 +7,7 @@ export const EventsV1 = {
   myth_alignment: "growth",
   cultural_tags: ["events.v1"],
   apply() {
-    return require("./events.v1.json");
+    return await import("./events.v1.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const EventsV1 = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

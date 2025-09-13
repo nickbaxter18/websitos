@@ -7,7 +7,7 @@ export const BinaryExtensions = {
   myth_alignment: "growth",
   cultural_tags: ["binary-extensions"],
   apply() {
-    return require("./binary-extensions.json");
+    return await import("./binary-extensions.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const BinaryExtensions = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

@@ -10,23 +10,44 @@ import {
   ResponsiveContainer,
   ReferenceArea,
 } from "recharts";
+import { HealthEntry } from "../CulturalHealthDashboard";
+
+interface HealthMetrics extends HealthEntry {
+  diversity: number;
+  coherence: number;
+  resilience: number;
+  beauty: number;
+  cvi: number;
+  diversity_avg?: number;
+  coherence_avg?: number;
+  resilience_avg?: number;
+  beauty_avg?: number;
+}
 
 interface HealthChartProps {
-  data: any[];
+  data: HealthMetrics[];
 }
 
 export default function HealthChart({ data }: HealthChartProps) {
-  if (!data || data.length === 0) return <p className="text-gray-500">No data available yet.</p>;
+  if (!data || data.length === 0)
+    return <p className="text-gray-500">No data available yet.</p>;
 
   // Determine background trend color
   let trendColor = "#f3f4f6";
   if (data.length >= 2) {
     const last = data[data.length - 1];
     const prev = data[data.length - 2];
+    const metrics: (keyof HealthMetrics)[] = [
+      "diversity",
+      "coherence",
+      "resilience",
+      "beauty",
+    ];
+
     const avgChange =
-      ["diversity", "coherence", "resilience", "beauty"].reduce((acc, metric: any) => {
+      metrics.reduce((acc, metric) => {
         return acc + ((last[metric] ?? 0) - (prev[metric] ?? 0));
-      }, 0) / 4;
+      }, 0) / metrics.length;
 
     if (avgChange > 0.1) {
       trendColor = "#dcfce7";
@@ -82,7 +103,13 @@ export default function HealthChart({ data }: HealthChartProps) {
         />
 
         {/* Cultural Vitality Index */}
-        <Line type="monotone" dataKey="cvi" stroke="#111827" strokeWidth={3} dot={false} />
+        <Line
+          type="monotone"
+          dataKey="cvi"
+          stroke="#111827"
+          strokeWidth={3}
+          dot={false}
+        />
       </LineChart>
     </ResponsiveContainer>
   );

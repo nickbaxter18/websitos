@@ -7,7 +7,7 @@ export const PostPurchaseEmailSequece = {
   myth_alignment: "growth",
   cultural_tags: ["post", "purchase", "email", "sequece"],
   apply() {
-    return require("./post_purchase_email_sequece.json");
+    return await import("./post_purchase_email_sequece.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const PostPurchaseEmailSequece = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

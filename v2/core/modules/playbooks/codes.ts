@@ -7,7 +7,7 @@ export const Codes = {
   myth_alignment: "growth",
   cultural_tags: ["codes"],
   apply() {
-    return require("./codes.json");
+    return await import("./codes.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const Codes = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

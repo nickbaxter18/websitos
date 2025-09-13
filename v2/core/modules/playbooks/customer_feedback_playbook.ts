@@ -7,7 +7,7 @@ export const CustomerFeedbackPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["customer", "feedback", "playbook"],
   apply() {
-    return require("./customer_feedback_playbook.json");
+    return await import("./customer_feedback_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CustomerFeedbackPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

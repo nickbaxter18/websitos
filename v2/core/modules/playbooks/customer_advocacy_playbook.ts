@@ -7,7 +7,7 @@ export const CustomerAdvocacyPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["customer", "advocacy", "playbook"],
   apply() {
-    return require("./customer_advocacy_playbook.json");
+    return await import("./customer_advocacy_playbook.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const CustomerAdvocacyPlaybook = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};

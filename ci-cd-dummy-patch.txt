@@ -1,5 +1,0 @@
-# Dummy patch file
-# This file exists purely to trigger a new commit and CI/CD pipeline run.
-# Safe to delete or overwrite later.
-
-Triggered at: {{DATE}}

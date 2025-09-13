@@ -7,7 +7,7 @@ export const LegalBoilerplate = {
   myth_alignment: "growth",
   cultural_tags: ["legal", "boilerplate"],
   apply() {
-    return require("./legal_boilerplate.json");
+    return await import("./legal_boilerplate.json");
   },
   fallback() {
     return {};
@@ -17,3 +17,8 @@ export const LegalBoilerplate = {
   coevolve() {},
   cultivate() {},
 };
+
+
+
+
+export default {};
