@@ -10,12 +10,14 @@ jobs:
     permissions:
       contents: write
       actions: read
+      packages: read
     steps:
       - name: Checkout repo (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           show-progress: true
+          persist-credentials: true
 
       - name: Verify GH_TOKEN presence
         run: |
@@ -35,7 +37,7 @@ jobs:
           ls -la .git || echo "⚠️ .git directory missing"
 
           echo "🔎 Git HEAD"
-          git rev-parse HEAD || echo "⚠️ Could not resolve HEAD"
+          git rev-parse HEAD || echo "⚠️ rev-parse failed"
 
           echo "🔎 Git status"
           git status || echo "⚠️ git status failed"
