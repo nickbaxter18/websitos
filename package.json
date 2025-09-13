@@ -113,8 +113,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,md,yml,yaml,html}": [
-      "prettier --write --allow-empty",
-      "eslint --fix --allow-empty"
+      "prettier --write",
+      "eslint --fix"
     ]
   },
   "directories": {

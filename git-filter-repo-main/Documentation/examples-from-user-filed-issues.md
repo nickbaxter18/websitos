@@ -8,27 +8,26 @@ questions, which may be of interest to others.
 
 ## Table of Contents
 
-  * [Adding files to root commits](#adding-files-to-root-commits)
-  * [Purge a large list of files](#purge-a-large-list-of-files)
-  * [Extracting a libary from a repo](#Extracting-a-libary-from-a-repo)
-  * [Replace words in all commit messages](#Replace-words-in-all-commit-messages)
-  * [Only keep files from two branches](#Only-keep-files-from-two-branches)
-  * [Renormalize end-of-line characters and add a .gitattributes](#Renormalize-end-of-line-characters-and-add-a-gitattributes)
-  * [Remove spaces at the end of lines](#Remove-spaces-at-the-end-of-lines)
-  * [Having both exclude and include rules for filenames](#Having-both-exclude-and-include-rules-for-filenames)
-  * [Removing paths with a certain extension](#Removing-paths-with-a-certain-extension)
-  * [Removing a directory](#Removing-a-directory)
-  * [Convert from NFD filenames to NFC](#Convert-from-NFD-filenames-to-NFC)
-  * [Set the committer of the last few commits to myself](#Set-the-committer-of-the-last-few-commits-to-myself)
-  * [Handling special characters, e.g. accents in names](#Handling-special-characters-eg-accents-in-names)
-  * [Handling repository corruption](#Handling-repository-corruption)
-  * [Removing all files with a backslash in them](#Removing-all-files-with-a-backslash-in-them)
-  * [Replace a binary blob in history](#Replace-a-binary-blob-in-history)
-  * [Remove commits older than N days](#Remove-commits-older-than-N-days)
-  * [Replacing pngs with compressed alternative](#Replacing-pngs-with-compressed-alternative)
-  * [Updating submodule hashes](#Updating-submodule-hashes)
-  * [Using multi-line strings in callbacks](#Using-multi-line-strings-in-callbacks)
-
+- [Adding files to root commits](#adding-files-to-root-commits)
+- [Purge a large list of files](#purge-a-large-list-of-files)
+- [Extracting a libary from a repo](#Extracting-a-libary-from-a-repo)
+- [Replace words in all commit messages](#Replace-words-in-all-commit-messages)
+- [Only keep files from two branches](#Only-keep-files-from-two-branches)
+- [Renormalize end-of-line characters and add a .gitattributes](#Renormalize-end-of-line-characters-and-add-a-gitattributes)
+- [Remove spaces at the end of lines](#Remove-spaces-at-the-end-of-lines)
+- [Having both exclude and include rules for filenames](#Having-both-exclude-and-include-rules-for-filenames)
+- [Removing paths with a certain extension](#Removing-paths-with-a-certain-extension)
+- [Removing a directory](#Removing-a-directory)
+- [Convert from NFD filenames to NFC](#Convert-from-NFD-filenames-to-NFC)
+- [Set the committer of the last few commits to myself](#Set-the-committer-of-the-last-few-commits-to-myself)
+- [Handling special characters, e.g. accents in names](#Handling-special-characters-eg-accents-in-names)
+- [Handling repository corruption](#Handling-repository-corruption)
+- [Removing all files with a backslash in them](#Removing-all-files-with-a-backslash-in-them)
+- [Replace a binary blob in history](#Replace-a-binary-blob-in-history)
+- [Remove commits older than N days](#Remove-commits-older-than-N-days)
+- [Replacing pngs with compressed alternative](#Replacing-pngs-with-compressed-alternative)
+- [Updating submodule hashes](#Updating-submodule-hashes)
+- [Using multi-line strings in callbacks](#Using-multi-line-strings-in-callbacks)
 
 ## Adding files to root commits
 
@@ -41,7 +40,7 @@ the repository:
 
 ```
 git filter-repo --commit-callback "if not commit.parents: commit.file_changes += [
-    FileChange(b'M', b'README.md', b'$(git hash-object -w '/path/to/existing/README.md')', b'100644'), 
+    FileChange(b'M', b'README.md', b'$(git hash-object -w '/path/to/existing/README.md')', b'100644'),
     FileChange(b'M', b'src/.gitignore', b'$(git hash-object -w '/home/myusers/mymodule.gitignore')', b'100644')]"
 ```
 
@@ -96,9 +95,9 @@ git filter-repo --message-callback 'return message.replace(b"stuff", b"task")'
 <!-- https://github.com/newren/git-filter-repo/issues/91 -->
 
 Let's say you know that the files currently present on two branches
-are the only files that matter.  Files that used to exist in either of
+are the only files that matter. Files that used to exist in either of
 these branches, or files that only exist on some other branch, should
-all be deleted from all versions of history.  This can be accomplished
+all be deleted from all versions of history. This can be accomplished
 by getting a list of files from each branch, combining them, sorting
 the list and picking out just the unique entries, then passing the
 result to `--paths-from-file`:
@@ -136,9 +135,9 @@ git filter-repo --replace-text <(echo 'regex:[\r\t ]+(\n|$)==>\n')
 <!-- https://github.com/newren/git-filter-repo/issues/230 -->
 
 If you want to have rules to both include and exclude filenames, you
-can simply invoke `git filter-repo` multiple times.  Alternatively,
+can simply invoke `git filter-repo` multiple times. Alternatively,
 you can do it in one run if you dispense with `--path` arguments and
-instead use the more generic `--filename-callback`.  For example to
+instead use the more generic `--filename-callback`. For example to
 include all files under `src/` except for `src/README.md`:
 
 ```
@@ -182,12 +181,12 @@ git filter-repo --path node_modules/electron/dist/ --invert-paths
 Given that Mac does utf-8 normalization of filenames, and has
 historically switched which kind of normalization it does, users may
 have committed files with alternative normalizations to their
-repository.  If someone wants to convert filenames in NFD form to NFC,
+repository. If someone wants to convert filenames in NFD form to NFC,
 they could run
 
 ```
 git filter-repo --filename-callback '
-    try: 
+    try:
         return subprocess.check_output("iconv -f utf-8-mac -t utf-8".split(),
                                        input=filename)
     except:
@@ -207,7 +206,7 @@ git filter-repo --filename-callback '
       return filename
 '
 ```
-  
+
 ## Set the committer of the last few commits to myself
 
 <!-- https://github.com/newren/git-filter-repo/issues/379 -->
@@ -228,7 +227,7 @@ won't allow you to directly place those in a bytestring
 (e.g. `b"Raphaël González"` would result in a `SyntaxError: bytes can
 only contain ASCII literal characters` error from Python), you just
 need to make a normal (UTF-8) string and then convert to a bytestring
-to handle these.  For example, changing the author name and email
+to handle these. For example, changing the author name and email
 where the author email is currently `example@test.com`:
 
 ```
@@ -244,6 +243,7 @@ git filter-repo --refs main~5..main --commit-callback '
 <!-- https://github.com/newren/git-filter-repo/issues/420 -->
 
 First, run fsck to get a list of the corrupt objects, e.g.:
+
 ```
 $ git fsck --full
 error in commit 166f57b3fbe31257100361ecaf735f305b533b21: missingSpaceBeforeDate: invalid author/committer line - missing space before date
@@ -254,17 +254,19 @@ Checking object directories: 100% (256/256), done.
 Odds are you'll only see one type of corruption, but if you see
 multiple, you can either do multiple filterings, or create replacement
 objects for all the corrupt objects (both commits and trees), and then
-do the filtering.  Since the method for handling corrupt commits and
+do the filtering. Since the method for handling corrupt commits and
 corrupt tress is slightly different, I'll give examples below for each.
 
 ### Handling repository corruption -- commit objects
 
 Print out the corrupt object literally to a temporary file:
+
 ```
 $ git cat-file -p 166f57b3fbe31257100361ecaf735f305b533b21 >tmp
 ```
 
 Taking a look at the file would show, for example:
+
 ```
 $ cat tmp
 tree e1d871155fce791680ec899fe7869067f2b4ffd2
@@ -275,7 +277,7 @@ Initial
 ```
 
 Edit that file to fix the error (in this case, the missing space
-between author email and author date).  In this case, it would look
+between author email and author date). In this case, it would look
 like this after editing:
 
 ```
@@ -288,6 +290,7 @@ Initial
 
 Save the updated file, then use `git replace` to make a replace reference
 for it.
+
 ```
 $ git replace -f 166f57b3fbe31257100361ecaf735f305b533b21 $(git hash-object -t commit -w tmp)
 ```
@@ -301,7 +304,7 @@ $ git filter-repo --proceed
 ```
 
 Note that if you have multiple corrupt objects, you need to create
-replacements for all of them, and then run filter-repo.  Leaving any
+replacements for all of them, and then run filter-repo. Leaving any
 corrupt object without a replacement is likely to cause the filter-repo run
 to fail.
 
@@ -310,11 +313,13 @@ to fail.
 <!-- GitHub customer example -->
 
 Print out the corrupt object literally to a temporary file:
+
 ```
 $ git cat-file -p c15680eae81cc8539af7e7de766a8a7c13bd27df >tmp
 ```
 
 Taking a look at the file would show, for example:
+
 ```
 $ cat tmp
 100644 blob cd5ded43e86f80bfd384702e3f4cc7ce42de49f9	.gitignore
@@ -325,7 +330,7 @@ $ cat tmp
 ```
 
 Edit that file to fix the error (in this case, removing either the `src`
-file (blob) or the `src` directory (tree)).  In this case, it might look
+file (blob) or the `src` directory (tree)). In this case, it might look
 like this after editing:
 
 ```
@@ -337,6 +342,7 @@ like this after editing:
 
 Save the updated file, then use `git mktree` to turn it into an actual
 tree object:
+
 ```
 $ git mktree <tmp
 ace04f50a5d13b43e94c12802d3d8a6c66a35b1d
@@ -344,6 +350,7 @@ ace04f50a5d13b43e94c12802d3d8a6c66a35b1d
 
 Now use the output of that command to create a replacement object for
 the original corrupt object:
+
 ```
 git replace -f c15680eae81cc8539af7e7de766a8a7c13bd27df ace04f50a5d13b43e94c12802d3d8a6c66a35b1d
 ```
@@ -360,7 +367,6 @@ As mentioned with corrupt commit objects, if you have multiple corrupt
 objects, as long as you create all the replacements for those objects
 first, you only need to run filter-repo once.
 
-
 ## Removing all files with a backslash in them
 
 <!-- https://github.com/newren/git-filter-repo/issues/427 -->
@@ -374,11 +380,11 @@ git filter-repo --filename-callback 'return None if b'\\' in filename else filen
 <!-- https://github.com/newren/git-filter-repo/issues/436 -->
 
 Let's say you committed a binary blob, perhaps an image file, with
-sensitive data, and never modified it.  You want to replace it with
+sensitive data, and never modified it. You want to replace it with
 the contents of some alternate file, currently found at
 `../alternative-file.jpg` (it can have a different filename than what
-is stored in the repository).  Let's also say the hash of the old file
-was `f4ede2e944868b9a08401dafeb2b944c7166fd0a`.  You can replace it
+is stored in the repository). Let's also say the hash of the old file
+was `f4ede2e944868b9a08401dafeb2b944c7166fd0a`. You can replace it
 with either
 
 ```
@@ -399,10 +405,10 @@ git filter-repo --proceed
 
 <!-- https://github.com/newren/git-filter-repo/issues/300 -->
 
-This is such a bad usecase.  I'm tempted to leave it out, but it has
+This is such a bad usecase. I'm tempted to leave it out, but it has
 come up multiple times, and there are people who are totally fine with
 changing every commit hash in their repository and throwing away
-history periodically.  First, identify an ${OLD_COMMIT} that you want
+history periodically. First, identify an ${OLD_COMMIT} that you want
 to be a new root commit, then run:
 
 ```
@@ -411,7 +417,7 @@ git filter-repo --proceed
 ```
 
 (The trick here is that `git replace --graft` takes a commit to replace, and
-a list of new parents for the commit.  Since ${OLD_COMMIT} is the final
+a list of new parents for the commit. Since ${OLD_COMMIT} is the final
 positional argument, it means the list of new parents is an empty list, i.e.
 we are turning it into a new root commit.)
 
@@ -433,12 +439,14 @@ git log -1 --raw --no-abbrev ${COMMIT_WHERE_YOU_COMPRESSED_PNGS}
 ```
 
 that will show output like
+
 ```
 :100755 100755 edf570fde099c0705432a389b96cb86489beda09 9cce52ae0806d695956dcf662cd74b497eaa7b12 M      resources/foo.png
 :100755 100755 644f7c55e1a88a29779dc86b9ff92f512bf9bc11 88b02e9e45c0a62db2f1751b6c065b0c2e538820 M      resources/bar.png
 ```
 
 Use that to make a --file-info-callback to fix up the original versions:
+
 ```
 git filter-repo --file-info-callback '
     if filename == b"resources/foo.png" and blob_id == b"edf570fde099c0705432a389b96cb86489beda09":
@@ -457,6 +465,7 @@ Let's say you have a repo with a submodule at src/my-submodule, and
 that you feel the wrong commit-hashes of the submodule were commited
 within your project and you want them updated according to the
 following table:
+
 ```
 old                                      new
 edf570fde099c0705432a389b96cb86489beda09 9cce52ae0806d695956dcf662cd74b497eaa7b12
@@ -464,6 +473,7 @@ edf570fde099c0705432a389b96cb86489beda09 9cce52ae0806d695956dcf662cd74b497eaa7b1
 ```
 
 You could do this as follows:
+
 ```
 git filter-repo --file-info-callback '
     if filename == b"src/my-submodule" and blob_id == b"edf570fde099c0705432a389b96cb86489beda09":
@@ -474,7 +484,7 @@ git filter-repo --file-info-callback '
 ```
 
 Yes, `blob_id` is kind of a misnomer here since the file's hash
-actually refers to a commit from the sub-project.  But `blob_id` is
+actually refers to a commit from the sub-project. But `blob_id` is
 the name of the parameter passed to the --file-info-callback, so that
 is what must be used.
 
@@ -483,7 +493,7 @@ is what must be used.
 <!-- https://lore.kernel.org/git/CABPp-BFqbiS8xsbLouNB41QTc5p0hEOy-EoV0Sjnp=xJEShkTw@mail.gmail.com/ -->
 
 Since the text for callbacks have spaces inserted at the front of every
-line, multi-line strings are normally munged.  For example, the command
+line, multi-line strings are normally munged. For example, the command
 
 ```
 git filter-repo --blob-callback '
@@ -496,6 +506,7 @@ with.  It is great.\n""", "utf-8")
 ```
 
 would result in a file with extra spaces at the front of every line:
+
 ```
   This is the new
   file that I am
@@ -507,7 +518,7 @@ The two spaces at the beginning of every-line were inserted into every
 line of the callback when trying to compile it as a function.
 However, you can use textwrap.dedent to fix this; in fact, using it
 will even allow you to add more leading space so that it looks nicely
-indented.  For example:
+indented. For example:
 
 ```
 git filter-repo --blob-callback '
@@ -521,6 +532,7 @@ git filter-repo --blob-callback '
 ```
 
 That will result in a file with contents
+
 ```
 This is the new
 file that I am

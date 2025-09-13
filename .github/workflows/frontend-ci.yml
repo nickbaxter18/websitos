@@ -13,19 +13,46 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      # Ensure Node.js is set up from .nvmrc (preferred) or fallback to 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
+          node-version-file: '.nvmrc'
           node-version: '20'
           cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
+
+      # Verify environment before proceeding
+      - name: Verify Node & npm availability
+        run: |
+          node --version
+          npm --version
+
+      # Clean cache before install to avoid corruption
+      - name: Clean npm cache
+        run: npm cache clean --force
+
+      - name: Install dependencies (capture logs)
+        shell: bash
+        run: |
+          npm ci 2>&1 | tee npm-install.log
+
+      - name: Upload npm install log
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-install-log
+          path: npm-install.log
+          retention-days: 7
+
       - name: Run frontend checks
         run: |
           npm run lint
           npm run type-check
           npm run test:ci
+
       - name: Build frontend
         run: npm run build
+
       - name: Upload frontend artifacts
         uses: actions/upload-artifact@v4
         with:

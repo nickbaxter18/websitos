@@ -1,19 +1,8 @@
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-# Get changed files between local HEAD and remote main
-CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+# Example pre-push checks (customize as needed)
+echo "✅ Husky pre-push running..."
 
-# Skip checks if only GitHub workflow files are changed or if commit message contains 'force push'
-if echo "$CHANGED_FILES" | grep -qE '(^|/)\.github/workflows/'; then
-  echo "[Husky] Skipping checks for workflow-only push"
-  exit 0
-fi
-
-if git log -1 --pretty=%B | grep -qi 'force push'; then
-  echo "[Husky] Skipping checks for force push commit"
-  exit 0
-fi
-
-# Otherwise run normal checks
-npm run lint
+# Ensure tests pass before pushing
 npm test

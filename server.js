@@ -148,7 +148,16 @@ app.post("/replace", checkApiKey, (req, res) => {
 // === Git APIs ===
 function runGit(cmd) {
   try {
-    return { stdout: execSync(`git ${cmd}`, { encoding: "utf8" }), stderr: "", exitCode: 0 };
+    const safeEnv = { ...process.env };
+    delete safeEnv.GIT_EDITOR;
+    return {
+      stdout: execSync(`git ${cmd}`, {
+        encoding: "utf8",
+        env: safeEnv
+      }),
+      stderr: "",
+      exitCode: 0
+    };
   } catch (err) {
     return { stdout: "", stderr: err.message, exitCode: 1 };
   }
@@ -193,7 +202,12 @@ let tasks = {};
 app.post("/task/start", checkApiKey, (req, res) => {
   const { command } = req.body;
   const id = Date.now().toString();
-  const child = spawn(command, [], { shell: true });
+  const safeEnv = { ...process.env };
+  delete safeEnv.GIT_EDITOR;
+  const child = spawn(command, [], {
+    shell: true,
+    env: safeEnv
+  });
   tasks[id] = { status: "running", stdout: "", stderr: "" };
   child.stdout.on("data", (d) => (tasks[id].stdout += d.toString()));
   child.stderr.on("data", (d) => (tasks[id].stderr += d.toString()));

@@ -1,4 +1,4 @@
-# WebsiteOS v2
+# WebsiteOS v2 (patch)
 
 ![Frontend CI](https://github.com/udigitrentals/websitos/actions/workflows/frontend-ci.yml/badge.svg)
 ![Backend CI](https://github.com/udigitrentals/websitos/actions/workflows/backend-ci.yml/badge.svg)
@@ -35,5 +35,5 @@ npm run dev
 - `/api/health` – API health
 - `/health` – root health
 - `/api/status` – extended status
-  "\n<!-- test commit -->"
-  "# Dummy patch to trigger clean workflows"
+
+<!-- dummy patch to trigger Frontend CI after workflow fix -->
