@@ -28,19 +28,10 @@ jobs:
             echo "✅ GH_TOKEN is available (masked)"
           fi
 
-      - name: Debug repo state
+      - name: Prepare snapshot
         run: |
-          echo "📂 Listing files"
-          ls -la || echo "⚠️ ls failed"
-
-          echo "🔎 Checking .git directory"
-          ls -la .git || echo "⚠️ .git directory missing"
-
-          echo "🔎 Git HEAD"
-          git rev-parse HEAD || echo "⚠️ rev-parse failed"
-
-          echo "🔎 Git status"
-          git status || echo "⚠️ git status failed"
+          echo "📂 Listing files before zipping"
+          ls -la
 
       - name: Zip repo snapshot (excluding sensitive files)
         run: |
