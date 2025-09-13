@@ -11,13 +11,6 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout repo (shallow, no submodules)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-          submodules: false
-
       - name: Verify GH_TOKEN presence
         run: |
           if [ -z "${{ secrets.GH_TOKEN }}" ]; then
@@ -27,14 +20,18 @@ jobs:
             echo "✅ GH_TOKEN is available (masked)"
           fi
 
-      - name: Prepare snapshot
+      - name: Download repo archive
         run: |
-          echo "📂 Listing files before zipping"
+          curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/zipball/${{ github.sha }} \
+            -o repo.zip
+          unzip repo.zip -d repo
+          mv repo/* repo_extracted || true
           ls -la
 
       - name: Zip repo snapshot (excluding sensitive files)
         run: |
-          zip -r repo-snapshot.zip . \
+          zip -r repo-snapshot.zip repo_extracted \
             -x "*.git*" \
             -x ".env*" \
             -x "node_modules/*" \
