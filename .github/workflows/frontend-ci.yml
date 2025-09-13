@@ -10,7 +10,6 @@ on:
 jobs:
   frontend:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -62,3 +61,11 @@ jobs:
             jest-report.json
             dist
           retention-days: 7
+
+  capture-failure:
+    if: always()
+    needs: [frontend]
+    uses: ./.github/workflows/failure-summary.yml
+    with:
+      job_name: frontend
+      step_name: Build

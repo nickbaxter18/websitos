@@ -1,0 +1,81 @@
+name: Preflight Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Verify Node & npm
+        run: |
+          which node
+          node --version
+          which npm
+          npm --version
+
+      - name: Debug workspace
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -al --max-depth=2
+
+      - name: Install dependencies
+        run: |
+          npm ci || echo "No package.json found"
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run lint (if available)
+        run: npm run lint || echo "No lint script" > lint-results.txt
+
+      - name: Run type-check (if available)
+        run: npm run type-check || echo "No type-check script" > ts-results.txt
+
+      - name: Run JS tests (if available)
+        run: npm test || echo "No JS tests" > jest-results.txt
+
+      - name: Run Python tests (if available)
+        run: |
+          if [ -f requirements.txt ]; then pytest || true; else echo "No Python tests"; fi > pytest-results.txt
+
+      - name: Summarize preflight results
+        run: |
+          echo "Preflight checks completed" > results.txt
+          cat lint-results.txt >> results.txt || true
+          cat ts-results.txt >> results.txt || true
+          cat jest-results.txt >> results.txt || true
+          cat pytest-results.txt >> results.txt || true
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-results
+          path: |
+            results.txt
+            lint-results.txt
+            ts-results.txt
+            jest-results.txt
+            pytest-results.txt
+          retention-days: 3

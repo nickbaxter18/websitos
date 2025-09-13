@@ -1,0 +1,66 @@
+name: Render Deploy with Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          echo "Triggering Render deploy..."
+          curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "accept: application/json" \
+          -H "content-type: application/json"
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for Deploy to Settle
+        run: |
+          echo "Waiting 60s for deploy to stabilize..."
+          sleep 60
+
+      - name: Check API Health
+        run: |
+          echo "Hitting /api/health..."
+          for i in {1..3}; do
+            if curl -sSf https://websitos.onrender.com/api/health; then
+              echo "✅ /api/health OK"
+              break
+            else
+              echo "Retrying..."
+              sleep 10
+            fi
+          done
+
+      - name: Check Extended Status
+        run: |
+          echo "Hitting /api/status..."
+          for i in {1..3}; do
+            if curl -sSf https://websitos.onrender.com/api/status; then
+              echo "✅ /api/status OK"
+              break
+            else
+              echo "Retrying..."
+              sleep 10
+            fi
+          done
+
+      - name: Check Root Health
+        run: |
+          echo "Hitting /health..."
+          for i in {1..3}; do
+            if curl -sSf https://websitos.onrender.com/health; then
+              echo "✅ /health OK"
+              break
+            else
+              echo "Retrying..."
+              sleep 10
+            fi
+          done

@@ -1,0 +1,60 @@
+name: CCF Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Validate required files exist
+        run: |
+          CRITICAL_FILES=( \
+            "config/secrets.schema.json" )
+
+          OPTIONAL_FILES=( \
+            ".github/ccf-manifest.md" \
+            ".github/workflows/ci-preflight.yml" \
+            ".github/workflows/pr-summary.yml" \
+            ".github/workflows/post-deploy-smoke.yml" \
+            ".github/workflows/render-deploy.yml" \
+            ".github/workflows/branch-protection.yml" )
+
+          MISSING_CRITICAL=0
+          for f in "${CRITICAL_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "❌ Missing critical file: $f"
+              MISSING_CRITICAL=1
+            else
+              echo "✅ Found critical file: $f"
+            fi
+          done
+
+          for f in "${OPTIONAL_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "⚠️ Missing optional file: $f"
+            else
+              echo "✅ Found optional file: $f"
+            fi
+          done
+
+          if [ "$MISSING_CRITICAL" -eq 1 ]; then
+            echo "❌ Critical files missing. Failing validation."
+            exit 1
+          else
+            echo "✅ Validation passed (optional files may be missing)."
+          fi
+
+      - name: Confirm manifest contains mapping section
+        run: |
+          if [ -f .github/ccf-manifest.md ] && grep -q "### 🚀 Mapping to Implementation" .github/ccf-manifest.md; then
+            echo "✅ Manifest mapping confirmed"
+          else
+            echo "⚠️ Manifest missing mapping section (not failing build)"
+          fi

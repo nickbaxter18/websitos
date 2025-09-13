@@ -29,13 +29,14 @@ from api_logging import StructuredLoggingMiddleware
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, ".env"))
 
-APP_KEY = os.getenv("APP_API_KEY", "dev-local-secret")
+APP_KEY = os.getenv("APP_APT_KEY", "dev-local-secret")
 COL = os.getenv("QDRANT_COLLECTION", "u_dig_brain_v1")
 MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
 
+# Align with correct GitHub/Render secret names
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPEN_AI_API_KEY")
 
 # -------------------------------------------------------------------
 # Logging Setup

@@ -2,17 +2,26 @@ name: U-DIG IT Repo Sync
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repo with PAT
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.UDIGIT_GITHUB_TOKEN }}
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Debug GITHUB_TOKEN presence
+        run: |
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "❌ GITHUB_TOKEN not available"
+            exit 1
+          else
+            echo "✅ GITHUB_TOKEN is available (masked)"
+          fi
 
       - name: Zip repo snapshot
         run: zip -r repo-snapshot.zip .
@@ -20,5 +29,5 @@ jobs:
       - name: Upload snapshot (U-DIG IT ingest)
         run: |
           curl -X POST "https://websitos.onrender.com/ingest_file" \
-          -H "Authorization: Bearer ${{ secrets.UDIGIT_GITHUB_TOKEN }}" \
-          -F "file=@repo-snapshot.zip"
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -F "file=@repo-snapshot.zip"

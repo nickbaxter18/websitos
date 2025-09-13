@@ -1,10 +1,10 @@
 # WebsiteOS v2 (patch)
 
-![Frontend CI](https://github.com/udigitrentals/websitos/actions/workflows/frontend-ci.yml/badge.svg)
-![Backend CI](https://github.com/udigitrentals/websitos/actions/workflows/backend-ci.yml/badge.svg)
-![Coverage](https://github.com/udigitrentals/websitos/actions/workflows/coverage.yml/badge.svg)
-![PR Summary](https://github.com/udigitrentals/websitos/actions/workflows/pr-summary.yml/badge.svg)
-[![codecov](https://codecov.io/gh/udigitrentals/websitos/branch/main/graph/badge.svg)](https://codecov.io/gh/udigitrentals/websitos)
+![Frontend CI](https://github.com/nickbaxter18/websitos/actions/workflows/frontend-ci.yml/badge.svg)
+![Backend CI](https://github.com/nickbaxter18/websitos/actions/workflows/backend-ci.yml/badge.svg)
+![Coverage](https://github.com/nickbaxter18/websitos/actions/workflows/coverage.yml/badge.svg)
+![PR Summary](https://github.com/nickbaxter18/websitos/actions/workflows/pr-summary.yml/badge.svg)
+[![codecov](https://codecov.io/gh/nickbaxter18/websitos/branch/main/graph/badge.svg)](https://codecov.io/gh/nickbaxter18/websitos)
 
 ---
 
@@ -36,4 +36,4 @@ npm run dev
 - `/health` – root health
 - `/api/status` – extended status
 
-<!-- dummy patch to trigger Frontend CI after workflow fix -->
+<!-- trigger Frontend CI -->

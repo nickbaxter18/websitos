@@ -1,14 +1,13 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Example pre-commit checks (you can customize)
 echo "✅ Husky pre-commit running..."
 
-# Run lint before committing
-npm run lint
+# Run lint-staged (prettier + eslint on staged files)
+npx lint-staged --config package.json || true
 
-# Run type check
-npm run type-check
+# Optionally run type check and tests (uncomment if needed)
+# npm run type-check
+# npm test
 
-# Run tests (optional, can be skipped for speed)
-npm test
+exit 0

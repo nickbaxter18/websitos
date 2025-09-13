@@ -1,0 +1,104 @@
+name: Capture Failure Summary
+
+on:
+  workflow_call:
+    inputs:
+      job_name:
+        required: true
+        type: string
+      step_name:
+        required: false
+        type: string
+        default: "unknown-step"
+
+jobs:
+  failure-summary:
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Collect failure info (always runs)
+        run: |
+          mkdir -p summary logs
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          EXIT_CODE_FILE="exit_code.log"
+          EXIT_CODE=$(cat $EXIT_CODE_FILE 2>/dev/null || echo "unknown")
+
+          # Aggregate logs if present
+          ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 20 {} + 2>/dev/null || echo "No stderr captured")
+          ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 20 {} + 2>/dev/null || echo "No stdout captured")
+
+          # Try to detect failed step (best effort)
+          FAILED_STEP=$(grep -i "Error" -m1 stderr.log 2>/dev/null || echo "${{ inputs.step_name }}")
+
+          # Calculate job duration (fallback -1 if unavailable)
+          START_TIME=$(date -d "$GITHUB_RUN_STARTED_AT" +%s 2>/dev/null || echo 0)
+          NOW=$(date +%s)
+          DURATION=$(( NOW - START_TIME ))
+
+          WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID"
+
+          # Always generate JSON, even if no failure
+          cat > summary/failure-summary-${{ inputs.job_name }}.json <<EOF
+          {
+            "run_id": $GITHUB_RUN_ID,
+            "job": "${{ inputs.job_name }}",
+            "step": "$FAILED_STEP",
+            "exit_code": "$EXIT_CODE",
+            "error": "$(echo "$ALL_STDERR" | head -n 1)",
+            "stdout_tail": $(echo "$ALL_STDOUT" | jq -R -s -c 'split("\n")'),
+            "stderr_tail": $(echo "$ALL_STDERR" | jq -R -s -c 'split("\n")'),
+            "git": {
+              "commit": "${{ github.sha }}",
+              "branch": "${{ github.ref_name }}",
+              "pr_number": "${{ github.event.pull_request.number || '' }}"
+            },
+            "triggered_by": "${{ github.actor }}",
+            "environment": {
+              "os": "${{ runner.os }}",
+              "node": "$(node -v || echo 'not installed')",
+              "python": "$(python3 --version 2>/dev/null || echo 'not installed')"
+            },
+            "duration_seconds": $DURATION,
+            "workflow_url": "$WORKFLOW_URL",
+            "timestamp": "$TIMESTAMP"
+          }
+          EOF
+
+          # Ensure JSON always exists
+          touch summary/failure-summary-${{ inputs.job_name }}.json
+
+          # Create fallback debug log
+          {
+            echo "Run ID: $GITHUB_RUN_ID"
+            echo "Job: ${{ inputs.job_name }}"
+            echo "Step: $FAILED_STEP"
+            echo "Exit Code: $EXIT_CODE"
+            echo "Timestamp: $TIMESTAMP"
+            echo "Git SHA: ${{ github.sha }}"
+            echo "Branch: ${{ github.ref_name }}"
+            echo "Actor: ${{ github.actor }}"
+            echo "Duration: $DURATION"
+            echo "Workflow URL: $WORKFLOW_URL"
+            echo "--- STDERR ---"
+            echo "$ALL_STDERR"
+            echo "--- STDOUT ---"
+            echo "$ALL_STDOUT"
+          } > summary/failure-debug-${{ inputs.job_name }}.log
+
+      - name: Debug artifact contents
+        run: |
+          echo "Listing files in workspace:"
+          ls -R /home/runner/work || true
+          echo "Listing files in summary/:"
+          ls -R summary || true
+          echo "--- JSON Preview ---"
+          cat summary/failure-summary-${{ inputs.job_name }}.json || echo "No JSON generated"
+
+      - name: Upload failure summary folder (always attempt)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-summary-${{ inputs.job_name }}
+          path: summary/**
+          retention-days: 7
