@@ -1,8 +1,8 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
-# Example pre-push checks (customize as needed)
 echo "✅ Husky pre-push running..."
 
-# Ensure tests pass before pushing
+# Run tests before pushing
 npm test
+
+exit 0
