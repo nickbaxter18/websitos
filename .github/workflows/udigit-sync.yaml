@@ -12,12 +12,12 @@ jobs:
       actions: read
       packages: read
     steps:
-      - name: Checkout repo (full history)
+      - name: Checkout repo (full history with GH_TOKEN)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          show-progress: true
           persist-credentials: true
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Verify GH_TOKEN presence
         run: |
