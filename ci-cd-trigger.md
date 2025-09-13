@@ -6,3 +6,4 @@
 "# Dummy commit after udigit-sync permissions fix"  
 "# Dummy commit after jest.json duplicate fix"  
 "# Dummy commit after eslint.json matcher fix"  
+"# Dummy commit after mypy.json matcher fix"  
