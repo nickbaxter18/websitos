@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: Enable problem matchers
-        uses: ./.github/workflows/setup-matchers.yml
+        uses: ./.github/actions/setup-matchers
 
       - name: Check API Health
         run: |
