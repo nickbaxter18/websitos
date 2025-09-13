@@ -1,10 +1,4 @@
-// Patched stub for CI compatibility
-
-export function decideAutonomy(input: any) {
-  return { status: "ok", input };
+export function decideAutonomy() {
+  // Placeholder logic until redesign is fully implemented
+  return { decision: "safe-autonomy", confidence: 1.0 };
 }
-
-// Ensure default export exists for tests
-export default {
-  decideAutonomy,
-};
