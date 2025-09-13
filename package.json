@@ -31,7 +31,12 @@
     "secscan": "ts-node -T -P tsconfig.ops.json scripts/scan-secrets.ts"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "@babel/preset-env": "^7.25.0",
+    "@babel/preset-react": "^7.25.0",
+    "@babel/preset-typescript": "^7.25.0",
+    "@babel/preset-flow": "^7.25.0"
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,html}": [
       "prettier --write",
