@@ -4,15 +4,15 @@
       "owner": "jest",
       "pattern": [
         {
-          "regexp": "^FAIL\s+(.+)$",
+          "regexp": "^FAIL\\s+(.+)$",
           "file": 1
         },
         {
-          "regexp": "^\s+●\s+(.*)$",
+          "regexp": "^\\s+●\\s+(.*)$",
           "message": 1
         },
         {
-          "regexp": "^\s+at\s+([^:]+):(\\d+):(\\d+)$",
+          "regexp": "^\\s+at\\s+([^:]+):(\\d+):(\\d+)$",
           "file": 1,
           "line": 2,
           "column": 3
