@@ -1,19 +1,13 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "strict": true,
+    "module": "commonjs",
     "jsx": "react-jsx",
-    "moduleResolution": "node",
     "esModuleInterop": true,
+    "allowJs": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
-    "typeRoots": ["./node_modules/@types", "./node_modules/@playwright"]
+    "strict": false
   },
-  "include": ["src", "scripts"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src", "tests", "v2"],
+  "exclude": ["node_modules", "dist"]
 }
