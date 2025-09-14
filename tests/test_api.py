@@ -9,8 +9,7 @@ def test_healthcheck():
     response = client.get("/api/health")
     assert response.status_code == 200
     data = response.json()
-    assert "ok" in data
-    assert data["ok"] is True
+    assert data == {"ok": True}
 
 
 def test_invalid_route():
