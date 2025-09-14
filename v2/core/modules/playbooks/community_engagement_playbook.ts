@@ -1,3 +1,5 @@
+import template from "./community_engagement_playbook.json";
+
 export const CommunityEngagementPlaybook = {
   id: "community_engagement_playbook",
   function: "community engagement playbook",
@@ -7,7 +9,7 @@ export const CommunityEngagementPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["community", "engagement", "playbook"],
   apply() {
-    return await import("./community_engagement_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const CommunityEngagementPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

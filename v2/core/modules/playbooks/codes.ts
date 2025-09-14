@@ -1,3 +1,5 @@
+import template from "./codes.json";
+
 export const Codes = {
   id: "codes",
   function: "codes",
@@ -7,7 +9,7 @@ export const Codes = {
   myth_alignment: "growth",
   cultural_tags: ["codes"],
   apply() {
-    return await import("./codes.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const Codes = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};
