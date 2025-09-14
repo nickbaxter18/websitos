@@ -6,8 +6,7 @@
         {
           "regexp": "File \\\"(.+?)\\\", line (\\d+).*",
           "file": 1,
-          "line": 2,
-          "message": "Python traceback detected"
+          "line": 2
         }
       ]
     },
