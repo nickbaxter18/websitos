@@ -8,7 +8,7 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    continue-on-error: true  # make smoke non-blocking
+    continue-on-error: true
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
@@ -39,11 +39,14 @@ jobs:
               echo "⚠️ $NAME failed with status $STATUS"
               echo "Response body (truncated):"
               echo "$BODY" | head -n 20
-              echo "::error file=.github/workflows/post-deploy-smoke.yml::Smoke check failed ($NAME, status $STATUS)"
+              echo "::warning file=.github/workflows/post-deploy-smoke.yml::Smoke check failed ($NAME, status $STATUS)"
               sleep 10
             fi
           done
           echo "::error::$NAME check failed after 3 attempts"
+          if [ ! -f response.txt ]; then
+            echo 'No response captured' > response.txt
+          fi
           exit 1
           EOF
           chmod +x check_endpoint.sh

@@ -13,7 +13,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false  # don't cancel all tasks if one fails
+      fail-fast: false
       matrix:
         task: [lint, type-check, test:unit, prettier]
     steps:
@@ -27,7 +27,7 @@ jobs:
           cache: 'npm'
 
       - name: Enable problem matchers
-        continue-on-error: true  # don't fail job if matcher fails
+        continue-on-error: true
         run: |
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/eslint.json"
@@ -43,23 +43,20 @@ jobs:
           echo "::group::🔎 Running task: ${{ matrix.task }}"
           EXIT=0
           if [ "${{ matrix.task }}" == "test:unit" ]; then
-            echo "⚡ Running Jest with annotations..."
             npm run test:unit -- --runInBand --verbose --reporters=default --reporters=jest-github-actions-reporter || EXIT=$?
             if [ ! -f jest-report.json ]; then
               echo '{}' > jest-report.json
               echo "::warning file=frontend/tests::jest-report.json missing, test run may have crashed"
             fi
           elif [ "${{ matrix.task }}" == "lint" ]; then
-            echo "⚡ Running ESLint with GitHub annotations..."
             npx eslint src v2 ops --format github || EXIT=$?
             if [ ! -f eslint-report.json ]; then
               echo '{}' > eslint-report.json
+              echo "::warning file=frontend/src::eslint-report.json missing, lint run may have crashed"
             fi
           elif [ "${{ matrix.task }}" == "type-check" ]; then
-            echo "⚡ Running TypeScript with GitHub annotations..."
             npx tsc --noEmit --pretty false || EXIT=$?
           elif [ "${{ matrix.task }}" == "prettier" ]; then
-            echo "⚡ Checking Prettier formatting..."
             npx prettier --check . | sed 's/^/::warning::/' || true
           fi
           echo "::endgroup::"
