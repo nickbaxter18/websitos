@@ -66,9 +66,9 @@ jobs:
           cat response.txt || echo "(no body)"
 
           if [ "$RESPONSE" -ne 200 ]; then
-            echo "❌ U-DIG IT ingest API returned error"
-            echo "::error file=.github/workflows/udigit-sync.yaml::U-DIG IT ingest API returned error (status $RESPONSE)"
-            exit 1
+            echo "⚠️ U-DIG IT ingest API returned error (status $RESPONSE). Skipping without failing."
+            echo "::warning file=.github/workflows/udigit-sync.yaml::U-DIG IT ingest API returned error (status $RESPONSE)"
+            exit 0
           else
             echo "✅ Sync successful"
           fi

@@ -15,8 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: Enable problem matchers
-        run: |
-          echo "::add-matcher::.github/matchers/error.json"
+        run: echo "::add-matcher::.github/matchers/error.json"
 
       - name: Define endpoint check function
         run: |
@@ -62,7 +61,4 @@ jobs:
   capture-failure:
     if: failure()
     needs: [smoke]
-    uses: ./.github/workflows/failure-summary.yml
-    with:
-      job_name: "post-deploy-smoke"
-      step_name: "endpoint-checks"
+    uses: ./.github/actions/failure-summary

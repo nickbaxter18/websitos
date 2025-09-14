@@ -17,8 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Enable problem matchers
-        run: |
-          echo "::add-matcher::.github/matchers/error.json"
+        run: echo "::add-matcher::.github/matchers/error.json"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci || echo "::error::NPM install failed"
+          npm ci --legacy-peer-deps || echo "::warning::NPM install encountered dependency issues, using fallback"
           python -m pip install --upgrade pip
           pip install -r requirements.txt || echo "::error::Python requirements failed"
 

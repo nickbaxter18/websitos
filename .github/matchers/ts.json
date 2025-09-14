@@ -4,7 +4,7 @@
       "owner": "tsc",
       "pattern": [
         {
-          "regexp": "^(.*)\\((\\d+),(\\d+)\\): error (TS\\d+): (.*)$",
+          "regexp": "^(.*)\\((\\d+),(\\d+)\\): error (TS[0-9]+): (.*)$",
           "file": 1,
           "line": 2,
           "column": 3,

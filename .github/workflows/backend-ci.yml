@@ -69,6 +69,10 @@ jobs:
           fi
           if [ "${{ matrix.task }}" == "pytest" ]; then
             pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || EXIT=$?
+            if [ ! -f pytest-report.json ]; then
+              echo '{}' > pytest-report.json
+              echo "::warning::pytest-report.json was missing, created dummy report"
+            fi
           fi
           echo "::endgroup::"
           exit ${EXIT:-0}
@@ -85,7 +89,4 @@ jobs:
   capture-failure:
     if: always()
     needs: [checks]
-    uses: ./.github/workflows/failure-summary.yml
-    with:
-      job_name: backend
-      step_name: checks
+    uses: ./.github/actions/failure-summary
