@@ -1,3 +1,5 @@
+import template from "./knowledge_graph_spec.json";
+
 export const KnowledgeGraphSpec = {
   id: "knowledge_graph_spec",
   function: "knowledge graph spec",
@@ -7,7 +9,7 @@ export const KnowledgeGraphSpec = {
   myth_alignment: "growth",
   cultural_tags: ["knowledge", "graph", "spec"],
   apply() {
-    return await import("./knowledge_graph_spec.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const KnowledgeGraphSpec = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

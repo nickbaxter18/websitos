@@ -1,13 +1,15 @@
+import template from "./lead_caputure_email_sequence.json";
+
 export const LeadCaputureEmailSequence = {
   id: "lead_caputure_email_sequence",
   function: "lead caputure email sequence",
   dependencies: [],
-  gardener_role: "seeder",
+  gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["lead", "caputure", "email", "sequence"],
   apply() {
-    return await import("./lead_caputure_email_sequence.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const LeadCaputureEmailSequence = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

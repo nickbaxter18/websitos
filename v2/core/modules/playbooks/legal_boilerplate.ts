@@ -1,3 +1,5 @@
+import template from "./legal_boilerplate.json";
+
 export const LegalBoilerplate = {
   id: "legal_boilerplate",
   function: "legal boilerplate",
@@ -7,7 +9,7 @@ export const LegalBoilerplate = {
   myth_alignment: "growth",
   cultural_tags: ["legal", "boilerplate"],
   apply() {
-    return await import("./legal_boilerplate.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const LegalBoilerplate = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};
