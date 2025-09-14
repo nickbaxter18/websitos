@@ -76,4 +76,15 @@ app.add_middleware(
 async def healthcheck():
     return {"ok": True}
 
+# -------------------------------------------------------------------
+# Status Endpoint
+# -------------------------------------------------------------------
+@app.get("/api/status", tags=["system"])
+async def status():
+    return {
+        "ok": True,
+        "version": app.version,
+        "title": app.title
+    }
+
 # (rest of api.py continues unchanged...)
