@@ -102,4 +102,9 @@ async def version():
         "title": app.title
     }
 
-# (rest of api.py continues unchanged...)
+# -------------------------------------------------------------------
+# Static Frontend Mount
+# -------------------------------------------------------------------
+DIST_DIR = os.path.join(BASE_DIR, "dist")
+if os.path.isdir(DIST_DIR):
+    app.mount("/", StaticFiles(directory=DIST_DIR, html=True), name="frontend")
