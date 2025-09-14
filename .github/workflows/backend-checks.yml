@@ -63,7 +63,8 @@ jobs:
             mypy . --exclude '(Lib|venv|node_modules)' --ignore-missing-imports --show-error-codes --show-traceback | sed 's/^/::error::/' || EXIT=$?
           fi
           if [ "${{ matrix.task }}" == "pytest" ]; then
-            pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || EXIT=$?
+            PYTHONPATH=. pytest -vv --maxfail=1 --disable-warnings \
+              --json-report --json-report-file=pytest-report.json || EXIT=$?
             if [ ! -f pytest-report.json ]; then
               echo '{}' > pytest-report.json
               echo "::warning file=backend/tests::pytest-report.json missing, test run may have crashed"

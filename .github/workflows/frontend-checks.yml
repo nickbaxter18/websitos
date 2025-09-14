@@ -43,13 +43,13 @@ jobs:
           echo "::group::🔎 Running task: ${{ matrix.task }}"
           EXIT=0
           if [ "${{ matrix.task }}" == "test:unit" ]; then
-            npm run test:unit -- --runInBand --verbose --reporters=default --reporters=jest-github-actions-reporter || EXIT=$?
+            npm run test:unit -- --runInBand --verbose --json --outputFile=jest-report.json --reporters=default --reporters=jest-github-actions-reporter || EXIT=$?
             if [ ! -f jest-report.json ]; then
               echo '{}' > jest-report.json
               echo "::warning file=frontend/tests::jest-report.json missing, test run may have crashed"
             fi
           elif [ "${{ matrix.task }}" == "lint" ]; then
-            npx eslint src v2 ops --format github || EXIT=$?
+            npx eslint src v2 ops --format json -o eslint-report.json --max-warnings=0 || EXIT=$?
             if [ ! -f eslint-report.json ]; then
               echo '{}' > eslint-report.json
               echo "::warning file=frontend/src::eslint-report.json missing, lint run may have crashed"

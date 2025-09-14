@@ -5,10 +5,12 @@
       "pattern": [
         {
           "regexp": "^FAIL\\s+(.+)$",
-          "file": 1
+          "file": 1,
+          "message": "Test failed in file"
         },
         {
-          "regexp": "^\\s+●\\s+(.+)$"
+          "regexp": "^\\s+●\\s+(.+)$",
+          "message": 1
         }
       ]
     }

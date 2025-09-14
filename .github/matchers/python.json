@@ -6,10 +6,12 @@
         {
           "regexp": "^File \\\"(.+?)\\\", line (\\d+).*$",
           "file": 1,
-          "line": 2
+          "line": 2,
+          "message": "Python traceback"
         },
         {
-          "regexp": "^(.*Error.*|.*Exception.*)$"
+          "regexp": "^(.*Error.*|.*Exception.*)$",
+          "message": 1
         }
       ]
     }
