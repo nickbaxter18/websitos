@@ -1,64 +1,44 @@
-name: CCF Validation
+name: Validation
 
 on:
   push:
     branches: [ main ]
-  schedule:
-    - cron: '0 2 * * *' # run daily at 2am UTC
+    paths:
+      - 'src/**'
+      - 'v2/**'
+      - 'config/**'
+      - '.github/workflows/ccf-validation.yml'
   workflow_dispatch:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate required files exist
+      - name: Enable problem matchers
         run: |
-          CRITICAL_FILES=( \
-            "config/secrets.schema.json" \
-            "package.json" \
-            "requirements.txt" \
-            "tsconfig.json" \
-            "jest.config.cjs" \
-            ".github/workflows/branch-protection.yml" \
-            ".github/workflows/render-deploy.yml" )
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/eslint.json"
+          echo "::add-matcher::.github/matchers/ts.json"
 
-          OPTIONAL_FILES=( \
-            ".github/ccf-manifest.md" \
-            ".github/workflows/pr-summary.yml" \
-            ".github/workflows/post-deploy-smoke.yml" )
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
 
-          MISSING_CRITICAL=0
-          for f in "${CRITICAL_FILES[@]}"; do
-            if [ ! -f "$f" ]; then
-              echo "❌ Missing critical file: $f"
-              MISSING_CRITICAL=1
-            else
-              echo "✅ Found critical file: $f"
-            fi
-          done
+      - name: Install dependencies
+        run: npm ci
 
-          for f in "${OPTIONAL_FILES[@]}"; do
-            if [ ! -f "$f" ]; then
-              echo "⚠️ Missing optional file: $f"
-            else
-              echo "✅ Found optional file: $f"
-            fi
-          done
-
-          if [ "$MISSING_CRITICAL" -eq 1 ]; then
-            echo "❌ Critical files missing. Failing validation."
-            exit 1
-          else
-            echo "✅ Validation passed (optional files may be missing)."
-          fi
-
-      - name: Confirm manifest contains mapping section
+      - name: Validate Environment
         run: |
-          if [ -f .github/ccf-manifest.md ] && grep -q "### 🚀 Mapping to Implementation" .github/ccf-manifest.md; then
-            echo "✅ Manifest mapping confirmed"
-          else
-            echo "⚠️ Manifest missing mapping section (not failing build)"
-          fi
+          echo "::group:: Validating Environment"
+          npm run validate-env || echo "::error file=src/validateEnv.ts::Environment validation failed"
+          echo "::endgroup::"
+
+      - name: Validate Schema
+        run: |
+          echo "::group:: Validating Schema"
+          npm run validate || echo "::error file=v2/core/schema-validator.ts::Schema validation failed"
+          echo "::endgroup::"

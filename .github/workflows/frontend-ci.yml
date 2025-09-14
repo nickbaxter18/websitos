@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        task: [lint, type-check, test:unit]
+        task: [lint, type-check, test:unit, prettier]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,25 +36,38 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
+      - name: Enable problem matchers
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/eslint.json"
+          echo "::add-matcher::.github/matchers/ts.json"
+
       - name: Install dependencies (npm ci)
         run: npm ci
 
-      - name: Enable problem matchers
-        uses: ./.github/actions/setup-matchers
-
       - name: Run ${{ matrix.task }}
         run: |
-          echo "🔎 Running task: ${{ matrix.task }}"
+          echo "::group::🔎 Running task: ${{ matrix.task }}"
           if [ "${{ matrix.task }}" == "test:unit" ]; then
-            echo "⚡ Running Jest with debug..."
-            npm run test:unit -- --runInBand --verbose || EXIT=$?
-            echo "--- Jest error logs ---"
+            echo "⚡ Running Jest with annotations..."
+            npm run test:unit -- --runInBand --verbose --reporters=default --reporters=jest-github-actions-reporter || EXIT=$?
+            echo "--- Jest report ---"
             cat jest-report.json || echo "(no jest-report.json produced)"
             exit ${EXIT:-0}
-          else
-            npm run ${{ matrix.task }}
+          elif [ "${{ matrix.task }}" == "lint" ]; then
+            echo "⚡ Running ESLint with GitHub annotations..."
+            npm run lint -- --format github || EXIT=$?
+            exit ${EXIT:-0}
+          elif [ "${{ matrix.task }}" == "type-check" ]; then
+            echo "⚡ Running TypeScript with GitHub annotations..."
+            npx tsc --noEmit --pretty false || EXIT=$?
+            exit ${EXIT:-0}
+          elif [ "${{ matrix.task }}" == "prettier" ]; then
+            echo "⚡ Checking Prettier formatting..."
+            npx prettier --check . | sed 's/^/::warning::/' || true
           fi
-        continue-on-error: ${{ matrix.task == 'lint' }}
+          echo "::endgroup::"
+        continue-on-error: ${{ matrix.task == 'lint' || matrix.task == 'prettier' }}
 
   build:
     runs-on: ubuntu-latest
@@ -76,6 +89,7 @@ jobs:
         run: npm run build
 
       - name: Upload frontend artifacts
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-artifacts
@@ -105,7 +119,7 @@ jobs:
         run: npm run test:e2e
 
   capture-failure:
-    if: always()
+    if: failure()
     needs: [build, e2e]
     uses: ./.github/workflows/failure-summary.yml
     with:

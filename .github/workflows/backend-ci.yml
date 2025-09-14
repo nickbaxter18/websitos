@@ -38,28 +38,32 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      - name: Enable problem matchers
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/python.json"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-json-report mypy black types-requests types-setuptools types-PyYAML || true
-
-      - name: Enable problem matchers
-        uses: ./.github/actions/setup-matchers
+          pip install pytest pytest-json-report mypy black types-requests types-setuptools types-PyYAML pytest-github-actions-annotate-failures || true
 
       - name: Run ${{ matrix.task }}
         run: |
-          if [ "${{ matrix.task }}" == "black" ]; then black --check . --exclude '(Lib|venv|node_modules)'; fi
-          if [ "${{ matrix.task }}" == "mypy" ]; then mypy . --exclude '(Lib|venv|node_modules)' --ignore-missing-imports || EXIT=$?; fi
-          if [ "${{ matrix.task }}" == "pytest" ]; then pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || EXIT=$?; fi
+          echo "::group::🔎 Running task: ${{ matrix.task }}"
+          if [ "${{ matrix.task }}" == "black" ]; then
+            black --check . --exclude '(Lib|venv|node_modules)' || EXIT=$?
+          fi
+          if [ "${{ matrix.task }}" == "mypy" ]; then
+            mypy . --exclude '(Lib|venv|node_modules)' --ignore-missing-imports --show-error-codes --show-traceback | sed 's/^/::error::/' || EXIT=$?
+          fi
+          if [ "${{ matrix.task }}" == "pytest" ]; then
+            pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || EXIT=$?
+          fi
+          echo "::endgroup::"
           exit ${EXIT:-0}
         continue-on-error: ${{ matrix.task == 'black' }}
-
-      - name: Debug mypy output
-        if: failure() && matrix.task == 'mypy'
-        run: |
-          echo "--- Mypy Cache Contents ---"
-          ls -R .mypy_cache || echo "No mypy cache found"
 
       - name: Upload pytest results artifact
         if: always() && matrix.task == 'pytest'

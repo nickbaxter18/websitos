@@ -19,6 +19,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Enable problem matchers
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/python.json"
+          echo "::add-matcher::.github/matchers/eslint.json"
+          echo "::add-matcher::.github/matchers/ts.json"
+
       - name: Collect failure info (runs only if job failed)
         run: |
           mkdir -p summary logs
@@ -27,32 +34,15 @@ jobs:
           EXIT_CODE_FILE="exit_code.log"
           EXIT_CODE=$(cat $EXIT_CODE_FILE 2>/dev/null || echo "unknown")
 
-          # Aggregate logs if present
           ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stderr captured")
           ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stdout captured")
 
-          # Try to detect failed step (best effort)
           FAILED_STEP=$(grep -i "Error" -m1 logs/*.stderr.log 2>/dev/null || echo "${{ inputs.step_name }}")
 
-          # Custom tagging for deploy-related failures
-          if echo "$ALL_STDERR" | grep -qi "API health check failed"; then
-            TAGGED_ERROR="🚨 API health check failed during deployment"
-          elif echo "$ALL_STDERR" | grep -qi "API extended status check failed"; then
-            TAGGED_ERROR="🚨 API extended status endpoint failed"
-          elif echo "$ALL_STDERR" | grep -qi "Root health check failed"; then
-            TAGGED_ERROR="🚨 Root health check failed"
-          else
-            TAGGED_ERROR=$(echo "$ALL_STDERR" | head -n 1)
-          fi
+          TAGGED_ERROR=$(echo "$ALL_STDERR" | head -n 1)
 
-          # Calculate job duration (fallback -1 if unavailable)
-          START_TIME=$(date -d "$GITHUB_RUN_STARTED_AT" +%s 2>/dev/null || echo 0)
-          NOW=$(date +%s)
-          DURATION=$(( NOW - START_TIME ))
+          echo "::error file=.github/workflows/${{ github.workflow }}.yml,title=${{ inputs.job_name }} failed::$TAGGED_ERROR"
 
-          WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID"
-
-          # Always generate JSON if failure occurs
           cat > summary/failure-summary-${{ inputs.job_name }}.json <<EOF
           {
             "run_id": $GITHUB_RUN_ID,
@@ -68,50 +58,13 @@ jobs:
               "pr_number": "${{ github.event.pull_request.number || '' }}"
             },
             "triggered_by": "${{ github.actor }}",
-            "environment": {
-              "os": "${{ runner.os }}",
-              "node": "$(node -v || echo 'not installed')",
-              "python": "$(python3 --version 2>/dev/null || echo 'not installed')"
-            },
-            "duration_seconds": $DURATION,
-            "workflow_url": "$WORKFLOW_URL",
+            "duration_seconds": -1,
+            "workflow_url": "https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID",
             "timestamp": "$TIMESTAMP"
           }
           EOF
 
-          # Create annotation for GitHub UI
-          if echo "$TAGGED_ERROR" | grep -qi "failed"; then
-            echo "::error file=summary/failure-summary-${{ inputs.job_name }}.json,title=Job ${{ inputs.job_name }} failed::$TAGGED_ERROR"
-          fi
-
-          # Create fallback debug log
-          {
-            echo "Run ID: $GITHUB_RUN_ID"
-            echo "Job: ${{ inputs.job_name }}"
-            echo "Step: $FAILED_STEP"
-            echo "Exit Code: $EXIT_CODE"
-            echo "Timestamp: $TIMESTAMP"
-            echo "Git SHA: ${{ github.sha }}"
-            echo "Branch: ${{ github.ref_name }}"
-            echo "Actor: ${{ github.actor }}"
-            echo "Duration: $DURATION"
-            echo "Workflow URL: $WORKFLOW_URL"
-            echo "--- STDERR ---"
-            echo "$ALL_STDERR"
-            echo "--- STDOUT ---"
-            echo "$ALL_STDOUT"
-          } > summary/failure-debug-${{ inputs.job_name }}.log
-
-      - name: Generate PR-friendly summary table
-        run: |
-          {
-            echo "### 🚨 Failure Summary for ${{ inputs.job_name }}"
-            echo "| Step | Exit Code | Error Message |"
-            echo "|------|-----------|---------------|"
-            echo "| $FAILED_STEP | $EXIT_CODE | $TAGGED_ERROR |"
-          } > summary/pr-summary-${{ inputs.job_name }}.md
-
-      - name: Upload failure summary folder (only if failure)
+      - name: Upload failure summary folder
         if: always()
         uses: actions/upload-artifact@v4
         with:

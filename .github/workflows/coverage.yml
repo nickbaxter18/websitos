@@ -35,6 +35,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Enable problem matchers
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/python.json"
+          echo "::add-matcher::.github/matchers/ts.json"
+
       - name: Setup Node.js (for frontend)
         if: matrix.task == 'frontend'
         uses: actions/setup-node@v4
@@ -58,28 +64,40 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov
-
-      - name: Enable problem matchers
-        uses: ./.github/actions/setup-matchers
+          pip install pytest pytest-cov pytest-github-actions-annotate-failures
 
       - name: Run frontend coverage (Jest)
         if: matrix.task == 'frontend'
-        run: npm run test:ci -- --coverage
+        run: |
+          echo "::group:: Running Jest coverage"
+          npm run test:ci -- --coverage --coverageReporters=text --coverageReporters=lcov || EXIT=$?
+          echo "::endgroup::"
+          if [ -f coverage/coverage-summary.json ]; then
+            LOW_COVERAGE=$(node -e "const s=require('./coverage/coverage-summary.json'); let low=Object.entries(s.total).filter(([k,v])=>v.pct<80); if(low.length){console.log('::warning::Low coverage detected: '+JSON.stringify(low))}")
+          fi
+          exit ${EXIT:-0}
 
       - name: Run backend coverage (Pytest)
         if: matrix.task == 'backend'
         run: |
-          echo "🔎 Running pytest with coverage..."
-          pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings || EXIT=$?
-          echo "--- Listing current directory ---"
-          ls -la . || true
-          echo "--- Listing coverage outputs ---"
-          ls -la coverage* || true
+          echo "::group:: Running Pytest coverage"
+          pytest --cov=api --cov-report=xml --cov-report=term-missing || EXIT=$?
+          echo "::endgroup::"
+          if [ -f coverage.xml ]; then
+            python - <<EOF
+import xml.etree.ElementTree as ET
+root = ET.parse('coverage.xml').getroot()
+for cls in root.findall('.//class'):
+    name = cls.get('name')
+    line_rate = float(cls.get('line-rate',0))
+    if line_rate < 0.8:
+        print(f"::warning file={name}::Low coverage ({line_rate*100:.1f}%)")
+EOF
+          fi
           exit ${EXIT:-0}
 
       - name: Upload frontend coverage
-        if: matrix.task == 'frontend'
+        if: matrix.task == 'frontend' && always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-frontend
@@ -87,7 +105,7 @@ jobs:
           retention-days: 1
 
       - name: Upload backend coverage
-        if: matrix.task == 'backend'
+        if: matrix.task == 'backend' && always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-backend

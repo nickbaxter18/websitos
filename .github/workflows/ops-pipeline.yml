@@ -1,44 +1,50 @@
-name: OpsPipeline
+name: Ops Pipeline
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'ops/**'
+      - 'toolkits/**'
+      - '.github/workflows/ops-pipeline.yml'
   workflow_dispatch:
 
 jobs:
-  ops-pipeline:
-    runs-on: windows-latest
-    timeout-minutes: 30
-
+  ops:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (full history)
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Enable problem matchers
-        uses: ./.github/actions/setup-matchers
-
-      # Ensure PowerShell Core is available and validate environment
-      - name: Verify pwsh availability
-        shell: pwsh
-        run: pwsh -v
-
-      - name: Run OpsPipeline
-        id: run_ops
-        shell: pwsh
         run: |
-          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-          if (-not (Test-Path ./OpsPipeline.ps1)) {
-            Write-Error "OpsPipeline.ps1 not found at repo root"
-            exit 1
-          }
-          ./OpsPipeline.ps1 -FailFast *>&1 | Tee-Object -FilePath ops-pipeline.log
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/python.json"
 
-      - name: Upload OpsPipeline logs (always)
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: ops-pipeline-logs
-          path: ops-pipeline.log
-          retention-days: 1
+          node-version-file: '.nvmrc'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          npm ci || echo "::error::NPM install failed"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || echo "::error::Python requirements failed"
+
+      - name: Run Ops Cycle
+        run: |
+          echo "::group:: Running Ops Cycle"
+          npm run opscycle || echo "::error file=ops/scripts/opsCycle.ts::Ops cycle failed"
+          echo "::endgroup::"
+
+      - name: Run Security Scan
+        run: |
+          echo "::group:: Running Security Scan"
+          npm run secscan || echo "::warning file=scripts/scan-secrets.ts::Security scan flagged issues"
+          echo "::endgroup::"

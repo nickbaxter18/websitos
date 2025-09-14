@@ -1,10 +1,10 @@
 {
   "problemMatcher": [
     {
-      "owner": "eslint",
+      "owner": "custom-error",
       "pattern": [
         {
-          "regexp": "^(.*):(\\d+):(\\d+): (.*) \\((error|warning) .+\\)",
+          "regexp": "ERROR in (.*):(\\d+):(\\d+): (.*)",
           "file": 1,
           "line": 2,
           "column": 3,
