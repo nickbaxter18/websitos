@@ -91,6 +91,11 @@
       "default",
       "jest-github-actions-reporter"
     ],
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+    "testPathIgnorePatterns": [
+      "<rootDir>/tests/e2e/",
+      "<rootDir>/WEBSITEOS/tests/e2e/"
+    ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1",
       "^v2/(.*)$": "<rootDir>/v2/$1",
