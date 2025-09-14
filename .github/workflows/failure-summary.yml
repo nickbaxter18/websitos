@@ -19,11 +19,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Enable problem matchers
-        run: |
-          echo "::add-matcher::.github/matchers/error.json"
-          echo "::add-matcher::.github/matchers/python.json"
-
       - name: Collect failure info
         run: |
           mkdir -p summary logs
