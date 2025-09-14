@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
+from starlette.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from qdrant_client import QdrantClient
@@ -103,8 +104,15 @@ async def version():
     }
 
 # -------------------------------------------------------------------
-# Static Frontend Mount
+# Static Frontend Mount + Catch-All
 # -------------------------------------------------------------------
 DIST_DIR = os.path.join(BASE_DIR, "dist")
 if os.path.isdir(DIST_DIR):
     app.mount("/", StaticFiles(directory=DIST_DIR, html=True), name="frontend")
+
+    @app.get("/{full_path:path}")
+    async def catch_all(full_path: str):
+        index_file = os.path.join(DIST_DIR, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return JSONResponse(status_code=404, content={"error": "Frontend not built"})
