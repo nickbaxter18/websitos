@@ -3,20 +3,8 @@ name: Frontend CI
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'v2/**'
-      - 'package.json'
-      - 'vite.config.js'
-      - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'v2/**'
-      - 'package.json'
-      - 'vite.config.js'
-      - '.github/workflows/frontend-ci.yml'
   workflow_dispatch:
 
 jobs:

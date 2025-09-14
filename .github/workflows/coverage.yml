@@ -3,22 +3,8 @@ name: Coverage
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'v2/**'
-      - 'api/**'
-      - 'requirements.txt'
-      - 'package.json'
-      - '.github/workflows/coverage.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'v2/**'
-      - 'api/**'
-      - 'requirements.txt'
-      - 'package.json'
-      - '.github/workflows/coverage.yml'
   workflow_dispatch:
 
 jobs:
