@@ -34,11 +34,17 @@ jobs:
       - name: Validate Environment
         run: |
           echo "::group:: Validating Environment"
-          npm run validate-env || echo "::error file=src/validateEnv.ts::Environment validation failed"
+          if ! npm run validate-env; then
+            echo "::error file=src/validateEnv.ts::Environment validation failed"
+            exit 1
+          fi
           echo "::endgroup::"
 
       - name: Validate Schema
         run: |
           echo "::group:: Validating Schema"
-          npm run validate || echo "::error file=v2/core/schema-validator.ts::Schema validation failed"
+          if ! npm run validate; then
+            echo "::error file=v2/core/schema-validator.ts::Schema validation failed"
+            exit 1
+          fi
           echo "::endgroup::"

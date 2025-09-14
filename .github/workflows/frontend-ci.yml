@@ -56,7 +56,7 @@ jobs:
             exit ${EXIT:-0}
           elif [ "${{ matrix.task }}" == "lint" ]; then
             echo "⚡ Running ESLint with GitHub annotations..."
-            npm run lint -- --format github || EXIT=$?
+            npx eslint src v2 ops --format github || EXIT=$?
             exit ${EXIT:-0}
           elif [ "${{ matrix.task }}" == "type-check" ]; then
             echo "⚡ Running TypeScript with GitHub annotations..."
