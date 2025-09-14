@@ -16,7 +16,9 @@ jobs:
 
       - name: Enable problem matchers
         continue-on-error: true
-        uses: ./.github/actions/setup-matchers
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/generic-errors.json"
 
       - name: Trigger Render Deploy
         id: trigger
@@ -33,7 +35,7 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     needs: deploy
-    continue-on-error: true  # make smoke non-blocking
+    continue-on-error: true
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
@@ -42,7 +44,9 @@ jobs:
 
       - name: Enable problem matchers
         continue-on-error: true
-        uses: ./.github/actions/setup-matchers
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/generic-errors.json"
 
       - name: Wait for Render Deploy to Complete
         run: |
@@ -92,6 +96,9 @@ jobs:
             fi
           done
           echo "::error::$NAME check failed after 3 attempts"
+          if [ ! -f response.txt ]; then
+            echo 'No response captured' > response.txt
+          fi
           exit 1
           EOF
           chmod +x check_endpoint.sh
@@ -114,4 +121,4 @@ jobs:
         with:
           name: smoke-test-logs
           path: response.txt
-          retention-days: 7
+          retention-days: 14

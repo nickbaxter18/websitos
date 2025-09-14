@@ -1,0 +1,13 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "generic-errors",
+      "pattern": [
+        {
+          "regexp": ".*(Error|Exception|FAIL).*",
+          "message": 0
+        }
+      ]
+    }
+  ]
+}

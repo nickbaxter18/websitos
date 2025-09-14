@@ -17,7 +17,9 @@ jobs:
 
       - name: Enable problem matchers
         continue-on-error: true
-        run: echo "::add-matcher::.github/matchers/error.json"
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/generic-errors.json"
 
       - name: Define endpoint check function
         run: |
@@ -69,4 +71,4 @@ jobs:
         with:
           name: post-deploy-smoke-logs
           path: response.txt
-          retention-days: 7
+          retention-days: 14

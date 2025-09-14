@@ -13,7 +13,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false  # don't stop all tasks if one fails
+      fail-fast: false
       matrix:
         task: [black, mypy, pytest]
     steps:
@@ -29,11 +29,13 @@ jobs:
           cache: 'pip'
 
       - name: Enable problem matchers
-        continue-on-error: true  # don't fail job if matcher fails
+        continue-on-error: true
         run: |
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/python.json"
-          echo "::add-matcher::.github/matchers/git.json"
+          echo "::add-matcher::.github/matchers/pytest.json"
+          echo "::add-matcher::.github/matchers/mypy.json"
+          echo "::add-matcher::.github/matchers/generic-errors.json"
 
       - name: Install dependencies
         run: |
@@ -76,4 +78,4 @@ jobs:
         with:
           name: backend-pytest-results
           path: pytest-report.json
-          retention-days: 7
+          retention-days: 14

@@ -9,8 +9,7 @@
           "line": 2
         },
         {
-          "regexp": "^(.*Error.*|.*Exception.*)$",
-          "message": 1
+          "regexp": "^(.*Error.*|.*Exception.*)$"
         }
       ]
     }

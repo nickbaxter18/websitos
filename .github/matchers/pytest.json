@@ -4,8 +4,7 @@
       "owner": "pytest",
       "pattern": [
         {
-          "regexp": "^E\\s+(.+)$",
-          "message": 1
+          "regexp": "^E\\s+(.+)$"
         },
         {
           "regexp": "^(.+):(\\d+):\\s+(.+)$",
