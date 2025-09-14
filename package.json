@@ -92,6 +92,8 @@
       "jest-github-actions-reporter"
     ],
     "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^v2/(.*)$": "<rootDir>/v2/$1",
       "\\.(css|less|scss)$": "identity-obj-proxy"
     }
   },

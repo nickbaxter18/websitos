@@ -9,7 +9,13 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "v2/*": ["v2/*"]
+    }
   },
   "include": ["src", "v2", "tests"],
   "exclude": ["node_modules", "dist"]
