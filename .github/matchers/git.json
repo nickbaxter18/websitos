@@ -1,0 +1,17 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "git",
+      "pattern": [
+        {
+          "regexp": ".*exit code 128.*",
+          "message": "Ignored git exit code 128 noise"
+        },
+        {
+          "regexp": "fatal: (.*)$",
+          "message": "Git failure: $1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,18 +1,14 @@
 {
   "problemMatcher": [
     {
-      "owner": "python-traceback",
+      "owner": "python",
       "pattern": [
         {
           "regexp": "File \\\"(.+?)\\\", line (\\d+).*",
           "file": 1,
-          "line": 2
-        }
-      ]
-    },
-    {
-      "owner": "python-error",
-      "pattern": [
+          "line": 2,
+          "message": "Traceback frame"
+        },
         {
           "regexp": "^(.*Error.*)$",
           "message": 1

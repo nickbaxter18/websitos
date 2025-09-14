@@ -40,6 +40,7 @@ jobs:
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/python.json"
           echo "::add-matcher::.github/matchers/ts.json"
+          echo "::add-matcher::.github/matchers/git.json"
 
       - name: Setup Node.js (for frontend)
         if: matrix.task == 'frontend'
@@ -70,10 +71,12 @@ jobs:
         if: matrix.task == 'frontend'
         run: |
           echo "::group:: Running Jest coverage"
-          npm run test:ci -- --coverage --coverageReporters=text --coverageReporters=lcov || EXIT=$?
+          npm run test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
           echo "::endgroup::"
           if [ -f coverage/coverage-summary.json ]; then
-            LOW_COVERAGE=$(node -e "const s=require('./coverage/coverage-summary.json'); let low=Object.entries(s.total).filter(([k,v])=>v.pct<80); if(low.length){console.log('::warning::Low coverage detected: '+JSON.stringify(low))}")
+            node -e "const s=require('./coverage/coverage-summary.json'); Object.entries(s.total).forEach(([k,v])=>{ if(v.pct<80){console.log('::warning file=frontend/'+k+'::Coverage only '+v.pct+'%, below threshold')}})"
+          else
+            echo "::warning file=frontend/tests::coverage-summary.json missing"
           fi
           exit ${EXIT:-0}
 
@@ -91,26 +94,12 @@ for cls in root.findall('.//class'):
     name = cls.get('name')
     line_rate = float(cls.get('line-rate',0))
     if line_rate < 0.8:
-        print(f"::warning file={name}::Low coverage ({line_rate*100:.1f}%)")
+        print(f"::warning file=backend/{name}::Coverage only {line_rate*100:.1f}% below threshold")
 EOF
+          else
+            echo "::warning file=backend/tests::coverage.xml missing"
           fi
           exit ${EXIT:-0}
-
-      - name: Upload frontend coverage
-        if: matrix.task == 'frontend' && always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-frontend
-          path: coverage/lcov.info
-          retention-days: 1
-
-      - name: Upload backend coverage
-        if: matrix.task == 'backend' && always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-backend
-          path: coverage.xml
-          retention-days: 1
 
   upload-codecov:
     needs: coverage

@@ -41,6 +41,7 @@ jobs:
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/eslint.json"
           echo "::add-matcher::.github/matchers/ts.json"
+          echo "::add-matcher::.github/matchers/git.json"
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -51,8 +52,10 @@ jobs:
           if [ "${{ matrix.task }}" == "test:unit" ]; then
             echo "⚡ Running Jest with annotations..."
             npm run test:unit -- --runInBand --verbose --reporters=default --reporters=jest-github-actions-reporter || EXIT=$?
-            echo "--- Jest report ---"
-            cat jest-report.json || echo "(no jest-report.json produced)"
+            if [ ! -f jest-report.json ]; then
+              echo '{}' > jest-report.json
+              echo "::warning file=frontend/tests::jest-report.json missing, test run may have crashed"
+            fi
             exit ${EXIT:-0}
           elif [ "${{ matrix.task }}" == "lint" ]; then
             echo "⚡ Running ESLint with GitHub annotations..."
@@ -121,7 +124,4 @@ jobs:
   capture-failure:
     if: failure()
     needs: [build, e2e]
-    uses: ./.github/workflows/failure-summary.yml
-    with:
-      job_name: frontend
-      step_name: build
+    uses: ./actions/capture-failure-summary

@@ -42,6 +42,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/python.json"
+          echo "::add-matcher::.github/matchers/git.json"
 
       - name: Install dependencies
         run: |
@@ -71,7 +72,7 @@ jobs:
             pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || EXIT=$?
             if [ ! -f pytest-report.json ]; then
               echo '{}' > pytest-report.json
-              echo "::warning::pytest-report.json was missing, created dummy report"
+              echo "::warning file=backend/tests::pytest-report.json missing, test run may have crashed"
             fi
           fi
           echo "::endgroup::"
@@ -89,4 +90,4 @@ jobs:
   capture-failure:
     if: always()
     needs: [checks]
-    uses: ./.github/actions/failure-summary
+    uses: ./actions/capture-failure-summary
