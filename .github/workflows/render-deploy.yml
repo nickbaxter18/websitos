@@ -63,16 +63,22 @@ jobs:
         id: trigger
         run: |
           echo "Triggering Render deploy..."
-          RESPONSE=$(curl -s -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+          RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "accept: application/json" \
             -H "content-type: application/json")
 
-          echo "Response: $RESPONSE"
-          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+          # Extract body and status
+          HTTP_BODY=$(echo "$RESPONSE" | sed -e 's/HTTPSTATUS:.*//g')
+          HTTP_STATUS=$(echo "$RESPONSE" | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
 
-          if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
-            echo "::error::Failed to trigger Render deploy (no deploy ID returned)"
+          echo "Render API response body: $HTTP_BODY"
+          echo "Render API response status: $HTTP_STATUS"
+
+          DEPLOY_ID=$(echo "$HTTP_BODY" | jq -r '.id // empty')
+
+          if [ "$HTTP_STATUS" -ne 200 ] || [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
+            echo "::error::Failed to trigger Render deploy. Full response above."
             exit 1
           fi
 
