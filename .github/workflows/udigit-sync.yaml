@@ -11,13 +11,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Verify APP_API_KEY presence
+      - name: Verify EDITOR_API_KEY presence
         run: |
-          if [ -z "${{ secrets.APP_API_KEY }}" ]; then
-            echo "❌ APP_API_KEY not available"
+          if [ -z "${{ secrets.EDITOR_API_KEY }}" ]; then
+            echo "❌ EDITOR_API_KEY not available"
             exit 1
           else
-            echo "✅ APP_API_KEY is available (masked)"
+            echo "✅ EDITOR_API_KEY is available (masked)"
           fi
 
       - name: Download repo archive
@@ -40,9 +40,9 @@ jobs:
 
       - name: Upload snapshot to U-DIG IT ingest API (with debug)
         run: |
-          echo "🔎 Sending request with APP_API_KEY..."
+          echo "🔎 Sending request with EDITOR_API_KEY..."
           RESPONSE=$(curl -v -s -o response.txt -w "%{http_code}" -X POST "https://websitos.onrender.com/ingest_file" \
-            -H "x-api-key: ${{ secrets.APP_API_KEY }}" \
+            -H "x-api-key: ${{ secrets.EDITOR_API_KEY }}" \
             -F "file=@repo-snapshot.zip")
 
           echo "--- HTTP Status Code ---"
