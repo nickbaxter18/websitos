@@ -1,12 +1,14 @@
 name: "Capture Failure Summary"
 description: "Collects and emits failure info as annotations"
-author: "websitos-ci"
+
+inputs:
+  job_name:
+    description: "Name of the job invoking this failure summary"
+    required: false
+
 runs:
   using: "composite"
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
     - name: Emit failure annotations
       shell: bash
       run: |
@@ -14,22 +16,25 @@ runs:
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
         EXIT_CODE=$(cat exit_code.log 2>/dev/null || echo "unknown")
-        ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stderr captured")
-        ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stdout captured")
+        ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 50 {} + 2>/dev/null || echo "")
+        ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 50 {} + 2>/dev/null || echo "")
 
         echo "::error::Job failed with exit code $EXIT_CODE"
 
-        echo "$ALL_STDERR" | while read -r line; do
-          if [ -n "$line" ]; then
-            echo "::error::$line"
-          fi
-        done
+        if [ -n "$ALL_STDERR" ]; then
+          echo "$ALL_STDERR" | while read -r line; do
+            [ -n "$line" ] && echo "::error::$line"
+          done
+        fi
 
-        echo "$ALL_STDOUT" | while read -r line; do
-          if [ -n "$line" ]; then
-            echo "::warning::$line"
-          fi
-        done
+        if [ -n "$ALL_STDOUT" ]; then
+          echo "$ALL_STDOUT" | while read -r line; do
+            [ -n "$line" ] && echo "::warning::$line"
+          done
+        fi
 
-        # Emit a final summary annotation
+        if [ -z "$ALL_STDERR" ] && [ -z "$ALL_STDOUT" ]; then
+          echo "::notice::No additional failure logs found"
+        fi
+
         echo "::notice::Failure summary recorded at $TIMESTAMP"
