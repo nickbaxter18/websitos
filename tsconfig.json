@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -17,6 +17,6 @@
       "v2/*": ["v2/*"]
     }
   },
-  "include": ["src", "v2", "tests", "src/vite-env.d.ts"],
+  "include": ["src", "v2", "tests", "src/vite-env.d.ts", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
