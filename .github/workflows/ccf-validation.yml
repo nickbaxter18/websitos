@@ -35,7 +35,14 @@ jobs:
         run: |
           echo "::group:: Validating Environment"
           if ! npm run validate-env; then
-            echo "::error file=src/validateEnv.ts::Environment validation failed"
+            echo "::error file=src/validateEnv.ts::Environment validation failed - missing or invalid variable detected"
+            if [ -f .env.example ]; then
+              while read -r var; do
+                if ! grep -q "^$var=" .env 2>/dev/null; then
+                  echo "::error file=src/validateEnv.ts::Missing environment variable: $var"
+                fi
+              done < <(grep -v '^#' .env.example | cut -d= -f1)
+            fi
             exit 1
           fi
           echo "::endgroup::"
@@ -44,7 +51,10 @@ jobs:
         run: |
           echo "::group:: Validating Schema"
           if ! npm run validate; then
-            echo "::error file=v2/core/schema-validator.ts::Schema validation failed"
+            echo "::error file=v2/core/schema-validator.ts::Schema validation failed - invalid schema definition"
+            if [ -f config/schema.json ]; then
+              echo "::warning file=v2/core/schema-validator.ts::Check config/schema.json for missing or invalid keys"
+            fi
             exit 1
           fi
           echo "::endgroup::"

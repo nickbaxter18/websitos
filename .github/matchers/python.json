@@ -4,14 +4,14 @@
       "owner": "python-traceback",
       "pattern": [
         {
-          "regexp": "File \\\"(.+?)\\\", line (\\d+), in (.*)",
+          "regexp": "File \\\"(.+?)\\\", line (\\d+), in (.+)",
           "file": 1,
           "line": 2,
-          "message": "Traceback in function: $3"
+          "message": "Traceback in function"
         },
         {
           "regexp": "^(.*Error): (.*)$",
-          "message": "$1 - $2"
+          "message": "$1: $2"
         }
       ]
     }

@@ -64,5 +64,5 @@ jobs:
     needs: [smoke]
     uses: ./.github/workflows/failure-summary.yml
     with:
-      job_name: post-deploy-smoke
-      step_name: endpoint-checks
+      job_name: "post-deploy-smoke"
+      step_name: "endpoint-checks"

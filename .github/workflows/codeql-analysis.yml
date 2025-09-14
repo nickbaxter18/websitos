@@ -26,9 +26,13 @@ jobs:
       - name: Enable problem matchers
         run: |
           echo "::add-matcher::.github/matchers/error.json"
-          echo "::add-matcher::.github/matchers/python.json"
-          echo "::add-matcher::.github/matchers/eslint.json"
-          echo "::add-matcher::.github/matchers/ts.json"
+          if [ "${{ matrix.language }}" == "python" ]; then
+            echo "::add-matcher::.github/matchers/python.json"
+          fi
+          if [ "${{ matrix.language }}" == "javascript" ]; then
+            echo "::add-matcher::.github/matchers/eslint.json"
+            echo "::add-matcher::.github/matchers/ts.json"
+          fi
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3

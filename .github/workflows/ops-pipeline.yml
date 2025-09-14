@@ -19,7 +19,6 @@ jobs:
       - name: Enable problem matchers
         run: |
           echo "::add-matcher::.github/matchers/error.json"
-          echo "::add-matcher::.github/matchers/python.json"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -40,11 +39,17 @@ jobs:
       - name: Run Ops Cycle
         run: |
           echo "::group:: Running Ops Cycle"
-          npm run opscycle || echo "::error file=ops/scripts/opsCycle.ts::Ops cycle failed"
+          if ! npm run opscycle; then
+            echo "::error file=ops/scripts/opsCycle.ts::Ops cycle failed"
+            exit 1
+          fi
           echo "::endgroup::"
 
       - name: Run Security Scan
         run: |
           echo "::group:: Running Security Scan"
-          npm run secscan || echo "::warning file=scripts/scan-secrets.ts::Security scan flagged issues"
+          if ! npm run secscan; then
+            echo "::warning file=scripts/scan-secrets.ts::Security scan flagged issues"
+            exit 0
+          fi
           echo "::endgroup::"

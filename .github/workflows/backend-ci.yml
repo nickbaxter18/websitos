@@ -54,9 +54,12 @@ jobs:
           echo "::group::🔎 Running task: ${{ matrix.task }}"
           if [ "${{ matrix.task }}" == "black" ]; then
             OUTPUT=$(black --check . --exclude '(Lib|venv|node_modules)' || true)
-            if [ -n "$OUTPUT" ]; then
+            if echo "$OUTPUT" | grep -q "would reformat"; then
               echo "$OUTPUT" | while read -r line; do
-                echo "::error file=$line::Black formatting issue detected"
+                FILE=$(echo $line | awk '{print $2}')
+                if [ -n "$FILE" ]; then
+                  echo "::error file=$FILE::Black formatting issue detected"
+                fi
               done
               exit 1
             fi
