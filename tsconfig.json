@@ -17,6 +17,6 @@
       "v2/*": ["v2/*"]
     }
   },
-  "include": ["src", "v2", "tests"],
+  "include": ["src", "v2", "tests", "src/vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

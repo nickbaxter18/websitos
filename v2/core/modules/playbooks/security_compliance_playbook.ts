@@ -1,13 +1,15 @@
+import template from "./security_compliance_playbook.json";
+
 export const SecurityCompliancePlaybook = {
   id: "security_compliance_playbook",
   function: "security compliance playbook",
   dependencies: [],
-  gardener_role: "pruner",
+  gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["security", "compliance", "playbook"],
   apply() {
-    return await import("./security_compliance_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const SecurityCompliancePlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

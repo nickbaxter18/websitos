@@ -1,3 +1,5 @@
+import template from "./sales_enablement_playbook.json";
+
 export const SalesEnablementPlaybook = {
   id: "sales_enablement_playbook",
   function: "sales enablement playbook",
@@ -7,7 +9,7 @@ export const SalesEnablementPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["sales", "enablement", "playbook"],
   apply() {
-    return await import("./sales_enablement_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const SalesEnablementPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

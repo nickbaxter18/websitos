@@ -1,3 +1,5 @@
+import template from "./refferal_email_sequence.json";
+
 export const RefferalEmailSequence = {
   id: "refferal_email_sequence",
   function: "refferal email sequence",
@@ -7,7 +9,7 @@ export const RefferalEmailSequence = {
   myth_alignment: "growth",
   cultural_tags: ["refferal", "email", "sequence"],
   apply() {
-    return await import("./refferal_email_sequence.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const RefferalEmailSequence = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

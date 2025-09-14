@@ -1,3 +1,5 @@
+import template from "./video_marketing_playbook.json";
+
 export const VideoMarketingPlaybook = {
   id: "video_marketing_playbook",
   function: "video marketing playbook",
@@ -7,7 +9,7 @@ export const VideoMarketingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["video", "marketing", "playbook"],
   apply() {
-    return await import("./video_marketing_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const VideoMarketingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

@@ -1,3 +1,5 @@
+import template from "./social_proof_engine_playbook.json";
+
 export const SocialProofEnginePlaybook = {
   id: "social_proof_engine_playbook",
   function: "social proof engine playbook",
@@ -7,7 +9,7 @@ export const SocialProofEnginePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["social", "proof", "engine", "playbook"],
   apply() {
-    return await import("./social_proof_engine_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const SocialProofEnginePlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

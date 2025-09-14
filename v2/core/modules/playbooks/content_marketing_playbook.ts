@@ -1,3 +1,5 @@
+import template from "./content_marketing_playbook.json";
+
 export const ContentMarketingPlaybook = {
   id: "content_marketing_playbook",
   function: "content marketing playbook",
@@ -7,7 +9,7 @@ export const ContentMarketingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["content", "marketing", "playbook"],
   apply() {
-    return await import("./content_marketing_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const ContentMarketingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

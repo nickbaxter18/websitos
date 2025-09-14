@@ -1,3 +1,5 @@
+import template from "./conversion_rate_playbook.json";
+
 export const ConversionRatePlaybook = {
   id: "conversion_rate_playbook",
   function: "conversion rate playbook",
@@ -7,7 +9,7 @@ export const ConversionRatePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["conversion", "rate", "playbook"],
   apply() {
-    return await import("./conversion_rate_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const ConversionRatePlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

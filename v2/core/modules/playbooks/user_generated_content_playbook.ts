@@ -1,3 +1,5 @@
+import template from "./user_generated_content_playbook.json";
+
 export const UserGeneratedContentPlaybook = {
   id: "user_generated_content_playbook",
   function: "user generated content playbook",
@@ -7,7 +9,7 @@ export const UserGeneratedContentPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["user", "generated", "content", "playbook"],
   apply() {
-    return await import("./user_generated_content_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const UserGeneratedContentPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

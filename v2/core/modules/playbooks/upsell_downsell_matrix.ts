@@ -1,3 +1,5 @@
+import template from "./upsell_downsell_matrix.json";
+
 export const UpsellDownsellMatrix = {
   id: "upsell_downsell_matrix",
   function: "upsell downsell matrix",
@@ -7,7 +9,7 @@ export const UpsellDownsellMatrix = {
   myth_alignment: "growth",
   cultural_tags: ["upsell", "downsell", "matrix"],
   apply() {
-    return await import("./upsell_downsell_matrix.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const UpsellDownsellMatrix = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

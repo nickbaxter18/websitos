@@ -1,3 +1,5 @@
+import template from "./package_20210527204621.json";
+
 export const Package20210527204621 = {
   id: "package_20210527204621",
   function: "package 20210527204621",
@@ -7,7 +9,7 @@ export const Package20210527204621 = {
   myth_alignment: "growth",
   cultural_tags: ["package", "20210527204621"],
   apply() {
-    return await import("./package_20210527204621.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const Package20210527204621 = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

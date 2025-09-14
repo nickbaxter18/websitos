@@ -1,3 +1,5 @@
+import template from "./customer_feedback_playbook.json";
+
 export const CustomerFeedbackPlaybook = {
   id: "customer_feedback_playbook",
   function: "customer feedback playbook",
@@ -7,7 +9,7 @@ export const CustomerFeedbackPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["customer", "feedback", "playbook"],
   apply() {
-    return await import("./customer_feedback_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const CustomerFeedbackPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

@@ -1,3 +1,5 @@
+import template from "./crm_automation_playbook.json";
+
 export const CrmAutomationPlaybook = {
   id: "crm_automation_playbook",
   function: "crm automation playbook",
@@ -5,9 +7,9 @@ export const CrmAutomationPlaybook = {
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ["automation", "playbook"],
+  cultural_tags: ["crm", "automation", "playbook"],
   apply() {
-    return await import("./crm_automation_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const CrmAutomationPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

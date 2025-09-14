@@ -1,13 +1,15 @@
+import template from "./product_roadmap.playbook.json";
+
 export const ProductRoadmapPlaybook = {
-  id: "product_roadmap.playbook",
-  function: "product roadmap.playbook",
+  id: "product_roadmap_playbook",
+  function: "product roadmap playbook",
   dependencies: [],
   gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
-  cultural_tags: ["product", "roadmap.playbook"],
+  cultural_tags: ["product", "roadmap", "playbook"],
   apply() {
-    return await import("./product_roadmap.playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const ProductRoadmapPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

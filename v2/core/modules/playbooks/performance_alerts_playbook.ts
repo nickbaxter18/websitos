@@ -1,3 +1,5 @@
+import template from "./performance_alerts_playbook.json";
+
 export const PerformanceAlertsPlaybook = {
   id: "performance_alerts_playbook",
   function: "performance alerts playbook",
@@ -7,7 +9,7 @@ export const PerformanceAlertsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["performance", "alerts", "playbook"],
   apply() {
-    return await import("./performance_alerts_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const PerformanceAlertsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

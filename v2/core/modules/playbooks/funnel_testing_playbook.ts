@@ -1,3 +1,5 @@
+import template from "./funnel_testing_playbook.json";
+
 export const FunnelTestingPlaybook = {
   id: "funnel_testing_playbook",
   function: "funnel testing playbook",
@@ -7,7 +9,7 @@ export const FunnelTestingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["funnel", "testing", "playbook"],
   apply() {
-    return await import("./funnel_testing_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const FunnelTestingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

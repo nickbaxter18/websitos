@@ -1,3 +1,5 @@
+import template from "./influencer_marketing_playbook.json";
+
 export const InfluencerMarketingPlaybook = {
   id: "influencer_marketing_playbook",
   function: "influencer marketing playbook",
@@ -7,7 +9,7 @@ export const InfluencerMarketingPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["influencer", "marketing", "playbook"],
   apply() {
-    return await import("./influencer_marketing_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const InfluencerMarketingPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

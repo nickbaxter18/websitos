@@ -1,13 +1,15 @@
+import template from "./webinar_campaign_playbook.json";
+
 export const WebinarCampaignPlaybook = {
   id: "webinar_campaign_playbook",
   function: "webinar campaign playbook",
   dependencies: [],
-  gardener_role: "seeder",
+  gardener_role: "grower",
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["webinar", "campaign", "playbook"],
   apply() {
-    return await import("./webinar_campaign_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const WebinarCampaignPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

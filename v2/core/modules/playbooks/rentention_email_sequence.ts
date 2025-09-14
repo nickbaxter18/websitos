@@ -1,3 +1,5 @@
+import template from "./rentention_email_sequence.json";
+
 export const RententionEmailSequence = {
   id: "rentention_email_sequence",
   function: "rentention email sequence",
@@ -7,7 +9,7 @@ export const RententionEmailSequence = {
   myth_alignment: "growth",
   cultural_tags: ["rentention", "email", "sequence"],
   apply() {
-    return await import("./rentention_email_sequence.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const RententionEmailSequence = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

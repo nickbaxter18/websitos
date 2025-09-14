@@ -1,3 +1,5 @@
+import template from "./loyalty_rewards_playbook.json";
+
 export const LoyaltyRewardsPlaybook = {
   id: "loyalty_rewards_playbook",
   function: "loyalty rewards playbook",
@@ -7,7 +9,7 @@ export const LoyaltyRewardsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["loyalty", "rewards", "playbook"],
   apply() {
-    return await import("./loyalty_rewards_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const LoyaltyRewardsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

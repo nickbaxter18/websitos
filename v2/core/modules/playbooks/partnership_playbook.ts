@@ -1,3 +1,5 @@
+import template from "./partnership_playbook.json";
+
 export const PartnershipPlaybook = {
   id: "partnership_playbook",
   function: "partnership playbook",
@@ -7,7 +9,7 @@ export const PartnershipPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["partnership", "playbook"],
   apply() {
-    return await import("./partnership_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const PartnershipPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

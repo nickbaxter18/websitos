@@ -1,3 +1,5 @@
+import template from "./competitior_comparison_playbook.json";
+
 export const CompetitiorComparisonPlaybook = {
   id: "competitior_comparison_playbook",
   function: "competitior comparison playbook",
@@ -7,7 +9,7 @@ export const CompetitiorComparisonPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["competitior", "comparison", "playbook"],
   apply() {
-    return await import("./competitior_comparison_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const CompetitiorComparisonPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

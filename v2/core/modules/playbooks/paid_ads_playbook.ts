@@ -1,3 +1,5 @@
+import template from "./paid_ads_playbook.json";
+
 export const PaidAdsPlaybook = {
   id: "paid_ads_playbook",
   function: "paid ads playbook",
@@ -7,7 +9,7 @@ export const PaidAdsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["paid", "playbook"],
   apply() {
-    return await import("./paid_ads_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const PaidAdsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

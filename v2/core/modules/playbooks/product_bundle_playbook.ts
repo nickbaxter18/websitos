@@ -1,3 +1,5 @@
+import template from "./product_bundle_playbook.json";
+
 export const ProductBundlePlaybook = {
   id: "product_bundle_playbook",
   function: "product bundle playbook",
@@ -7,7 +9,7 @@ export const ProductBundlePlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["product", "bundle", "playbook"],
   apply() {
-    return await import("./product_bundle_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const ProductBundlePlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};
