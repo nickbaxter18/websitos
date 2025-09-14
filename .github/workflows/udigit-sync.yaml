@@ -15,6 +15,7 @@ jobs:
         run: |
           if [ -z "${{ secrets.EDITOR_API_KEY }}" ]; then
             echo "❌ EDITOR_API_KEY not available"
+            echo "::error file=.github/workflows/udigit-sync.yaml::EDITOR_API_KEY not available"
             exit 1
           else
             echo "✅ EDITOR_API_KEY is available (masked)"
@@ -27,8 +28,10 @@ jobs:
         run: |
           echo "🔎 Probing ingest API..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://websitos.onrender.com/ingest_file || echo "000")
+          echo "Probe returned status: $STATUS"
           if [ "$STATUS" -ne 200 ]; then
             echo "⚠️ Ingest API not reachable (status $STATUS). Skipping sync."
+            echo "::warning file=.github/workflows/udigit-sync.yaml::Ingest API not reachable (status $STATUS)"
             exit 0
           fi
 
@@ -64,6 +67,7 @@ jobs:
 
           if [ "$RESPONSE" -ne 200 ]; then
             echo "❌ U-DIG IT ingest API returned error"
+            echo "::error file=.github/workflows/udigit-sync.yaml::U-DIG IT ingest API returned error (status $RESPONSE)"
             exit 1
           else
             echo "✅ Sync successful"

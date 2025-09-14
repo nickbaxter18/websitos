@@ -18,9 +18,6 @@ jobs:
         run: |
           echo "::add-matcher::.github/matchers/error.json"
 
-      - name: Enable problem matchers
-        uses: ./.github/actions/setup-matchers
-
       - name: Define endpoint check function
         run: |
           cat > check_endpoint.sh <<'EOF'
@@ -41,7 +38,7 @@ jobs:
               echo "⚠️ $NAME failed with status $STATUS"
               echo "Response body (truncated):"
               echo "$BODY" | head -n 20
-              echo "::error file=post-deploy-smoke.yml,line=$i::Smoke check failed ($NAME, status $STATUS)"
+              echo "::error file=.github/workflows/post-deploy-smoke.yml::Smoke check failed ($NAME, status $STATUS)"
               sleep 10
             fi
           done
@@ -64,7 +61,7 @@ jobs:
 
   capture-failure:
     if: failure()
-    needs: smoke
+    needs: [smoke]
     uses: ./.github/workflows/failure-summary.yml
     with:
       job_name: post-deploy-smoke
