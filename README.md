@@ -1,4 +1,4 @@
-# WebsiteOS v2 (patch)
+# WebsiteOS v2 (p.
 
 ![Frontend CI](https://github.com/nickbaxter18/websitos/actions/workflows/frontend-ci.yml/badge.svg)
 ![Backend CI](https://github.com/nickbaxter18/websitos/actions/workflows/backend-ci.yml/badge.svg)
