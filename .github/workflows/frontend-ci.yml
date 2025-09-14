@@ -43,7 +43,17 @@ jobs:
         uses: ./.github/actions/setup-matchers
 
       - name: Run ${{ matrix.task }}
-        run: npm run ${{ matrix.task }}
+        run: |
+          echo "🔎 Running task: ${{ matrix.task }}"
+          if [ "${{ matrix.task }}" == "test:unit" ]; then
+            echo "⚡ Running Jest with debug..."
+            npm run test:unit -- --runInBand --verbose || EXIT=$?
+            echo "--- Jest error logs ---"
+            cat jest-report.json || echo "(no jest-report.json produced)"
+            exit ${EXIT:-0}
+          else
+            npm run ${{ matrix.task }}
+          fi
         continue-on-error: ${{ matrix.task == 'lint' }}
 
   build:

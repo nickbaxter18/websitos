@@ -15,6 +15,10 @@ module.exports = {
     "@testing-library/jest-dom",
     "<rootDir>/jest.setup.js"
   ],
-  // ✅ Exclude Playwright e2e tests from Jest, they run via `npm run test:e2e`
   testPathIgnorePatterns: ["/node_modules/", "/tests/e2e/", "/WEBSITEOS/tests/e2e/"],
+
+  // ✅ Force coverage output for CI
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  coverageReporters: ["json-summary", "lcov", "text", "cobertura"],
 };
