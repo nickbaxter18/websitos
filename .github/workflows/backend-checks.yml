@@ -13,7 +13,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false  # don't stop all tasks if one fails
       matrix:
         task: [black, mypy, pytest]
     steps:
@@ -29,6 +29,7 @@ jobs:
           cache: 'pip'
 
       - name: Enable problem matchers
+        continue-on-error: true  # don't fail job if matcher fails
         run: |
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/python.json"
@@ -43,6 +44,7 @@ jobs:
       - name: Run ${{ matrix.task }}
         run: |
           echo "::group::🔎 Running task: ${{ matrix.task }}"
+          EXIT=0
           if [ "${{ matrix.task }}" == "black" ]; then
             OUTPUT=$(black --check . --exclude '(Lib|venv|node_modules)' || true)
             if echo "$OUTPUT" | grep -q "would reformat"; then
@@ -52,7 +54,7 @@ jobs:
                   echo "::error file=$FILE::Black formatting issue detected"
                 fi
               done
-              exit 1
+              EXIT=1
             fi
           fi
           if [ "${{ matrix.task }}" == "mypy" ]; then
@@ -66,8 +68,7 @@ jobs:
             fi
           fi
           echo "::endgroup::"
-          exit ${EXIT:-0}
-        continue-on-error: ${{ matrix.task == 'black' }}
+          exit $EXIT
 
       - name: Upload pytest results artifact
         if: always() && matrix.task == 'pytest'

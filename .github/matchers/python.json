@@ -4,13 +4,13 @@
       "owner": "python",
       "pattern": [
         {
-          "regexp": "File \\\"(.+?)\\\", line (\\d+).*",
+          "regexp": "^File \\\"(.+?)\\\", line (\\d+), in .*$",
           "file": 1,
           "line": 2,
-          "message": "Traceback frame"
+          "message": "Python traceback"
         },
         {
-          "regexp": "^(.*Error.*)$",
+          "regexp": "^(.*Error.*|.*Exception.*)$",
           "message": 1
         }
       ]

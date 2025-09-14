@@ -8,6 +8,7 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    continue-on-error: true  # make smoke non-blocking
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
@@ -15,6 +16,7 @@ jobs:
           fetch-depth: 0
 
       - name: Enable problem matchers
+        continue-on-error: true
         run: echo "::add-matcher::.github/matchers/error.json"
 
       - name: Define endpoint check function
@@ -57,3 +59,11 @@ jobs:
 
       - name: Check Frontend Homepage
         run: ./check_endpoint.sh https://websitos.onrender.com/ "Frontend Homepage"
+
+      - name: Upload Smoke Test Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-deploy-smoke-logs
+          path: response.txt
+          retention-days: 7

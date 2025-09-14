@@ -13,7 +13,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false  # don't cancel all tasks if one fails
       matrix:
         task: [lint, type-check, test:unit, prettier]
     steps:
@@ -27,11 +27,13 @@ jobs:
           cache: 'npm'
 
       - name: Enable problem matchers
+        continue-on-error: true  # don't fail job if matcher fails
         run: |
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/eslint.json"
           echo "::add-matcher::.github/matchers/ts.json"
           echo "::add-matcher::.github/matchers/git.json"
+          echo "::add-matcher::.github/matchers/jest.json"
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -39,6 +41,7 @@ jobs:
       - name: Run ${{ matrix.task }}
         run: |
           echo "::group::🔎 Running task: ${{ matrix.task }}"
+          EXIT=0
           if [ "${{ matrix.task }}" == "test:unit" ]; then
             echo "⚡ Running Jest with annotations..."
             npm run test:unit -- --runInBand --verbose --reporters=default --reporters=jest-github-actions-reporter || EXIT=$?
@@ -46,21 +49,38 @@ jobs:
               echo '{}' > jest-report.json
               echo "::warning file=frontend/tests::jest-report.json missing, test run may have crashed"
             fi
-            exit ${EXIT:-0}
           elif [ "${{ matrix.task }}" == "lint" ]; then
             echo "⚡ Running ESLint with GitHub annotations..."
             npx eslint src v2 ops --format github || EXIT=$?
-            exit ${EXIT:-0}
+            if [ ! -f eslint-report.json ]; then
+              echo '{}' > eslint-report.json
+            fi
           elif [ "${{ matrix.task }}" == "type-check" ]; then
             echo "⚡ Running TypeScript with GitHub annotations..."
             npx tsc --noEmit --pretty false || EXIT=$?
-            exit ${EXIT:-0}
           elif [ "${{ matrix.task }}" == "prettier" ]; then
             echo "⚡ Checking Prettier formatting..."
             npx prettier --check . | sed 's/^/::warning::/' || true
           fi
           echo "::endgroup::"
+          exit $EXIT
         continue-on-error: ${{ matrix.task == 'lint' || matrix.task == 'prettier' }}
+
+      - name: Upload Jest results artifact
+        if: always() && matrix.task == 'test:unit'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-jest-results
+          path: jest-report.json
+          retention-days: 7
+
+      - name: Upload ESLint results artifact
+        if: always() && matrix.task == 'lint'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-eslint-results
+          path: eslint-report.json
+          retention-days: 7
 
   build:
     runs-on: ubuntu-latest
@@ -90,6 +110,7 @@ jobs:
             coverage/lcov.info
             coverage/coverage-summary.json
             jest-report.json
+            eslint-report.json
           retention-days: 7
 
   e2e:
