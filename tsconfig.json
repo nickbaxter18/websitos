@@ -1,20 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "esnext",
+    "target": "ES2020",
+    "module": "commonjs",
     "moduleResolution": "node",
-    "jsx": "react-jsx",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
-    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
     "skipLibCheck": true,
-    "strict": false,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "v2/*": ["v2/*"]
-    },
-    "types": ["node", "jest", "@testing-library/jest-dom", "@playwright/test"]
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist"
   },
-  "include": ["src", "tests", "v2", "WEBSITEOS"],
+  "include": ["src", "v2", "tests"],
   "exclude": ["node_modules", "dist"]
 }

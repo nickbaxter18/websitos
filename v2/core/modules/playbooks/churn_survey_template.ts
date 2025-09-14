@@ -1,3 +1,5 @@
+import template from "./churn_survey_template.json";
+
 export const ChurnSurveyTemplate = {
   id: "churn_survey_template",
   function: "churn survey template",
@@ -7,7 +9,7 @@ export const ChurnSurveyTemplate = {
   myth_alignment: "growth",
   cultural_tags: ["churn", "survey", "template"],
   apply() {
-    return await import("./churn_survey_template.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const ChurnSurveyTemplate = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

@@ -1,3 +1,5 @@
+import template from "./binary-extensions.json";
+
 export const BinaryExtensions = {
   id: "binary-extensions",
   function: "binary-extensions",
@@ -7,7 +9,7 @@ export const BinaryExtensions = {
   myth_alignment: "growth",
   cultural_tags: ["binary-extensions"],
   apply() {
-    return await import("./binary-extensions.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const BinaryExtensions = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

@@ -27,29 +27,33 @@ jobs:
           #!/bin/bash
           URL=$1
           NAME=$2
-          for i in {1..3}; do
-            echo "Checking $NAME at $URL (attempt $i)..."
+          MAX_RETRIES=5
+          DELAY=5
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Checking $NAME at $URL (attempt $i/$MAX_RETRIES)..."
             RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -o response.txt "$URL" || true)
             BODY=$(cat response.txt)
             STATUS=$(echo $RESPONSE | sed -e 's/.*HTTPSTATUS://')
 
             if [ "$STATUS" -eq 200 ]; then
               echo "✅ $NAME OK"
-              rm -f response.txt
-              exit 0
+              echo "$BODY" | head -n 20
+              break
             else
               echo "⚠️ $NAME failed with status $STATUS"
               echo "Response body (truncated):"
               echo "$BODY" | head -n 20
-              echo "::warning file=.github/workflows/post-deploy-smoke.yml::Smoke check failed ($NAME, status $STATUS)"
-              sleep 10
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "Retrying in $DELAY seconds..."
+                sleep $DELAY
+                DELAY=$((DELAY*2))
+              else
+                echo "::error::$NAME check failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
             fi
           done
-          echo "::error::$NAME check failed after 3 attempts"
-          if [ ! -f response.txt ]; then
-            echo 'No response captured' > response.txt
-          fi
-          exit 1
           EOF
           chmod +x check_endpoint.sh
 

@@ -1,3 +1,5 @@
+import template from "./board_investor_report.json";
+
 export const BoardInvestorReport = {
   id: "board_investor_report",
   function: "board investor report",
@@ -7,7 +9,7 @@ export const BoardInvestorReport = {
   myth_alignment: "growth",
   cultural_tags: ["board", "investor", "report"],
   apply() {
-    return await import("./board_investor_report.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const BoardInvestorReport = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

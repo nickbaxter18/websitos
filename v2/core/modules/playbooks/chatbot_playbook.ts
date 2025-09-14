@@ -1,3 +1,5 @@
+import template from "./chatbot_playbook.json";
+
 export const ChatbotPlaybook = {
   id: "chatbot_playbook",
   function: "chatbot playbook",
@@ -7,7 +9,7 @@ export const ChatbotPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["chatbot", "playbook"],
   apply() {
-    return await import("./chatbot_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const ChatbotPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};
