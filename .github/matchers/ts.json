@@ -1,7 +1,7 @@
 {
   "problemMatcher": [
     {
-      "owner": "tsc",
+      "owner": "tsc-colon",
       "pattern": [
         {
           "regexp": "^(.*):(\\d+):(\\d+) - error (TS[0-9]+): (.*)$",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "owner": "tsc",
+      "owner": "tsc-parens",
       "pattern": [
         {
           "regexp": "^(.*)\\((\\d+),(\\d+)\\): error (TS[0-9]+): (.*)$",

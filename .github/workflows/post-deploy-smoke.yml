@@ -61,4 +61,4 @@ jobs:
   capture-failure:
     if: failure()
     needs: [smoke]
-    uses: ./.github/actions/failure-summary
+    uses: ./.github/actions/capture-failure-summary

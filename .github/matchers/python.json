@@ -7,7 +7,12 @@
           "regexp": "File \\\"(.+?)\\\", line (\\d+).*",
           "file": 1,
           "line": 2
-        },
+        }
+      ]
+    },
+    {
+      "owner": "python-error",
+      "pattern": [
         {
           "regexp": "^(.*Error.*)$",
           "message": 1

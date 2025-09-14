@@ -1,0 +1,45 @@
+name: "Capture Failure Summary"
+description: "Collects and uploads failure info as artifact with annotations"
+author: "websitos-ci"
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Collect failure info
+      shell: bash
+      run: |
+        mkdir -p summary logs
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+        EXIT_CODE=$(cat exit_code.log 2>/dev/null || echo "unknown")
+        ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stderr captured")
+        ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stdout captured")
+
+        TAGGED_ERROR=$(echo "$ALL_STDERR" | head -n 1)
+
+        echo "::error::Job failed with error: $TAGGED_ERROR"
+
+        cat > summary/failure-summary.json <<EOF
+        {
+          "run_id": $GITHUB_RUN_ID,
+          "exit_code": "$EXIT_CODE",
+          "error": "$TAGGED_ERROR",
+          "stdout_tail": $(echo "$ALL_STDOUT" | jq -R -s -c 'split("\n")'),
+          "stderr_tail": $(echo "$ALL_STDERR" | jq -R -s -c 'split("\n")'),
+          "commit": "${{ github.sha }}",
+          "branch": "${{ github.ref_name }}",
+          "actor": "${{ github.actor }}",
+          "workflow_url": "https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID",
+          "timestamp": "$TIMESTAMP"
+        }
+        EOF
+
+    - name: Upload failure summary
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: failure-summary
+        path: summary/**
+        retention-days: 1
