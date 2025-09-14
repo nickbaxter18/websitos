@@ -4,12 +4,11 @@
       "owner": "eslint",
       "pattern": [
         {
-          "regexp": "^(?<file>.*?):(?<line>\\d+):(?<col>\\d+): (?<msg>.*) \\\((?<sev>error|warning).+\\\)$",
-          "file": "file",
-          "line": "line",
-          "column": "col",
-          "message": "msg",
-          "annotationLevel": "warning"
+          "regexp": "^(.*):(\\d+):(\\d+): (.*) \\((error|warning) .+\\)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
         }
       ]
     }

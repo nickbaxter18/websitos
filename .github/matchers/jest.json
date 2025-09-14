@@ -4,21 +4,18 @@
       "owner": "jest",
       "pattern": [
         {
-          "regexp": "^FAIL\\s+(?<file>.+)$",
-          "file": "file",
-          "annotationLevel": "failure"
+          "regexp": "^FAIL\\s+(.+)$",
+          "file": 1
         },
         {
-          "regexp": "^\\s+●\\s+(?<msg>.+)$",
-          "message": "msg",
-          "annotationLevel": "failure"
+          "regexp": "^\\s+●\\s+(.+)$",
+          "message": 1
         },
         {
-          "regexp": "^\\s+at\\s+(?<file>[^:]+):(?<line>\\d+):(?<col>\\d+)$",
-          "file": "file",
-          "line": "line",
-          "column": "col",
-          "annotationLevel": "failure"
+          "regexp": "^\\s+at\\s+([^:]+):(\\d+):(\\d+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3
         }
       ]
     }
