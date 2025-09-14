@@ -1,3 +1,5 @@
+import template from "./product_announcement_update_sequence.json";
+
 export const ProductAnnouncementUpdateSequence = {
   id: "product_announcement_update_sequence",
   function: "product announcement update sequence",
@@ -7,7 +9,7 @@ export const ProductAnnouncementUpdateSequence = {
   myth_alignment: "growth",
   cultural_tags: ["product", "announcement", "update", "sequence"],
   apply() {
-    return await import("./product_announcement_update_sequence.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const ProductAnnouncementUpdateSequence = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

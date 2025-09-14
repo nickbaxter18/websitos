@@ -1,3 +1,5 @@
+import template from "./post_purchase_email_sequece.json";
+
 export const PostPurchaseEmailSequece = {
   id: "post_purchase_email_sequece",
   function: "post purchase email sequece",
@@ -7,7 +9,7 @@ export const PostPurchaseEmailSequece = {
   myth_alignment: "growth",
   cultural_tags: ["post", "purchase", "email", "sequece"],
   apply() {
-    return await import("./post_purchase_email_sequece.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const PostPurchaseEmailSequece = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

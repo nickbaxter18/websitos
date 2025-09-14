@@ -1,3 +1,5 @@
+import template from "./pricing_experiments_playbook.json";
+
 export const PricingExperimentsPlaybook = {
   id: "pricing_experiments_playbook",
   function: "pricing experiments playbook",
@@ -7,7 +9,7 @@ export const PricingExperimentsPlaybook = {
   myth_alignment: "growth",
   cultural_tags: ["pricing", "experiments", "playbook"],
   apply() {
-    return await import("./pricing_experiments_playbook.json");
+    return template;
   },
   fallback() {
     return {};
@@ -17,8 +19,5 @@ export const PricingExperimentsPlaybook = {
   coevolve() {},
   cultivate() {},
 };
-
-
-
 
 export default {};

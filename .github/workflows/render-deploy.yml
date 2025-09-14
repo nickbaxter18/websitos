@@ -51,8 +51,15 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "accept: application/json" \
             -H "content-type: application/json")
-          echo "$RESPONSE"
-          DEPLOY_ID=$(echo $RESPONSE | jq -r '.id')
+
+          echo "Response: $RESPONSE"
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+
+          if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
+            echo "::error::Failed to trigger Render deploy (no deploy ID returned)"
+            exit 1
+          fi
+
           echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
 
   smoke:
@@ -78,7 +85,7 @@ jobs:
 
           for i in {1..30}; do
             STATUS=$(curl -s "https://api.render.com/v1/deploys/$DEPLOY_ID" \
-              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | jq -r '.status')
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | jq -r '.status // empty')
 
             echo "Attempt $i: Status = $STATUS"
 
@@ -101,28 +108,33 @@ jobs:
           #!/bin/bash
           URL=$1
           NAME=$2
-          for i in {1..3}; do
-            echo "Checking $NAME at $URL (attempt $i)..."
+          MAX_RETRIES=5
+          DELAY=5
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Checking $NAME at $URL (attempt $i/$MAX_RETRIES)..."
             RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -o response.txt "$URL" || true)
             BODY=$(cat response.txt)
             STATUS=$(echo $RESPONSE | sed -e 's/.*HTTPSTATUS://')
 
             if [ "$STATUS" -eq 200 ]; then
               echo "✅ $NAME OK"
-              rm -f response.txt
-              exit 0
+              echo "$BODY" | head -n 20
+              break
             else
               echo "⚠️ $NAME failed with status $STATUS"
               echo "Response body (truncated):"
               echo "$BODY" | head -n 20
-              sleep 10
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "Retrying in $DELAY seconds..."
+                sleep $DELAY
+                DELAY=$((DELAY*2))
+              else
+                echo "::error::$NAME check failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
             fi
           done
-          echo "::error::$NAME check failed after 3 attempts"
-          if [ ! -f response.txt ]; then
-            echo 'No response captured' > response.txt
-          fi
-          exit 1
           EOF
           chmod +x check_endpoint.sh
 
