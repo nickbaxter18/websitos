@@ -69,4 +69,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# -------------------------------------------------------------------
+# Healthcheck Endpoint
+# -------------------------------------------------------------------
+@app.get("/api/health", tags=["system"])
+async def healthcheck():
+    return {"status": "ok"}
+
 # (rest of api.py continues unchanged...)
