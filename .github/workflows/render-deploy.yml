@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
+    environment: Websitos
     permissions:
       contents: read
       id-token: write
@@ -26,7 +26,7 @@ jobs:
       - name: Verify secrets
         run: |
           if [ -z "$RENDER_SERVICE_ID" ] || [ -z "$RENDER_API_KEY" ]; then
-            echo "::error::Missing Render secrets"
+            echo "::error::Render secrets missing or not exposed to this job"
             exit 1
           fi
 
