@@ -1,3 +1,5 @@
+/// <reference path="./vite-env.d.ts" />
+
 import { z } from "zod";
 
 const schema = z.object({

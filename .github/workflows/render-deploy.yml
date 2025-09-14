@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
     outputs:
       deploy_id: ${{ steps.trigger.outputs.deploy_id }}
     steps:
