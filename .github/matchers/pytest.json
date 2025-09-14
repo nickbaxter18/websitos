@@ -4,13 +4,16 @@
       "owner": "pytest",
       "pattern": [
         {
-          "regexp": "^E\\s+(.+)$"
+          "regexp": "^E\\s+(?<msg>.+)$",
+          "message": "msg",
+          "annotationLevel": "failure"
         },
         {
-          "regexp": "^(.+):(\\d+):\\s+(.+)$",
-          "file": 1,
-          "line": 2,
-          "message": 3
+          "regexp": "^(?<file>.+?):(?<line>\\d+): (?<msg>.+)$",
+          "file": "file",
+          "line": "line",
+          "message": "msg",
+          "annotationLevel": "failure"
         }
       ]
     }

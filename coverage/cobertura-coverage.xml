@@ -1,0 +1,238 @@
+<?xml version="1.0" ?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<coverage lines-valid="65" lines-covered="34" line-rate="0.523" branches-valid="35" branches-covered="0" branch-rate="0" timestamp="1757856608614" complexity="0" version="0.1">
+  <sources>
+    <source>C:\Users\Nick\Downloads\WEBSITEOS</source>
+  </sources>
+  <packages>
+    <package name="WEBSITEOS.v2.core" line-rate="0.8571" branch-rate="0">
+      <classes>
+        <class name="design-genome.ts" filename="WEBSITEOS\v2\core\design-genome.ts" line-rate="0.8571" branch-rate="0">
+          <methods>
+            <method name="validateGenome" hits="1" signature="()V">
+              <lines>
+                <line number="18" hits="1"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="1" branch="false"/>
+            <line number="3" hits="1" branch="false"/>
+            <line number="18" hits="1" branch="false"/>
+            <line number="19" hits="1" branch="false"/>
+            <line number="20" hits="1" branch="true" condition-coverage="0% (0/1)"/>
+            <line number="21" hits="0" branch="false"/>
+            <line number="23" hits="1" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src" line-rate="1" branch-rate="1">
+      <classes>
+        <class name="App.tsx" filename="src\App.tsx" line-rate="1" branch-rate="1">
+          <methods>
+            <method name="App" hits="1" signature="()V">
+              <lines>
+                <line number="7" hits="1"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="1" branch="false"/>
+            <line number="2" hits="1" branch="false"/>
+            <line number="3" hits="1" branch="false"/>
+            <line number="4" hits="1" branch="false"/>
+            <line number="5" hits="1" branch="false"/>
+            <line number="7" hits="1" branch="false"/>
+            <line number="8" hits="1" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.components" line-rate="0.6" branch-rate="1">
+      <classes>
+        <class name="Footer.tsx" filename="src\components\Footer.tsx" line-rate="0.5" branch-rate="1">
+          <methods>
+            <method name="Footer" hits="0" signature="()V">
+              <lines>
+                <line number="3" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="3" hits="1" branch="false"/>
+            <line number="4" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="Navbar.tsx" filename="src\components\Navbar.tsx" line-rate="0.6666" branch-rate="1">
+          <methods>
+            <method name="Navbar" hits="0" signature="()V">
+              <lines>
+                <line number="4" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="2" hits="1" branch="false"/>
+            <line number="4" hits="1" branch="false"/>
+            <line number="5" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.pages" line-rate="0.22579999999999997" branch-rate="0">
+      <classes>
+        <class name="Dashboard.tsx" filename="src\pages\Dashboard.tsx" line-rate="1" branch-rate="1">
+          <methods>
+            <method name="Dashboard" hits="2" signature="()V">
+              <lines>
+                <line number="4" hits="2"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="4" hits="1" branch="false"/>
+            <line number="5" hits="2" branch="false"/>
+          </lines>
+        </class>
+        <class name="Home.tsx" filename="src\pages\Home.tsx" line-rate="0.6666" branch-rate="1">
+          <methods>
+            <method name="Home" hits="0" signature="()V">
+              <lines>
+                <line number="4" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="2" hits="1" branch="false"/>
+            <line number="4" hits="1" branch="false"/>
+            <line number="5" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="Status.tsx" filename="src\pages\Status.tsx" line-rate="0.1153" branch-rate="0">
+          <methods>
+            <method name="StatusBadge" hits="0" signature="()V">
+              <lines>
+                <line number="10" hits="0"/>
+              </lines>
+            </method>
+            <method name="Status" hits="0" signature="()V">
+              <lines>
+                <line number="27" hits="0"/>
+              </lines>
+            </method>
+            <method name="fetchStatus" hits="0" signature="()V">
+              <lines>
+                <line number="35" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_3)" hits="0" signature="()V">
+              <lines>
+                <line number="55" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_4)" hits="0" signature="()V">
+              <lines>
+                <line number="58" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="1" branch="false"/>
+            <line number="2" hits="1" branch="false"/>
+            <line number="11" hits="0" branch="false"/>
+            <line number="27" hits="1" branch="false"/>
+            <line number="28" hits="0" branch="false"/>
+            <line number="29" hits="0" branch="false"/>
+            <line number="30" hits="0" branch="false"/>
+            <line number="31" hits="0" branch="false"/>
+            <line number="32" hits="0" branch="false"/>
+            <line number="33" hits="0" branch="false"/>
+            <line number="36" hits="0" branch="false"/>
+            <line number="37" hits="0" branch="false"/>
+            <line number="38" hits="0" branch="false"/>
+            <line number="43" hits="0" branch="false"/>
+            <line number="44" hits="0" branch="false"/>
+            <line number="45" hits="0" branch="false"/>
+            <line number="46" hits="0" branch="false"/>
+            <line number="47" hits="0" branch="false"/>
+            <line number="49" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="51" hits="0" branch="false"/>
+            <line number="55" hits="0" branch="false"/>
+            <line number="56" hits="0" branch="false"/>
+            <line number="57" hits="0" branch="false"/>
+            <line number="58" hits="0" branch="false"/>
+            <line number="61" hits="0" branch="true" condition-coverage="0% (0/3)"/>
+            <line number="63" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.utils" line-rate="0.5" branch-rate="1">
+      <classes>
+        <class name="apiClient.ts" filename="src\utils\apiClient.ts" line-rate="0.5" branch-rate="1">
+          <methods>
+            <method name="getApiHealth" hits="0" signature="()V">
+              <lines>
+                <line number="13" hits="0"/>
+              </lines>
+            </method>
+            <method name="getRootHealth" hits="0" signature="()V">
+              <lines>
+                <line number="17" hits="0"/>
+              </lines>
+            </method>
+            <method name="getApiStatus" hits="0" signature="()V">
+              <lines>
+                <line number="21" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="13" hits="1" branch="false"/>
+            <line number="14" hits="0" branch="false"/>
+            <line number="17" hits="1" branch="false"/>
+            <line number="18" hits="0" branch="false"/>
+            <line number="21" hits="1" branch="false"/>
+            <line number="22" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="v2.core" line-rate="0.8887999999999999" branch-rate="0">
+      <classes>
+        <class name="autonomous-redesign.ts" filename="v2\core\autonomous-redesign.ts" line-rate="1" branch-rate="1">
+          <methods>
+            <method name="decideAutonomy" hits="2" signature="()V">
+              <lines>
+                <line number="1" hits="2"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="2" branch="false"/>
+            <line number="3" hits="2" branch="false"/>
+          </lines>
+        </class>
+        <class name="design-genome.ts" filename="v2\core\design-genome.ts" line-rate="0.8571" branch-rate="0">
+          <methods>
+            <method name="validateGenome" hits="1" signature="()V">
+              <lines>
+                <line number="18" hits="1"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="1" branch="false"/>
+            <line number="3" hits="1" branch="false"/>
+            <line number="18" hits="1" branch="false"/>
+            <line number="19" hits="1" branch="false"/>
+            <line number="20" hits="1" branch="true" condition-coverage="0% (0/1)"/>
+            <line number="21" hits="0" branch="false"/>
+            <line number="23" hits="1" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

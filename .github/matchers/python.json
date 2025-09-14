@@ -4,14 +4,16 @@
       "owner": "python",
       "pattern": [
         {
-          "regexp": "File \\\"(.+?)\\\", line (\\d+).*",
-          "file": 1,
-          "line": 2,
-          "message": "Traceback frame"
+          "regexp": "File \\\"(?<file>.+?)\\\", line (?<line>\\d+).*",
+          "file": "file",
+          "line": "line",
+          "message": "Traceback frame",
+          "loop": true
         },
         {
-          "regexp": "^(.*Error.*)$",
-          "message": 1
+          "regexp": "^(?<msg>.*Error.*)$",
+          "message": "msg",
+          "annotationLevel": "failure"
         }
       ]
     }

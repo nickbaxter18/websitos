@@ -4,11 +4,11 @@
       "owner": "mypy",
       "pattern": [
         {
-          "regexp": "^(.*):(\\d+):\\s+(error|note):\\s+(.+)$",
-          "file": 1,
-          "line": 2,
-          "severity": 3,
-          "message": 4
+          "regexp": "^(?<file>.*?):(?<line>\\d+):\\s+(?<sev>error|note):\\s+(?<msg>.+)$",
+          "file": "file",
+          "line": "line",
+          "message": "msg",
+          "annotationLevel": "failure"
         }
       ]
     }

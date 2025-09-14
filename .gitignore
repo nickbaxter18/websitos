@@ -1,3 +1,2 @@
-# Ignore purge and rebase scripts so they don't get tracked or run in CI
-purge-collector.sh
-bulk-rebase.sh
+# Ignore CI trigger file
+ci-trigger.txt

@@ -5,11 +5,13 @@
       "pattern": [
         {
           "regexp": ".*exit code 128.*",
-          "message": "Ignored git exit code 128 noise"
+          "message": "Git returned exit code 128 (likely no-op fetch/push)",
+          "annotationLevel": "warning"
         },
         {
-          "regexp": "fatal: (.*)$",
-          "message": "Git failure: $1"
+          "regexp": "fatal: (?<msg>.*)$",
+          "message": "Git failure: ${msg}",
+          "annotationLevel": "failure"
         }
       ]
     }
