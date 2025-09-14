@@ -23,17 +23,13 @@ jobs:
         run: |
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/python.json"
-          echo "::add-matcher::.github/matchers/eslint.json"
-          echo "::add-matcher::.github/matchers/ts.json"
 
-      - name: Collect failure info (runs only if job failed)
+      - name: Collect failure info
         run: |
           mkdir -p summary logs
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          EXIT_CODE_FILE="exit_code.log"
-          EXIT_CODE=$(cat $EXIT_CODE_FILE 2>/dev/null || echo "unknown")
-
+          EXIT_CODE=$(cat exit_code.log 2>/dev/null || echo "unknown")
           ALL_STDERR=$(find logs -name "*.stderr.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stderr captured")
           ALL_STDOUT=$(find logs -name "*.stdout.log" -exec tail -n 50 {} + 2>/dev/null || echo "No stdout captured")
 
@@ -58,13 +54,12 @@ jobs:
               "pr_number": "${{ github.event.pull_request.number || '' }}"
             },
             "triggered_by": "${{ github.actor }}",
-            "duration_seconds": -1,
             "workflow_url": "https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID",
             "timestamp": "$TIMESTAMP"
           }
           EOF
 
-      - name: Upload failure summary folder
+      - name: Upload failure summary artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
