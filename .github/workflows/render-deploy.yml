@@ -8,6 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    outputs:
+      deploy_id: ${{ steps.trigger.outputs.deploy_id }}
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
