@@ -13,12 +13,9 @@ def test_healthcheck():
 
 
 def test_invalid_route():
-    """Unknown routes should return the SPA fallback (200 OK with error message)."""
+    """Unknown routes should return 404 Not Found."""
     response = client.get("/this-should-not-exist")
-    assert response.status_code == 200
-    data = response.json()
-    assert "error" in data
-    assert data["error"] == "Frontend not built"
+    assert response.status_code == 404
 
 
 def test_version():
