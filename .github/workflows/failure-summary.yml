@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     if: failure()
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Collect failure info (runs only if job failed)
         run: |
           mkdir -p summary logs

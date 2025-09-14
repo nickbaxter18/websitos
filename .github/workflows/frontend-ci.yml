@@ -70,6 +70,7 @@ jobs:
         with:
           name: frontend-artifacts
           path: |
+            coverage/lcov.info
             coverage/coverage-summary.json
             jest-report.json
           retention-days: 7
@@ -99,4 +100,4 @@ jobs:
     uses: ./.github/workflows/failure-summary.yml
     with:
       job_name: frontend
-      step_name: Run ${{ matrix.task }}
+      step_name: build

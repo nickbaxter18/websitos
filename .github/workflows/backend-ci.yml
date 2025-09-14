@@ -54,13 +54,12 @@ jobs:
           if [ "${{ matrix.task }}" == "pytest" ]; then pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json; fi
         continue-on-error: ${{ matrix.task == 'black' }}
 
-      - name: Upload results artifact
-        if: always()
+      - name: Upload pytest results artifact
+        if: always() && matrix.task == 'pytest'
         uses: actions/upload-artifact@v4
         with:
-          name: backend-${{ matrix.task }}-results
-          path: |
-            pytest-report.json
+          name: backend-pytest-results
+          path: pytest-report.json
           retention-days: 7
 
   capture-failure:
@@ -69,4 +68,4 @@ jobs:
     uses: ./.github/workflows/failure-summary.yml
     with:
       job_name: backend
-      step_name: Run ${{ matrix.task }}
+      step_name: checks

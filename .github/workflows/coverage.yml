@@ -71,15 +71,20 @@ jobs:
         if: matrix.task == 'backend'
         run: pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings
 
-      - name: Upload coverage reports
-        if: always()
+      - name: Upload frontend coverage
+        if: matrix.task == 'frontend'
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.task }}
-          path: |
-            coverage
-            coverage.xml
-            coverage/coverage-final.json
+          name: coverage-frontend
+          path: coverage/lcov.info
+          retention-days: 1
+
+      - name: Upload backend coverage
+        if: matrix.task == 'backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: coverage.xml
           retention-days: 1
 
   upload-codecov:
@@ -95,5 +100,5 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/coverage-final.json,./coverage.xml
+          files: ./coverage/lcov.info,./coverage.xml
           fail_ci_if_error: false
