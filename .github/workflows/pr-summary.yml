@@ -44,13 +44,6 @@ jobs:
           name: coverage-backend
           path: coverage-backend
 
-      - name: Download failure summaries (ignore if missing)
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: failure-summary
-          path: failure-summaries
-
       - name: Generate PR Summary
         run: |
           echo "### ✅ CI & Deploy Summary" >> summary.md
@@ -59,13 +52,6 @@ jobs:
           echo "### 📊 Coverage Reports" >> summary.md
           ls coverage-frontend || echo "(no frontend coverage found)" >> summary.md
           ls coverage-backend || echo "(no backend coverage found)" >> summary.md
-          echo "---" >> summary.md
-          echo "### 🚨 Failure Summaries" >> summary.md
-          for f in failure-summaries/*.md; do
-            echo "\n" >> summary.md
-            cat "$f" >> summary.md
-            echo "\n" >> summary.md
-          done || echo "No failure summaries found" >> summary.md
 
       - name: Post PR Comment
         uses: marocchino/sticky-pull-request-comment@v2

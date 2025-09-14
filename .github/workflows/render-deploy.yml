@@ -104,10 +104,3 @@ jobs:
 
       - name: Check Frontend Homepage
         run: ./check_endpoint.sh https://websitos.onrender.com/ "Frontend Homepage"
-
-      - name: Capture Failure Summary (only if failure)
-        if: failure()
-        uses: ./.github/workflows/failure-summary.yml
-        with:
-          job_name: smoke
-          step_name: Deploy Smoke Test

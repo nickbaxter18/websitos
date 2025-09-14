@@ -76,11 +76,3 @@ jobs:
           name: backend-pytest-results
           path: pytest-report.json
           retention-days: 7
-
-  capture-failure:
-    if: always()
-    needs: [checks]
-    continue-on-error: true
-    uses: ./actions/capture-failure-summary
-    with:
-      job_name: backend-checks

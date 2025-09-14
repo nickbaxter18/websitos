@@ -89,14 +89,6 @@ EOF
           fi
           exit ${EXIT:-0}
 
-  capture-failure:
-    if: always()
-    needs: [coverage]
-    continue-on-error: true
-    uses: ./actions/capture-failure-summary
-    with:
-      job_name: coverage-checks
-
   upload-codecov:
     needs: coverage
     runs-on: ubuntu-latest

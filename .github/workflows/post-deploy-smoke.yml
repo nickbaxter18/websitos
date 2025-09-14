@@ -57,8 +57,3 @@ jobs:
 
       - name: Check Frontend Homepage
         run: ./check_endpoint.sh https://websitos.onrender.com/ "Frontend Homepage"
-
-  capture-failure:
-    if: failure()
-    needs: [smoke]
-    uses: ./actions/capture-failure-summary

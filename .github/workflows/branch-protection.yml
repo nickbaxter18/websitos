@@ -8,20 +8,20 @@ jobs:
   enforce:
     runs-on: ubuntu-latest
     steps:
-      - name: Require Frontend CI to Pass
+      - name: Require Frontend Checks to Pass
         run: |
-          echo "Checking Frontend CI status..."
-          STATUS=$(gh run list --workflow "Frontend CI" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
+          echo "Checking Frontend Checks status..."
+          STATUS=$(gh run list --workflow "Frontend Checks" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
           if [ "$STATUS" != "success" ]; then
-            echo "❌ Frontend CI must pass before merging."
+            echo "❌ Frontend Checks must pass before merging."
             exit 1
           fi
 
-      - name: Require Backend CI to Pass
+      - name: Require Backend Checks to Pass
         run: |
-          echo "Checking Backend CI status..."
-          STATUS=$(gh run list --workflow "Backend CI" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
+          echo "Checking Backend Checks status..."
+          STATUS=$(gh run list --workflow "Backend Checks" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
           if [ "$STATUS" != "success" ]; then
-            echo "❌ Backend CI must pass before merging."
+            echo "❌ Backend Checks must pass before merging."
             exit 1
           fi

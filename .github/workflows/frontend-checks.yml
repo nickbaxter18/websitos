@@ -110,11 +110,3 @@ jobs:
 
       - name: Run Playwright tests
         run: npm run test:e2e
-
-  capture-failure:
-    if: always()
-    needs: [build, e2e]
-    continue-on-error: true
-    uses: ./actions/capture-failure-summary
-    with:
-      job_name: frontend-checks
