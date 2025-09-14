@@ -23,6 +23,15 @@ jobs:
         env:
           EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
 
+      - name: Probe ingest API endpoint
+        run: |
+          echo "🔎 Probing ingest API..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://websitos.onrender.com/ingest_file || echo "000")
+          if [ "$STATUS" -ne 200 ]; then
+            echo "⚠️ Ingest API not reachable (status $STATUS). Skipping sync."
+            exit 0
+          fi
+
       - name: Download repo archive
         run: |
           curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
