@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "esnext",
+    "moduleResolution": "node",
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowJs": true,
@@ -12,7 +13,7 @@
       "@/*": ["src/*"],
       "v2/*": ["v2/*"]
     },
-    "types": ["jest", "@testing-library/jest-dom", "@playwright/test"]
+    "types": ["node", "jest", "@testing-library/jest-dom", "@playwright/test"]
   },
   "include": ["src", "tests", "v2", "WEBSITEOS"],
   "exclude": ["node_modules", "dist"]

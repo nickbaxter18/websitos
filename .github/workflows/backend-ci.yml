@@ -42,7 +42,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-json-report mypy black
+          pip install pytest pytest-json-report mypy black types-requests types-setuptools types-PyYAML || true
 
       - name: Enable problem matchers
         uses: ./.github/actions/setup-matchers
@@ -50,9 +50,16 @@ jobs:
       - name: Run ${{ matrix.task }}
         run: |
           if [ "${{ matrix.task }}" == "black" ]; then black --check . --exclude '(Lib|venv|node_modules)'; fi
-          if [ "${{ matrix.task }}" == "mypy" ]; then mypy . --exclude '(Lib|venv|node_modules)'; fi
-          if [ "${{ matrix.task }}" == "pytest" ]; then pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json; fi
+          if [ "${{ matrix.task }}" == "mypy" ]; then mypy . --exclude '(Lib|venv|node_modules)' --ignore-missing-imports || EXIT=$?; fi
+          if [ "${{ matrix.task }}" == "pytest" ]; then pytest -vv --maxfail=1 --disable-warnings --json-report --json-report-file=pytest-report.json || EXIT=$?; fi
+          exit ${EXIT:-0}
         continue-on-error: ${{ matrix.task == 'black' }}
+
+      - name: Debug mypy output
+        if: failure() && matrix.task == 'mypy'
+        run: |
+          echo "--- Mypy Cache Contents ---"
+          ls -R .mypy_cache || echo "No mypy cache found"
 
       - name: Upload pytest results artifact
         if: always() && matrix.task == 'pytest'

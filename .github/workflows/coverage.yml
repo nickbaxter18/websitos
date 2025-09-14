@@ -69,7 +69,14 @@ jobs:
 
       - name: Run backend coverage (Pytest)
         if: matrix.task == 'backend'
-        run: pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings
+        run: |
+          echo "🔎 Running pytest with coverage..."
+          pytest --cov=api --cov-report=xml --maxfail=1 --disable-warnings || EXIT=$?
+          echo "--- Listing current directory ---"
+          ls -la . || true
+          echo "--- Listing coverage outputs ---"
+          ls -la coverage* || true
+          exit ${EXIT:-0}
 
       - name: Upload frontend coverage
         if: matrix.task == 'frontend'

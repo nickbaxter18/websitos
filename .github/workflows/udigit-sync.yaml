@@ -18,7 +18,10 @@ jobs:
             exit 1
           else
             echo "✅ EDITOR_API_KEY is available (masked)"
+            echo "Length: ${#EDITOR_API_KEY}" # safe, does not reveal value
           fi
+        env:
+          EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
 
       - name: Download repo archive
         run: |
