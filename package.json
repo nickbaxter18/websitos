@@ -15,8 +15,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "npm run test:unit && npm run test:e2e",
-    "test:unit": "jest",
-    "test:ci": "jest --passWithNoTests --coverage --coverageReporters=json-summary --coverageReporters=lcov --json --outputFile=jest-report.json",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --coverage --coverageReporters=json-summary --coverageReporters=lcov --json --outputFile=jest-report.json",
     "test:e2e": "playwright test",
     "type-check": "tsc --noEmit",
     "lint": "eslint src v2 ops",
@@ -88,11 +88,6 @@
   "jest": {
     "preset": "ts-jest/presets/default-esm",
     "testEnvironment": "jsdom",
-    "globals": {
-      "ts-jest": {
-        "useESM": true
-      }
-    },
     "extensionsToTreatAsEsm": [
       ".ts",
       ".tsx"
@@ -105,6 +100,7 @@
         }
       ]
     },
+    "transformIgnorePatterns": [],
     "moduleFileExtensions": [
       "ts",
       "tsx",
