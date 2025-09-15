@@ -24,7 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "validate": "ts-node v2/core/schema-validator.ts",
-    "validate-env": "node --loader ts-node/esm src/validateEnv.ts",
+    "validate-env": "node --loader ts-node/esm --experimental-specifier-resolution=node src/validateEnv.ts",
     "verify-assets": "node scripts/verifyAssets.js",
     "prepare": "husky",
     "start": "node server.js",
