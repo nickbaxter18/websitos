@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -40,12 +41,14 @@ jobs:
         run: |
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/generic-errors.json"
+          echo "::add-matcher::.github/matchers/python.json"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install --prefer-binary -r requirements.txt || pip install --prefer-binary -r requirements.txt
-          pip install pytest pytest-json-report mypy black flake8 types-requests types-setuptools types-PyYAML pytest-github-actions-annotate-failures || true
+          pip install --prefer-binary -r requirements.txt
+          pip install pytest pytest-json-report mypy black flake8 \
+            types-requests types-setuptools types-PyYAML pytest-github-actions-annotate-failures
 
       - name: Run ${{ matrix.task }}
         run: |

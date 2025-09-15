@@ -11,6 +11,12 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Checkout repository (debug only)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
       - name: Verify EDITOR_API_KEY presence
         run: |
           if [ -z "${{ secrets.EDITOR_API_KEY }}" ]; then
@@ -32,7 +38,7 @@ jobs:
           echo "🔎 Probing ingest API..."
           touch response.txt
           for i in 1 2 3; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$INGEST_API_URL" || echo "000")
+            STATUS=$(curl -s --fail --connect-timeout 10 --max-time 60 -o /dev/null -w "%{http_code}" "$INGEST_API_URL" || echo "000")
             echo "Probe returned status: $STATUS"
             if [ "$STATUS" -eq 200 ]; then
               echo "✅ Ingest API reachable"
@@ -48,7 +54,7 @@ jobs:
 
       - name: Download repo archive
         run: |
-          curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          curl -s --fail --connect-timeout 10 --max-time 60 -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/zipball/${{ github.sha }} \
             -o repo.zip
           unzip repo.zip -d repo
@@ -71,7 +77,7 @@ jobs:
         run: |
           touch response.txt
           echo "🔎 Sending request with EDITOR_API_KEY..."
-          RESPONSE=$(curl -v -s -o response.txt -w "%{http_code}" -X POST "$INGEST_API_URL" \
+          RESPONSE=$(curl -s --fail --connect-timeout 10 --max-time 60 -v -o response.txt -w "%{http_code}" -X POST "$INGEST_API_URL" \
             -H "x-api-key: ${{ secrets.EDITOR_API_KEY }}" \
             -F "file=@repo-snapshot.zip")
 
@@ -92,5 +98,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sync-logs
-          path: response.txt
+          path: |
+            response.txt
+            repo-snapshot.zip
+            *.log
           retention-days: 14

@@ -8,12 +8,17 @@ jobs:
   enforce:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup GitHub CLI
+        uses: cli/cli-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Require Frontend Checks to Pass
         run: |
           echo "Checking Frontend Checks status..."
           STATUS=$(gh run list --workflow "Frontend Checks" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
           if [ "$STATUS" != "success" ]; then
-            echo "❌ Frontend Checks must pass before merging."
+            echo "::error file=.github/workflows/branch-protection.yml::Frontend Checks must pass before merging."
             exit 1
           fi
 
@@ -22,6 +27,6 @@ jobs:
           echo "Checking Backend Checks status..."
           STATUS=$(gh run list --workflow "Backend Checks" --branch ${{ github.head_ref }} --limit 1 --json conclusion --jq '.[0].conclusion')
           if [ "$STATUS" != "success" ]; then
-            echo "❌ Backend Checks must pass before merging."
+            echo "::error file=.github/workflows/branch-protection.yml::Backend Checks must pass before merging."
             exit 1
           fi

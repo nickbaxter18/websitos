@@ -20,8 +20,11 @@ jobs:
       matrix:
         language: [ 'javascript', 'python' ]
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Enable problem matchers
         run: |
@@ -33,6 +36,27 @@ jobs:
             echo "::add-matcher::.github/matchers/eslint.json"
             echo "::add-matcher::.github/matchers/ts.json"
           fi
+
+      - name: Setup Node.js (for JS/TS)
+        if: matrix.language == 'javascript'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Setup Python (for backend)
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node.js dependencies
+        if: matrix.language == 'javascript'
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: pip install --prefer-binary -r requirements.txt || true
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3

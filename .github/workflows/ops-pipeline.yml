@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Enable problem matchers
         run: echo "::add-matcher::.github/matchers/error.json"
@@ -31,9 +34,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --legacy-peer-deps || echo "::warning::NPM install encountered dependency issues, using fallback"
+          npm ci --legacy-peer-deps
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || echo "::error::Python requirements failed"
+          pip install --prefer-binary -r requirements.txt
+          pip install pytest pytest-github-actions-annotate-failures
 
       - name: Run Ops Cycle
         run: |
