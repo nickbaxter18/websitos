@@ -108,7 +108,15 @@
       "^@/(.*)$": "<rootDir>/src/$1",
       "^v2/(.*)$": "<rootDir>/v2/$1",
       "\\.(css|less|scss)$": "identity-obj-proxy"
-    }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,html,md}": "prettier --write",

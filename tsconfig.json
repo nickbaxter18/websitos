@@ -18,6 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "jsx": "react-jsx",
+    "isolatedModules": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["src", "v2", "tests", "src/vite-env.d.ts", "src/types/**/*.d.ts", "global.d.ts"],
