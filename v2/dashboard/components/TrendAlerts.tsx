@@ -22,21 +22,15 @@ export default function TrendAlerts({ data, setAlerts, alerts }: TrendAlertsProp
       const change = values[values.length - 1] - values[values.length - 2];
 
       if (change < 0) {
-        newAlerts.push(
-          `⚠️ ${metric.name} dropped by ${change.toFixed(2)} since last commit.`
-        );
+        newAlerts.push(`⚠️ ${metric.name} dropped by ${change.toFixed(2)} since last commit.`);
       } else if (change > 0) {
-        newAlerts.push(
-          `✅ ${metric.name} improved by ${change.toFixed(2)} since last commit.`
-        );
+        newAlerts.push(`✅ ${metric.name} improved by ${change.toFixed(2)} since last commit.`);
       }
 
       if (values.length >= 5) {
         const lastFive = values.slice(-5);
         if (lastFive.every((v, i, arr) => i === 0 || v < arr[i - 1])) {
-          newAlerts.push(
-            `🚨 Critical: ${metric.name} has been declining for 5 commits in a row.`
-          );
+          newAlerts.push(`🚨 Critical: ${metric.name} has been declining for 5 commits in a row.`);
         }
         if (lastFive.every((v, i, arr) => i === 0 || v > arr[i - 1])) {
           newAlerts.push(

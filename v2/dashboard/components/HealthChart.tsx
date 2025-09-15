@@ -17,20 +17,14 @@ interface HealthChartProps {
 }
 
 export default function HealthChart({ data }: HealthChartProps) {
-  if (!data || data.length === 0)
-    return <p className="text-gray-500">No data available yet.</p>;
+  if (!data || data.length === 0) return <p className="text-gray-500">No data available yet.</p>;
 
   // Determine background trend color
   let trendColor = "#f3f4f6";
   if (data.length >= 2) {
     const last = data[data.length - 1];
     const prev = data[data.length - 2];
-    const metrics: (keyof CommitMetrics)[] = [
-      "diversity",
-      "coherence",
-      "resilience",
-      "beauty",
-    ];
+    const metrics: (keyof CommitMetrics)[] = ["diversity", "coherence", "resilience", "beauty"];
 
     const avgChange =
       metrics.reduce((acc, metric) => {
@@ -91,13 +85,7 @@ export default function HealthChart({ data }: HealthChartProps) {
         />
 
         {/* Cultural Vitality Index */}
-        <Line
-          type="monotone"
-          dataKey="cvi"
-          stroke="#111827"
-          strokeWidth={3}
-          dot={false}
-        />
+        <Line type="monotone" dataKey="cvi" stroke="#111827" strokeWidth={3} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );

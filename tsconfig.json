@@ -20,13 +20,6 @@
     "jsx": "react-jsx",
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": [
-    "src",
-    "v2",
-    "tests",
-    "src/vite-env.d.ts",
-    "src/types/**/*.d.ts",
-    "global.d.ts"
-  ],
+  "include": ["src", "v2", "tests", "src/vite-env.d.ts", "src/types/**/*.d.ts", "global.d.ts"],
   "exclude": ["node_modules", "dist", "coverage"]
 }

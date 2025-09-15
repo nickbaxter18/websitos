@@ -66,10 +66,7 @@ export default function CulturalHealthDashboard() {
         setCompareCommit={setCompareCommit}
       />
 
-      <ComparisonTable
-        selectedCommit={selectedCommit}
-        compareCommit={compareCommit}
-      />
+      <ComparisonTable selectedCommit={selectedCommit} compareCommit={compareCommit} />
     </div>
   );
 }

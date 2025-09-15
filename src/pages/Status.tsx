@@ -22,12 +22,13 @@ export default function StatusPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">System Status</h1>
+      <h1 className="mb-4 text-2xl font-bold">System Status</h1>
       <div className="space-y-2">
         <p>API Health: {apiHealth?.ok ? "✅ OK" : "❌ Down"}</p>
         <p>Root Health: {rootHealth?.ok ? "✅ OK" : "❌ Down"}</p>
         <p>
-          Status: {status?.ok ? "✅ OK" : "❌ Down"} — Version: {status?.version} — Uptime: {status?.uptime}
+          Status: {status?.ok ? "✅ OK" : "❌ Down"} — Version: {status?.version} — Uptime:{" "}
+          {status?.uptime}
         </p>
       </div>
     </div>

@@ -6,10 +6,7 @@ interface ComparisonTableProps {
   compareCommit: CommitMetricsNullable;
 }
 
-export default function ComparisonTable({
-  selectedCommit,
-  compareCommit,
-}: ComparisonTableProps) {
+export default function ComparisonTable({ selectedCommit, compareCommit }: ComparisonTableProps) {
   if (!selectedCommit || !compareCommit) return null;
   const sc = selectedCommit;
   const cc = compareCommit;
@@ -21,12 +18,7 @@ export default function ComparisonTable({
   function renderDelta(current: number, previous: number) {
     const diff = current - previous;
     const arrow = diff > 0 ? "↑" : diff < 0 ? "↓" : "→";
-    const color =
-      diff > 0
-        ? "text-green-600"
-        : diff < 0
-        ? "text-red-600"
-        : "text-gray-600";
+    const color = diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-gray-600";
     return <span className={color}>{`${arrow} ${diff.toFixed(2)}`}</span>;
   }
 
@@ -56,17 +48,15 @@ export default function ComparisonTable({
 
   function exportComparisonCSV() {
     const headers = ["Metric", "From", "To", "Change"];
-    const rows = ["diversity", "coherence", "resilience", "beauty", "cvi"].map(
-      (metric) => [
-        metric,
-        safeToFixed(cc[metric as keyof CommitMetrics]),
-        safeToFixed(sc[metric as keyof CommitMetrics]),
-        safeToFixed(
-          (sc[metric as keyof CommitMetrics] as number) -
-            (cc[metric as keyof CommitMetrics] as number)
-        ),
-      ]
-    );
+    const rows = ["diversity", "coherence", "resilience", "beauty", "cvi"].map((metric) => [
+      metric,
+      safeToFixed(cc[metric as keyof CommitMetrics]),
+      safeToFixed(sc[metric as keyof CommitMetrics]),
+      safeToFixed(
+        (sc[metric as keyof CommitMetrics] as number) -
+          (cc[metric as keyof CommitMetrics] as number)
+      ),
+    ]);
     const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -91,21 +81,19 @@ export default function ComparisonTable({
           </tr>
         </thead>
         <tbody>
-          {["diversity", "coherence", "resilience", "beauty", "cvi"].map(
-            (metric) => (
-              <tr key={metric}>
-                <td className="p-2 capitalize">{metric}</td>
-                <td className="p-2">{safeToFixed(cc[metric as keyof CommitMetrics])}</td>
-                <td className="p-2">{safeToFixed(sc[metric as keyof CommitMetrics])}</td>
-                <td className="p-2">
-                  {renderDelta(
-                    sc[metric as keyof CommitMetrics] as number,
-                    cc[metric as keyof CommitMetrics] as number
-                  )}
-                </td>
-              </tr>
-            )
-          )}
+          {["diversity", "coherence", "resilience", "beauty", "cvi"].map((metric) => (
+            <tr key={metric}>
+              <td className="p-2 capitalize">{metric}</td>
+              <td className="p-2">{safeToFixed(cc[metric as keyof CommitMetrics])}</td>
+              <td className="p-2">{safeToFixed(sc[metric as keyof CommitMetrics])}</td>
+              <td className="p-2">
+                {renderDelta(
+                  sc[metric as keyof CommitMetrics] as number,
+                  cc[metric as keyof CommitMetrics] as number
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
       <div className="mt-4 flex gap-2">
