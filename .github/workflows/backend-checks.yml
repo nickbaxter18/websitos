@@ -77,12 +77,8 @@ jobs:
             fi
           fi
           if [ "${{ matrix.task }}" == "flake8" ]; then
-            echo "📂 Debug: Listing Python files before flake8"
-            ls -R | grep -E '\\.py$' || true
-            echo "📂 Debug: Current working directory"
-            pwd
-            flake8 api.py api_logging.py env_validator.py sample_doc.py tests \
-              --exclude venv,__pycache__,.pytest_cache \
+            echo "📂 Debug: Running recursive flake8"
+            flake8 . --exclude venv,__pycache__,.pytest_cache,node_modules,backend \
               --max-line-length=120 > flake8-report.txt || EXIT=$?
           fi
           echo "::endgroup::"
