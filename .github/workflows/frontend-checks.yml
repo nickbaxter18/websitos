@@ -41,7 +41,7 @@ jobs:
       - name: Run ESLint
         if: matrix.task == 'lint'
         run: |
-          pnpm eslint src v2 ops --format json --output-file eslint-report.json || true
+          pnpm exec eslint src v2 ops --format json --output-file eslint-report.json || true
           if [ ! -f eslint-report.json ]; then echo '{}' > eslint-report.json; fi
 
       - name: Upload ESLint report
@@ -55,7 +55,7 @@ jobs:
       - name: Run Prettier
         if: matrix.task == 'prettier'
         run: |
-          pnpm prettier --check . > prettier-report.txt || true
+          pnpm exec prettier --check . > prettier-report.txt 2>&1 || true
           if [ ! -f prettier-report.txt ]; then echo 'No Prettier output' > prettier-report.txt; fi
 
       - name: Upload Prettier report
@@ -69,7 +69,7 @@ jobs:
       - name: Run TypeScript type-check
         if: matrix.task == 'type-check'
         run: |
-          pnpm tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-report.txt 2>&1 || true
+          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-report.txt 2>&1 || true
           if [ ! -f tsc-report.txt ]; then echo 'No TSC output' > tsc-report.txt; fi
 
       - name: Upload TSC report
@@ -83,7 +83,7 @@ jobs:
       - name: Run Jest unit tests
         if: matrix.task == 'test:unit'
         run: |
-          pnpm jest --json --outputFile=jest-report.json --reporters=default --reporters=jest-github-actions-reporter || true
+          pnpm exec jest --json --outputFile=jest-report.json --reporters=default --reporters=jest-github-actions-reporter || true
           if [ ! -f jest-report.json ]; then echo '{}' > jest-report.json; fi
 
       - name: Upload Jest results
