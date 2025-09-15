@@ -2,6 +2,9 @@
 
 echo "✅ Husky pre-commit running..."
 
+# Ensure global npm bin is in PATH (so pnpm is found)
+export PATH="$PATH:$(npm bin -g)"
+
 pnpm lint-staged --config package.json || true
 
 # Optionally run type check and tests (uncomment if needed)
