@@ -83,8 +83,8 @@ jobs:
       - name: Run Jest unit tests
         if: matrix.task == 'test:unit'
         run: |
-          pnpm exec jest --json --outputFile=jest-report.json --reporters=default --reporters=jest-github-actions-reporter || true
-          if [ ! -f jest-report.json ]; then echo '{}' > jest-report.json; fi
+          npx pnpm exec jest --json --outputFile=jest-report.json --reporters=default --reporters=jest-github-actions-reporter || true
+          if [ ! -s jest-report.json ]; then echo '{}' > jest-report.json; fi
 
       - name: Upload Jest results
         if: always() && matrix.task == 'test:unit'
