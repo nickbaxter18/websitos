@@ -1,0 +1,3 @@
+# Ignore config files that are not part of TS project
+babel.config.js
+jest.config.js
