@@ -15,15 +15,28 @@ WebsiteOS v2 – Unified frontend, backend, and editor stack.
 
 ## Getting Started
 
+### Install Dependencies
+This project now uses **pnpm** for dependency management. Ensure you have it installed globally:
+
 ```bash
-npm install
-npm run dev
+npm install -g pnpm
+```
+
+Then install dependencies:
+
+```bash
+pnpm install
+```
+
+### Run Dev Environment
+```bash
+pnpm dev
 ```
 
 ## Tests
 
-- Frontend unit tests: `npm test`
-- Frontend E2E: `npm run test:e2e`
+- Frontend unit tests: `pnpm test:unit`
+- Frontend E2E: `pnpm test:e2e`
 - Backend tests: `pytest`
 
 ## CI/CD

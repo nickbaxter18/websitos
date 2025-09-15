@@ -17,14 +17,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
 
-      - name: Enable problem matchers
-        uses: ./.github/actions/setup-matchers
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Cache pnpm
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Ensure no package-lock.json present
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "::error file=package-lock.json::package-lock.json should not exist. Please delete it and use pnpm-lock.yaml."
+            exit 1
+          fi
 
       - name: Install dependencies without updating lockfile
-        run: npm ci --ignore-scripts --legacy-peer-deps
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Check if package-lock.json is in sync
+      - name: Check if pnpm-lock.yaml is in sync
         run: |
-          git diff --exit-code package-lock.json || (echo "::error file=package-lock.json::Lockfile is out of sync with package.json. Run 'npm install' locally and commit the changes." && exit 1)
+          git diff --exit-code pnpm-lock.yaml || (echo "::error file=pnpm-lock.yaml::Lockfile is out of sync with package.json. Run 'pnpm install' locally and commit the changes." && exit 1)
