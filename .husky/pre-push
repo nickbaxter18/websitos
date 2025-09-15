@@ -2,5 +2,5 @@
 . "$(dirname "$0")/_/husky.sh"
 
 # Run lint and filtered unit tests before pushing
-pnpm run lint
-pnpm run jest --config=jest.config.js --ignorePatterns="tests/e2e/|WEBSITEOS/"
+pnpm exec eslint src v2 ops
+pnpm exec jest --config=jest.config.js --ignorePatterns="tests/e2e/|WEBSITEOS/"
