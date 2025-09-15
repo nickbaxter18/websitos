@@ -89,10 +89,10 @@
   "jest": {
     "preset": "ts-jest/presets/default-esm",
     "testEnvironment": "jsdom",
-    "extensionsToTreatAsEsm": [
-      ".ts",
-      ".tsx"
-    ],
+    "testEnvironmentOptions": {
+      "customExportConditions": ["node", "node-addons"]
+    },
+    "extensionsToTreatAsEsm": [".ts", ".tsx"],
     "transform": {
       "^.+\\.(ts|tsx)$": [
         "ts-jest",
@@ -102,17 +102,13 @@
       ]
     },
     "transformIgnorePatterns": [],
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
+    "testPathIgnorePatterns": [
+      "<rootDir>/tests/e2e/",
+      "<rootDir>/WEBSITEOS/tests/e2e/",
+      "<rootDir>/WEBSITEOS/tests/"
     ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/src/setupTests.ts"
-    ],
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1",
       "^v2/(.*)$": "<rootDir>/v2/$1",
