@@ -112,7 +112,8 @@
       "<rootDir>/tests/e2e/",
       "<rootDir>/WEBSITEOS/tests/",
       "<rootDir>/WEBSITEOS/v2/core/modules/special/",
-      "<rootDir>/WEBSITEOS/src/"
+      "<rootDir>/WEBSITEOS/src/",
+      "<rootDir>/WEBSITEOS/v2/tests/"
     ],
     "moduleFileExtensions": [
       "ts",
