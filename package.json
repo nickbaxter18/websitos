@@ -22,6 +22,7 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint src v2 ops",
     "lint:fix": "eslint src v2 ops --fix",
+    "lint-staged": "lint-staged",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "validate": "ts-node v2/core/schema-validator.ts",
