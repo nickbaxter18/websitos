@@ -1,7 +1,7 @@
-﻿import type { Request, Response } from "express";
-import Ajv2020 from "ajv/dist/2020"; // ✅ draft 2020-12 engine
+import type { Request, Response } from "express";
+import Ajv2020 from "ajv/dist/2020"; // ? draft 2020-12 engine
 import addFormats from "ajv-formats";
-import schema from "../schemas/events.v1.json" assert { type: "json" };
+import schema from "../schemas/events.v1.json" with { type: "json" };
 import { routeEvent } from "./router";
 
 // Ajv v8 configured for 2020-12

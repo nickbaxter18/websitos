@@ -1,4 +1,4 @@
-﻿import { QALog, Budgets } from "./types";
+import { QALog, Budgets } from "./types.js";
 
 export function qaChecks(budgets: Budgets, simulate: "none" | "access-fail" = "none"): QALog {
   const base: QALog = {

@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   flag: "prefetch",
   async apply(html: string) {
     const s = `<script>(function(){

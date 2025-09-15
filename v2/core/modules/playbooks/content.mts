@@ -6,7 +6,7 @@ export const Content = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["content"],
-  apply() {
+  async apply() {
     return await import("./content.json", { assert: { type: "json" } });
   },
   fallback() {

@@ -153,11 +153,22 @@
     <script>
       const API_KEY = "1f82a9f4a9d84b8db2d4f6c0e2c5a7b1";
 
+      // ✅ Safe fetch wrapper with error handling
       async function authFetch(url, options = {}) {
         options.headers = Object.assign({}, options.headers, { "x-api-key": API_KEY });
-        return fetch(url, options);
+        const res = await fetch(url, options);
+        if (!res.ok) {
+          let errMsg = `Request failed: ${res.status}`;
+          try {
+            const err = await res.json();
+            if (err.error) errMsg = err.error;
+          } catch (_) {}
+          throw new Error(errMsg);
+        }
+        return res;
       }
 
+      // ✅ CodeMirror setup
       const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
         theme: "dracula",
@@ -165,7 +176,7 @@
       editor.setSize("100%", "100%");
       let openFiles = {},
         activeFile = null,
-        lastTaskId = null;
+        lastTaskId = localStorage.getItem("lastTaskId");
 
       function detectMode(file) {
         if (!file) return "javascript";
@@ -179,34 +190,40 @@
         return "javascript";
       }
 
+      // === File Tree ===
       async function loadTree(dir = ".") {
-        const res = await authFetch("/list?dir=" + encodeURIComponent(dir));
-        const data = await res.json();
-        const container = document.createElement("div");
-        data.files.forEach((f) => {
-          const item = document.createElement("div");
-          item.dataset.name = f.name.toLowerCase();
-          item.dataset.type = f.type;
-          if (f.type === "dir") {
-            item.textContent = "📂 " + f.name;
-            item.className = "dir";
-            item.onclick = async () => {
-              if (item.nextSibling && item.nextSibling.classList.contains("nested"))
-                item.nextSibling.remove();
-              else {
-                const nested = await loadTree(data.dir + "/" + f.name);
-                nested.classList.add("nested");
-                item.after(nested);
-              }
-            };
-          } else {
-            item.textContent = "📄 " + f.name;
-            item.className = "file";
-            item.onclick = () => openFile(data.dir + "/" + f.name);
-          }
-          container.appendChild(item);
-        });
-        return container;
+        try {
+          const res = await authFetch("/list?dir=" + encodeURIComponent(dir));
+          const data = await res.json();
+          const container = document.createElement("div");
+          data.files.forEach((f) => {
+            const item = document.createElement("div");
+            item.dataset.name = f.name.toLowerCase();
+            item.dataset.type = f.type;
+            if (f.type === "dir") {
+              item.textContent = "📂 " + f.name;
+              item.className = "dir";
+              item.onclick = async () => {
+                if (item.nextSibling && item.nextSibling.classList.contains("nested"))
+                  item.nextSibling.remove();
+                else {
+                  const nested = await loadTree(data.dir + "/" + f.name);
+                  nested.classList.add("nested");
+                  item.after(nested);
+                }
+              };
+            } else {
+              item.textContent = "📄 " + f.name;
+              item.className = "file";
+              item.onclick = () => openFile(data.dir + "/" + f.name);
+            }
+            container.appendChild(item);
+          });
+          return container;
+        } catch (err) {
+          alert("Error loading file tree: " + err.message);
+          return document.createElement("div");
+        }
       }
 
       async function renderSidebar() {
@@ -215,26 +232,30 @@
         sidebar.appendChild(await loadTree("."));
       }
 
+      // === File Tabs ===
       async function openFile(path) {
         if (openFiles[path]) return setActiveTab(path);
-        const res = await authFetch("/file?path=" + encodeURIComponent(path));
-        if (!res.ok) return alert("File not found");
-        const data = await res.json();
-        const tab = document.createElement("div");
-        tab.className = "tab";
-        tab.textContent = path.split("/").pop();
-        const closeBtn = document.createElement("span");
-        closeBtn.textContent = "×";
-        closeBtn.className = "close";
-        closeBtn.onclick = (e) => {
-          e.stopPropagation();
-          closeTab(path);
-        };
-        tab.appendChild(closeBtn);
-        tab.onclick = () => setActiveTab(path);
-        document.getElementById("tabs").appendChild(tab);
-        openFiles[path] = { content: data.content, tabEl: tab };
-        setActiveTab(path);
+        try {
+          const res = await authFetch("/file?path=" + encodeURIComponent(path));
+          const data = await res.json();
+          const tab = document.createElement("div");
+          tab.className = "tab";
+          tab.textContent = path.split("/").pop();
+          const closeBtn = document.createElement("span");
+          closeBtn.textContent = "×";
+          closeBtn.className = "close";
+          closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            closeTab(path);
+          };
+          tab.appendChild(closeBtn);
+          tab.onclick = () => setActiveTab(path);
+          document.getElementById("tabs").appendChild(tab);
+          openFiles[path] = { content: data.content, tabEl: tab };
+          setActiveTab(path);
+        } catch (err) {
+          alert("Error opening file: " + err.message);
+        }
       }
 
       function setActiveTab(path) {
@@ -265,56 +286,73 @@
         }
       }
 
+      // === File Actions ===
       async function saveFile() {
         if (!activeFile) return alert("No file open");
-        const content = editor.getValue();
-        const res = await authFetch("/file", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: activeFile, content }),
-        });
-        const data = await res.json();
-        setStatus(data.message || "Saved!");
+        try {
+          const content = editor.getValue();
+          const res = await authFetch("/file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: activeFile, content }),
+          });
+          const data = await res.json();
+          setStatus(data.message || "Saved!");
+        } catch (err) {
+          alert("Save failed: " + err.message);
+        }
       }
 
       // === Cockpit Features ===
       async function promptNewFile() {
         const name = prompt("Enter new file path:");
         if (!name) return;
-        const res = await authFetch("/create/file", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: name }),
-        });
-        const data = await res.json();
-        setStatus(data.message);
-        renderSidebar();
+        try {
+          const res = await authFetch("/create/file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: name }),
+          });
+          const data = await res.json();
+          setStatus(data.message);
+          renderSidebar();
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
       }
 
       async function promptNewFolder() {
         const name = prompt("Enter new folder path:");
         if (!name) return;
-        const res = await authFetch("/create/folder", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: name }),
-        });
-        const data = await res.json();
-        setStatus(data.message);
-        renderSidebar();
+        try {
+          const res = await authFetch("/create/folder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: name }),
+          });
+          const data = await res.json();
+          setStatus(data.message);
+          renderSidebar();
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
       }
 
       async function promptDelete() {
         const target = prompt("Enter file/folder path to delete:");
         if (!target) return;
-        const res = await authFetch("/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: target, recursive: true }),
-        });
-        const data = await res.json();
-        setStatus(data.message);
-        renderSidebar();
+        try {
+          const res = await authFetch("/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: target, recursive: true }),
+          });
+          const data = await res.json();
+          setStatus(data.message);
+          renderSidebar();
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
       }
 
       async function promptMove() {
@@ -322,28 +360,36 @@
         if (!src) return;
         const dest = prompt("Enter destination path:");
         if (!dest) return;
-        const res = await authFetch("/move", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ src, dest }),
-        });
-        const data = await res.json();
-        setStatus(data.message);
-        renderSidebar();
+        try {
+          const res = await authFetch("/move", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ src, dest }),
+          });
+          const data = await res.json();
+          setStatus(data.message);
+          renderSidebar();
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
       }
 
       async function promptSearch() {
         const query = prompt("Enter search term:");
         if (!query) return;
-        const res = await authFetch("/search?query=" + encodeURIComponent(query));
-        const data = await res.json();
-        alert(
-          "Found " +
-            data.matches.length +
-            "\\n\\n" +
-            data.matches.map((m) => `${m.path}:${m.line} → ${m.text}`).join("\\n")
-        );
-        setStatus("Search complete");
+        try {
+          const res = await authFetch("/search?query=" + encodeURIComponent(query));
+          const data = await res.json();
+          alert(
+            "Found " +
+              data.matches.length +
+              "\n\n" +
+              data.matches.map((m) => `${m.path}:${m.line} → ${m.text}`).join("\n")
+          );
+          setStatus("Search complete");
+        } catch (err) {
+          alert("Search failed: " + err.message);
+        }
       }
 
       async function promptReplace() {
@@ -351,57 +397,80 @@
         if (!query) return;
         const replace = prompt("Replace with:");
         if (replace === null) return;
-        const res = await authFetch("/replace", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, replace }),
-        });
-        const data = await res.json();
-        setStatus(data.message || "Replace done");
+        try {
+          const res = await authFetch("/replace", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query, replace }),
+          });
+          const data = await res.json();
+          setStatus(data.message || "Replace done");
+        } catch (err) {
+          alert("Replace failed: " + err.message);
+        }
       }
 
       async function tailLogs() {
         const logPath = prompt("Enter log file path:");
         if (!logPath) return;
-        const res = await authFetch(`/logs/tail?path=${encodeURIComponent(logPath)}&lines=50`);
-        const data = await res.json();
-        alert("Last lines:\\n\\n" + (data.content || "No content"));
-        setStatus("Log tailed");
+        try {
+          const res = await authFetch(`/logs/tail?path=${encodeURIComponent(logPath)}&lines=50`);
+          const data = await res.json();
+          alert("Last lines:\n\n" + (data.content || "No content"));
+          setStatus("Log tailed");
+        } catch (err) {
+          alert("Log tail failed: " + err.message);
+        }
       }
 
+      // === Tasks ===
       async function startTask() {
         const cmd = prompt("Enter command to run:");
         if (!cmd) return;
-        const res = await authFetch("/task/start", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ command: cmd }),
-        });
-        const data = await res.json();
-        lastTaskId = data.taskId;
-        alert("Task started with ID: " + lastTaskId);
-        setStatus("Task started");
+        try {
+          const res = await authFetch("/task/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: cmd }),
+          });
+          const data = await res.json();
+          lastTaskId = data.taskId;
+          localStorage.setItem("lastTaskId", lastTaskId);
+          alert("Task started with ID: " + lastTaskId);
+          setStatus("Task started");
+        } catch (err) {
+          alert("Task start failed: " + err.message);
+        }
       }
 
       async function checkTaskStatus() {
         if (!lastTaskId) return alert("No task started yet");
-        const res = await authFetch(`/task/status?taskId=${encodeURIComponent(lastTaskId)}`);
-        const data = await res.json();
-        alert(`Status: ${data.status}\\n\\nSTDOUT:\\n${data.stdout}\\n\\nSTDERR:\\n${data.stderr}`);
-        setStatus("Task checked");
+        try {
+          const res = await authFetch(`/task/status?taskId=${encodeURIComponent(lastTaskId)}`);
+          const data = await res.json();
+          alert(`Status: ${data.status}\n\nSTDOUT:\n${data.stdout}\n\nSTDERR:\n${data.stderr}`);
+          setStatus("Task checked");
+        } catch (err) {
+          alert("Task status failed: " + err.message);
+        }
       }
 
       async function gitStatus() {
-        const res = await authFetch("/git/status");
-        const data = await res.json();
-        alert(data.stdout || data.stderr || "No output");
-        setStatus("Git status checked");
+        try {
+          const res = await authFetch("/git/status");
+          const data = await res.json();
+          alert(data.stdout || data.stderr || "No output");
+          setStatus("Git status checked");
+        } catch (err) {
+          alert("Git status failed: " + err.message);
+        }
       }
 
       function setStatus(msg) {
         document.getElementById("status").innerText = msg;
       }
 
+      // === File Search Filter ===
       document.getElementById("fileSearch").addEventListener("input", (e) => {
         const term = e.target.value.toLowerCase();
         document.querySelectorAll("#fileTree .file, #fileTree .dir").forEach((el) => {

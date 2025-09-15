@@ -1,4 +1,4 @@
-﻿import { SecLog } from "./types";
+import { SecLog } from "./types.js";
 
 export function secChecks(simulate: "none" | "secrets" | "cve" = "none"): SecLog {
   const base: SecLog = {

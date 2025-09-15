@@ -1,4 +1,4 @@
-﻿export type AnchorKind = "before" | "after" | "regex";
+export type AnchorKind = "before" | "after" | "regex";
 
 /** Resolve anchor into byte offsets using regex against file text. */
 export function resolveAnchor(source: string, anchor: string): { kind: AnchorKind; index: number } {

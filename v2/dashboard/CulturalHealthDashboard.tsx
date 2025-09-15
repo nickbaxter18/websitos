@@ -1,22 +1,16 @@
 import React, { useEffect, useState } from "react";
-import TrendAlerts from "./components/TrendAlerts";
-import CviGauge from "./components/CviGauge";
-import HealthChart from "./components/HealthChart";
-import CommitSelector from "./components/CommitSelector";
-import ComparisonTable from "./components/ComparisonTable";
-
-export interface HealthEntry {
-  id: string;
-  value: number;
-  status: string;
-  timestamp: string;
-}
+import TrendAlerts from "./components/TrendAlerts.js";
+import CviGauge from "./components/CviGauge.js";
+import HealthChart from "./components/HealthChart.js";
+import CommitSelector from "./components/CommitSelector.js";
+import ComparisonTable from "./components/ComparisonTable.js";
+import { CommitMetrics, CommitMetricsNullable } from "./types.js";
 
 export default function CulturalHealthDashboard() {
-  const [data, setData] = useState<HealthEntry[]>([]);
+  const [data, setData] = useState<CommitMetrics[]>([]);
   const [alerts, setAlerts] = useState<string[]>([]);
-  const [selectedCommit, setSelectedCommit] = useState<HealthEntry | null>(null);
-  const [compareCommit, setCompareCommit] = useState<HealthEntry | null>(null);
+  const [selectedCommit, setSelectedCommit] = useState<CommitMetricsNullable>(null);
+  const [compareCommit, setCompareCommit] = useState<CommitMetricsNullable>(null);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
 
   useEffect(() => {
@@ -33,8 +27,8 @@ export default function CulturalHealthDashboard() {
   async function fetchData() {
     try {
       const res = await fetch("/docs/meta/health-history.json");
-      const json: HealthEntry[] = await res.json();
-      const formatted: HealthEntry[] = json.map((entry) => ({
+      const json: CommitMetrics[] = await res.json();
+      const formatted: CommitMetrics[] = json.map((entry) => ({
         ...entry,
         timestamp: new Date(entry.timestamp).toLocaleString(),
       }));

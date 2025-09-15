@@ -1,4 +1,4 @@
-﻿import { partial } from "../render.js";
+import { partial } from "../render.js";
 export default {
   flag: "consent_mode",
   async apply(html: string) {

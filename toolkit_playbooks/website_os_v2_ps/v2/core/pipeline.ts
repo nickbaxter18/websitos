@@ -1,4 +1,4 @@
-﻿import flags from "../config/flags.json" assert { type: "json" };
+import flags from "../config/flags.json" with { type: "json" };
 import { readTemplates, writeOut, type Ctx } from "./render.js";
 import modules from "./modules/index.js";
 export async function buildPage(ctx: Ctx) {

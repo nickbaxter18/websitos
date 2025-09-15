@@ -1,4 +1,4 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -72,7 +72,7 @@ function main(){
   const secLog = {
     summary: { status: blocked ? "block" : "safe" },
     secrets: { found: [], status: "safe" as const },
-    deps: { highOrCritical: findings.map(f=>`${f.severity.toUpperCase()} ${f.name} — ${f.via}${f.fixAvailable?" (fix available)":""}`), status: blocked ? "block" : "safe" as const },
+    deps: { highOrCritical: findings.map(f=>`${f.severity.toUpperCase()} ${f.name} � ${f.via}${f.fixAvailable?" (fix available)":""}`), status: blocked ? "block" : "safe" as const },
     configs: { issues: [], status: "safe" as const },
     runtime: { https: true, headers: { csp: true, hsts: true }, status: "safe" as const }
   };
@@ -83,11 +83,11 @@ function main(){
   fs.writeFileSync(outFile, JSON.stringify(secLog,null,2));
 
   if (blocked) {
-    console.error(`❌ Dependency CVEs ≥ ${threshold.toUpperCase()} found (${findings.length}). Log: ${outFile}`);
+    console.error(`? Dependency CVEs = ${threshold.toUpperCase()} found (${findings.length}). Log: ${outFile}`);
     for (const f of findings.slice(0,12)) console.error(` - ${f.severity.toUpperCase()} ${f.name}: ${f.via}`);
     process.exitCode = 2;
   } else {
-    console.log(`✅ No CVEs ≥ ${threshold.toUpperCase()} detected. Log: ${outFile}`);
+    console.log(`? No CVEs = ${threshold.toUpperCase()} detected. Log: ${outFile}`);
   }
 }
 

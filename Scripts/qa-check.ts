@@ -1,4 +1,4 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 
@@ -97,7 +97,7 @@ function main(){
     } else if (JSON_EXT.has(ext)){
       checkJSON(fp);
     }
-    if (VERBOSE && filesScanned % 400 === 0) console.error(`scanned ${filesScanned} files…`);
+    if (VERBOSE && filesScanned % 400 === 0) console.error(`scanned ${filesScanned} files�`);
   }
 
   const { options } = getCompilerSetup(ROOT);
@@ -122,9 +122,9 @@ function main(){
   fs.writeFileSync(outFile, JSON.stringify(qaLog,null,2));
 
   if (summaryStatus === "pass"){
-    console.log(`✅ QA pass. Log: ${outFile}  (scanned ~${filesScanned} files)`);
+    console.log(`? QA pass. Log: ${outFile}  (scanned ~${filesScanned} files)`);
   } else {
-    console.error(`❌ QA fail. Log: ${outFile}`);
+    console.error(`? QA fail. Log: ${outFile}`);
     if (syntaxNotes.length) console.error(` - syntax errors: ${syntaxNotes.length}`);
     if (jsonNotes.length) console.error(` - invalid json: ${jsonNotes.length}`);
     process.exitCode = 2;

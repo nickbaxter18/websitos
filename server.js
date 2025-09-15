@@ -1,5 +1,5 @@
-// ✅ Entry point
-const { createApp } = require("./backend");
+// ✅ Entry point with ES Modules
+import { createApp } from "./backend/index.js"; // must include .js extension
 
 const app = createApp();
 const PORT = process.env.PORT || 4000;

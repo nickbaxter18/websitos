@@ -1,6 +1,6 @@
 import React from "react";
-import NavigationMenu from "./Navbar";
-import Footer from "./Footer";
+import NavigationMenu from "./Navbar.js";
+import Footer from "./Footer.js";
 
 interface LayoutProps {
   children: React.ReactNode;

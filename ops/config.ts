@@ -1,4 +1,4 @@
-﻿import { Budgets, Profile } from "./types";
+import { Budgets, Profile } from "./types.js";
 
 export const DEFAULT_PROFILE: Profile = "Balanced";
 

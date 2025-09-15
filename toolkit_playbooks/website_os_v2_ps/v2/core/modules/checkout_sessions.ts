@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   flag: "checkout_sessions",
   async apply(html: string) {
     const s = `<script>(function(){

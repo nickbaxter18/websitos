@@ -1,4 +1,4 @@
-﻿export interface DevReport {
+export interface DevReport {
   build: { status: "pass" | "fail" | "skipped"; durationSec: number };
   container: { scan: "pass" | "fail" | "skipped"; cves: string[] };
   deploy: {

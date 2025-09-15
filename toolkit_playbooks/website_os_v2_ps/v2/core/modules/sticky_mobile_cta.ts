@@ -1,4 +1,4 @@
-﻿import { partial } from "../render.js";
+import { partial } from "../render.js";
 export default {
   flag: "sticky_mobile_cta",
   async apply(html: string) {

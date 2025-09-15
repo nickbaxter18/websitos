@@ -1,4 +1,4 @@
-﻿import fs from "fs";
+import fs from "fs";
 import path from "path";
 export type Ctx = { product?: any; persona?: any; tenant?: string; locale?: string };
 const root = path.resolve(process.cwd(), "v2");

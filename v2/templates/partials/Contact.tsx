@@ -1,5 +1,5 @@
 import React from "react";
-import Layout from "../partials/Layout";
+import Layout from "../partials/Layout.js";
 
 export default function Contact() {
   return (

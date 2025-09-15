@@ -1,18 +1,9 @@
 import React from "react";
-import { HealthEntry } from "../CulturalHealthDashboard";
-
-interface CommitMetrics extends HealthEntry {
-  diversity: number;
-  coherence: number;
-  resilience: number;
-  beauty: number;
-  cvi: number;
-  commit: string;
-}
+import { CommitMetrics, CommitMetricsNullable } from "../types.js";
 
 interface ComparisonTableProps {
-  selectedCommit: CommitMetrics | null;
-  compareCommit: CommitMetrics | null;
+  selectedCommit: CommitMetricsNullable;
+  compareCommit: CommitMetricsNullable;
 }
 
 export default function ComparisonTable({
@@ -20,6 +11,12 @@ export default function ComparisonTable({
   compareCommit,
 }: ComparisonTableProps) {
   if (!selectedCommit || !compareCommit) return null;
+  const sc = selectedCommit;
+  const cc = compareCommit;
+
+  function safeToFixed(value: unknown): string {
+    return typeof value === "number" ? value.toFixed(2) : Number(value).toFixed(2);
+  }
 
   function renderDelta(current: number, previous: number) {
     const diff = current - previous;
@@ -35,20 +32,14 @@ export default function ComparisonTable({
 
   function exportComparisonJSON() {
     const comparison = {
-      from: compareCommit.commit,
-      to: selectedCommit.commit,
+      from: cc.commit,
+      to: sc.commit,
       changes: {
-        diversity: (
-          selectedCommit.diversity - compareCommit.diversity
-        ).toFixed(2),
-        coherence: (
-          selectedCommit.coherence - compareCommit.coherence
-        ).toFixed(2),
-        resilience: (
-          selectedCommit.resilience - compareCommit.resilience
-        ).toFixed(2),
-        beauty: (selectedCommit.beauty - compareCommit.beauty).toFixed(2),
-        cvi: (selectedCommit.cvi - compareCommit.cvi).toFixed(2),
+        diversity: safeToFixed(sc.diversity - cc.diversity),
+        coherence: safeToFixed(sc.coherence - cc.coherence),
+        resilience: safeToFixed(sc.resilience - cc.resilience),
+        beauty: safeToFixed(sc.beauty - cc.beauty),
+        cvi: safeToFixed(sc.cvi - cc.cvi),
       },
     };
 
@@ -58,10 +49,7 @@ export default function ComparisonTable({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `cultural-comparison-${compareCommit.commit.slice(
-      0,
-      7
-    )}-to-${selectedCommit.commit.slice(0, 7)}.json`;
+    a.download = `cultural-comparison-${cc.commit.slice(0, 7)}-to-${sc.commit.slice(0, 7)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -71,12 +59,12 @@ export default function ComparisonTable({
     const rows = ["diversity", "coherence", "resilience", "beauty", "cvi"].map(
       (metric) => [
         metric,
-        compareCommit[metric as keyof CommitMetrics].toFixed(2),
-        selectedCommit[metric as keyof CommitMetrics].toFixed(2),
-        (
-          selectedCommit[metric as keyof CommitMetrics] -
-          compareCommit[metric as keyof CommitMetrics]
-        ).toFixed(2),
+        safeToFixed(cc[metric as keyof CommitMetrics]),
+        safeToFixed(sc[metric as keyof CommitMetrics]),
+        safeToFixed(
+          (sc[metric as keyof CommitMetrics] as number) -
+            (cc[metric as keyof CommitMetrics] as number)
+        ),
       ]
     );
     const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
@@ -85,10 +73,7 @@ export default function ComparisonTable({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `cultural-comparison-${compareCommit.commit.slice(
-      0,
-      7
-    )}-to-${selectedCommit.commit.slice(0, 7)}.csv`;
+    a.download = `cultural-comparison-${cc.commit.slice(0, 7)}-to-${sc.commit.slice(0, 7)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -110,16 +95,12 @@ export default function ComparisonTable({
             (metric) => (
               <tr key={metric}>
                 <td className="p-2 capitalize">{metric}</td>
-                <td className="p-2">
-                  {compareCommit[metric as keyof CommitMetrics].toFixed(2)}
-                </td>
-                <td className="p-2">
-                  {selectedCommit[metric as keyof CommitMetrics].toFixed(2)}
-                </td>
+                <td className="p-2">{safeToFixed(cc[metric as keyof CommitMetrics])}</td>
+                <td className="p-2">{safeToFixed(sc[metric as keyof CommitMetrics])}</td>
                 <td className="p-2">
                   {renderDelta(
-                    selectedCommit[metric as keyof CommitMetrics],
-                    compareCommit[metric as keyof CommitMetrics]
+                    sc[metric as keyof CommitMetrics] as number,
+                    cc[metric as keyof CommitMetrics] as number
                   )}
                 </td>
               </tr>

@@ -1,7 +1,7 @@
-﻿import fs from "node:fs";
-import { EditCommand, EditorEntry } from "./types";
-import { resolveAnchor } from "./anchors";
-import { readText, backupFile, writeText } from "./fileops";
+import fs from "node:fs";
+import { EditCommand, EditorEntry } from "./types.js";
+import { resolveAnchor } from "./anchors.js";
+import { readText, backupFile, writeText } from "./fileops.js";
 
 function appendLedger(entry: EditorEntry) {
   const path = ".editor-diff-log.json";

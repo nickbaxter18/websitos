@@ -1,12 +1,8 @@
 import React from "react";
-import { HealthEntry } from "../CulturalHealthDashboard";
-
-interface CommitMetrics extends HealthEntry {
-  cvi: number;
-}
+import { CommitMetricsNullable } from "../types.js";
 
 interface CviGaugeProps {
-  selectedCommit: CommitMetrics | null;
+  selectedCommit: CommitMetricsNullable;
 }
 
 export default function CviGauge({ selectedCommit }: CviGaugeProps) {

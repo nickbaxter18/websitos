@@ -1,12 +1,12 @@
 import React from "react";
-import { HealthEntry } from "../CulturalHealthDashboard";
+import { CommitMetrics } from "../types.js";
 
 interface CommitSelectorProps {
-  data: HealthEntry[];
-  selectedCommit: HealthEntry | null;
-  setSelectedCommit: (commit: HealthEntry | null) => void;
-  compareCommit: HealthEntry | null;
-  setCompareCommit: (commit: HealthEntry | null) => void;
+  data: CommitMetrics[];
+  selectedCommit: CommitMetrics | null;
+  setSelectedCommit: (commit: CommitMetrics | null) => void;
+  compareCommit: CommitMetrics | null;
+  setCompareCommit: (commit: CommitMetrics | null) => void;
 }
 
 export default function CommitSelector({

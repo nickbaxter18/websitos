@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   flag: "server_tagging",
   async apply(html: string) {
     const s = `<script>(function(){

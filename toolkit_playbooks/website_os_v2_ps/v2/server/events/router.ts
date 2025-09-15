@@ -1,4 +1,4 @@
-﻿export function routeEvent(e: any) {
+export function routeEvent(e: any) {
   switch (e.type) {
     case "lead_submit":
       return sendSequence("lead_capture", e);

@@ -8,7 +8,7 @@ export const ChurnSurveyTemplate = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["churn", "survey", "template"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {

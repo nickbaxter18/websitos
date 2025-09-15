@@ -8,7 +8,7 @@ export const ContentMarketingPlaybook = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["content", "marketing", "playbook"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {

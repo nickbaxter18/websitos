@@ -1,4 +1,4 @@
-﻿import helmet from "helmet";
+import helmet from "helmet";
 import type { Request, Response, NextFunction } from "express";
 
 /**

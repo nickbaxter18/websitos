@@ -8,7 +8,7 @@ export const ChatbotPlaybook = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["chatbot", "playbook"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {

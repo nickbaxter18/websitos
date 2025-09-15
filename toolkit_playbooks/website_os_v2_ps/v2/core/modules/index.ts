@@ -1,4 +1,4 @@
-﻿import type { Ctx } from "../render.js";
+import type { Ctx } from "../render.js";
 type M = { flag: string; apply: (html: string, ctx: Ctx) => Promise<string> };
 
 import lead from "./lead.js";

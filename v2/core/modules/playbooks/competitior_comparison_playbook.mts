@@ -8,7 +8,7 @@ export const CompetitiorComparisonPlaybook = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["competitior", "comparison", "playbook"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {

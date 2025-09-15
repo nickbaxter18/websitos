@@ -8,7 +8,7 @@ export const CrmAutomationPlaybook = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["crm", "automation", "playbook"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {

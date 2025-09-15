@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   flag: "pwa_offline",
   async apply(html: string) {
     return html.replace(

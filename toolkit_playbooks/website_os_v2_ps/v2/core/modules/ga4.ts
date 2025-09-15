@@ -1,4 +1,4 @@
-﻿import { partial } from "../render.js";
+import { partial } from "../render.js";
 export default {
   flag: "ga4_events",
   async apply(html: string) {

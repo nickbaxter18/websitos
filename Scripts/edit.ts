@@ -1,4 +1,4 @@
-﻿import { stageAndApply } from "../ops/editorops";
+import { stageAndApply } from "../ops/editorops";
 
 const args = process.argv;
 const type = args[2] as "insert" | "append" | "replace" | "full-rewrite";
@@ -13,9 +13,9 @@ if (!type || !file) {
 
 try {
   const { entry, backupPath } = stageAndApply({ type, file, anchors: anchor ? [anchor] : [], payload });
-  console.log("✅ Edit applied:", JSON.stringify(entry, null, 2));
-  console.log("🛟 Backup:", backupPath);
+  console.log("? Edit applied:", JSON.stringify(entry, null, 2));
+  console.log("?? Backup:", backupPath);
 } catch (e) {
-  console.error("❌ Edit failed:", e instanceof Error ? e.message : e);
+  console.error("? Edit failed:", e instanceof Error ? e.message : e);
   process.exit(2);
 }

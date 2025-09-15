@@ -1,4 +1,4 @@
-﻿import { HarmonyDecision, Profile, QALog, SecLog } from "./types";
+import { HarmonyDecision, Profile, QALog, SecLog } from "./types.js";
 
 export function decide(
   profile: Profile,

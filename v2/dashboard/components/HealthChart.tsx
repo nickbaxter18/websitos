@@ -10,22 +10,10 @@ import {
   ResponsiveContainer,
   ReferenceArea,
 } from "recharts";
-import { HealthEntry } from "../CulturalHealthDashboard";
-
-interface HealthMetrics extends HealthEntry {
-  diversity: number;
-  coherence: number;
-  resilience: number;
-  beauty: number;
-  cvi: number;
-  diversity_avg?: number;
-  coherence_avg?: number;
-  resilience_avg?: number;
-  beauty_avg?: number;
-}
+import { CommitMetrics } from "../types.js";
 
 interface HealthChartProps {
-  data: HealthMetrics[];
+  data: CommitMetrics[];
 }
 
 export default function HealthChart({ data }: HealthChartProps) {
@@ -37,7 +25,7 @@ export default function HealthChart({ data }: HealthChartProps) {
   if (data.length >= 2) {
     const last = data[data.length - 1];
     const prev = data[data.length - 2];
-    const metrics: (keyof HealthMetrics)[] = [
+    const metrics: (keyof CommitMetrics)[] = [
       "diversity",
       "coherence",
       "resilience",
@@ -46,7 +34,7 @@ export default function HealthChart({ data }: HealthChartProps) {
 
     const avgChange =
       metrics.reduce((acc, metric) => {
-        return acc + ((last[metric] ?? 0) - (prev[metric] ?? 0));
+        return acc + (Number(last[metric] ?? 0) - Number(prev[metric] ?? 0));
       }, 0) / metrics.length;
 
     if (avgChange > 0.1) {

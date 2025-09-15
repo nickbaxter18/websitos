@@ -8,7 +8,7 @@ export const CommunityEngagementPlaybook = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["community", "engagement", "playbook"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {

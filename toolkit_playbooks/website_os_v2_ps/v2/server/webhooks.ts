@@ -1,4 +1,4 @@
-﻿import type { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Stripe from "stripe";
 import fs from "fs";
 import path from "path";

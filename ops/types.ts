@@ -1,4 +1,4 @@
-﻿export type QAStatus = "pass" | "warn" | "fail";
+export type QAStatus = "pass" | "warn" | "fail";
 export type SecStatus = "safe" | "warn" | "block";
 export type HarmonyDecision = "approved" | "blocked";
 export type Profile = "Strict" | "Balanced" | "Fast";

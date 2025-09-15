@@ -8,7 +8,7 @@ export const Codes = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["codes"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {

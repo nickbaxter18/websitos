@@ -1,4 +1,4 @@
-﻿import { resolveAnchor } from "../ops/anchors";
+import { resolveAnchor } from "../ops/anchors";
 import fs from "node:fs";
 
 const file = process.argv[2];

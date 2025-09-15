@@ -1,4 +1,4 @@
-﻿export function pickOrderBump(product: { price: number }) {
+export function pickOrderBump(product: { price: number }) {
   return product && product.price <= 29 ? "ai_spark_starter" : "quick_win_addon";
 }
 export default {

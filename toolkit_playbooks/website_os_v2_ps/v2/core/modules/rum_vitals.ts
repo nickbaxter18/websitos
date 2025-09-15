@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   flag: "rum_vitals",
   async apply(html: string) {
     const s = `<script src="https://unpkg.com/web-vitals@4/dist/web-vitals.umd.js" defer onload="

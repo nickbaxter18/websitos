@@ -1,23 +1,14 @@
-// Stubbed API client for CI
-
-export type HealthResponse = {
-  ok: boolean;
-};
-
-export type StatusResponse = {
-  ok: boolean;
-  version: string;
-  uptime: string;
-};
-
-export async function getApiHealth(): Promise<HealthResponse> {
-  return { ok: true };
+export async function getApiHealth(): Promise<IHealthResponse> {
+  const res = await fetch("/api/health");
+  return res.json();
 }
 
-export async function getRootHealth(): Promise<HealthResponse> {
-  return { ok: true };
+export async function getRootHealth(): Promise<IHealthResponse> {
+  const res = await fetch("/health");
+  return res.json();
 }
 
-export async function getApiStatus(): Promise<StatusResponse> {
-  return { ok: true, version: "1.0.0", uptime: "100%" };
+export async function getApiStatus(): Promise<IStatusResponse> {
+  const res = await fetch("/api/status");
+  return res.json();
 }

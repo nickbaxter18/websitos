@@ -1,4 +1,4 @@
-export { stageAndApply as stageDiff } from "./editorops";
+export { stageAndApply as stageDiff } from "./editorops.js";
 
 // Temporary stub for CI until implemented properly
 export function runCycle() {

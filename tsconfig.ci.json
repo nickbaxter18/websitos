@@ -4,7 +4,16 @@
     "noEmit": true,
     "skipLibCheck": true,
     "strict": true,
-    "pretty": false
+    "pretty": false,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force"
   },
-  "include": ["src", "v2", "ops"]
+  "include": ["src", "v2", "ops", "global.d.ts"],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

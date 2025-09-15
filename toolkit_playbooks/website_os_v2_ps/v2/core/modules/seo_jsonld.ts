@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   flag: "seo_jsonld",
   async apply(html: string, ctx: any) {
     const p = ctx?.product || {

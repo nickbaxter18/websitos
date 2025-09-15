@@ -1,5 +1,5 @@
-﻿import fs from "node:fs";
-import { QALog, SecLog, HarmonyLog } from "./types";
+import fs from "node:fs";
+import { QALog, SecLog, HarmonyLog } from "./types.js";
 
 export function writeQA(path: string, qa: QALog) {
   fs.writeFileSync(path, JSON.stringify(qa, null, 2));

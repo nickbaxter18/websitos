@@ -8,7 +8,7 @@ export const BoardInvestorReport = {
   archetype: "playbook",
   myth_alignment: "growth",
   cultural_tags: ["board", "investor", "report"],
-  apply() {
+  async apply() {
     return template;
   },
   fallback() {
