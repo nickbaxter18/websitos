@@ -26,7 +26,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+
+      - name: Cache pip wheels
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Enable problem matchers
         continue-on-error: true
@@ -40,7 +47,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install --prefer-binary -r requirements.txt || pip install --prefer-binary -r requirements.txt
           pip install pytest pytest-json-report mypy black types-requests types-setuptools types-PyYAML pytest-github-actions-annotate-failures || true
 
       - name: Run ${{ matrix.task }}

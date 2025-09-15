@@ -36,7 +36,7 @@ jobs:
           echo "::add-matcher::.github/matchers/generic-errors.json"
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci || npm ci
 
       - name: Run ${{ matrix.task }}
         run: |
@@ -93,10 +93,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci || npm ci
 
       - name: Build frontend
-        run: npm run build
+        run: npm run build -- --strict
 
       - name: Upload frontend artifacts
         if: failure()
@@ -124,7 +124,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci || npm ci
 
       - name: Run Playwright tests
         run: npm run test:e2e
