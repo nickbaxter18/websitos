@@ -23,6 +23,9 @@ jobs:
           submodules: false
           persist-credentials: false
 
+      - name: Load default env file
+        run: cp .env.example .env
+
       - name: Enable problem matchers
         run: echo "::add-matcher::.github/matchers/error.json"
 

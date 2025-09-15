@@ -24,6 +24,9 @@ jobs:
           submodules: false
           persist-credentials: false
 
+      - name: Load default env file
+        run: cp .env.example .env
+
       - name: Enable problem matchers
         run: |
           echo "::add-matcher::.github/matchers/error.json"
@@ -54,13 +57,6 @@ jobs:
           echo "::group:: Validating Environment"
           if ! pnpm validate-env; then
             echo "::error file=src/validateEnv.ts::Environment validation failed - missing or invalid variable detected"
-            if [ -f .env.example ]; then
-              while read -r var; do
-                if ! grep -q "^$var=" .env 2>/dev/null; then
-                  echo "::error file=src/validateEnv.ts::Missing environment variable: $var"
-                fi
-              done < <(grep -v '^#' .env.example | cut -d= -f1)
-            fi
             exit 1
           fi
           echo "::endgroup::"
@@ -70,9 +66,6 @@ jobs:
           echo "::group:: Validating Schema"
           if ! pnpm validate; then
             echo "::error file=v2/core/schema-validator.ts::Schema validation failed - invalid schema definition"
-            if [ -f config/schema.json ]; then
-              echo "::warning file=v2/core/schema-validator.ts::Check config/schema.json for missing or invalid keys"
-            fi
             exit 1
           fi
           echo "::endgroup::"
