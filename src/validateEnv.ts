@@ -1,4 +1,4 @@
-/// <reference path="./vite-env.d.ts" />
+import "./vite-env.d.ts";
 
 import { z } from "zod";
 

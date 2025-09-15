@@ -8,7 +8,9 @@ function appendLedger(entry: EditorEntry) {
   let cur: { entries: EditorEntry[] } = { entries: [] };
   try {
     cur = JSON.parse(fs.readFileSync(path, "utf8"));
-  } catch {}
+  } catch {
+    // ignore errors while reading or parsing existing log file
+  }
   if (!Array.isArray(cur.entries)) cur.entries = [];
   cur.entries.push(entry);
   fs.writeFileSync(path, JSON.stringify(cur, null, 2));

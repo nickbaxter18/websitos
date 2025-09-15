@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 // Props for Card
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+type CardProps = React.HTMLAttributes<HTMLDivElement>;
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, ...props }, ref) => {
   return (
@@ -16,7 +16,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, ...props 
 Card.displayName = "Card";
 
 // Props for CardContent
-export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+type CardContentProps = React.HTMLAttributes<HTMLDivElement>;
 
 const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, ...props }, ref) => {
