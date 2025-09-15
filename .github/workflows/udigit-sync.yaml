@@ -25,10 +25,12 @@ jobs:
           EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
 
       - name: Probe ingest API endpoint
+        continue-on-error: true
         env:
           INGEST_API_URL: https://websitos2.onrender.com/ingest_file
         run: |
           echo "🔎 Probing ingest API..."
+          touch response.txt
           for i in 1 2 3; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$INGEST_API_URL" || echo "000")
             echo "Probe returned status: $STATUS"
@@ -40,8 +42,7 @@ jobs:
             sleep $((5 * i))
           done
           if [ "$STATUS" -ne 200 ]; then
-            echo "⚠️ Ingest API not reachable after retries (status $STATUS). Skipping sync."
-            echo "::notice file=.github/workflows/udigit-sync.yaml::Ingest skipped because API unreachable"
+            echo "::notice file=.github/workflows/udigit-sync.yaml::Sync skipped – API unreachable (status $STATUS)"
             exit 0
           fi
 
@@ -64,9 +65,11 @@ jobs:
             -x "__pycache__/*"
 
       - name: Upload snapshot to U-DIG IT ingest API (with debug)
+        continue-on-error: true
         env:
           INGEST_API_URL: https://websitos2.onrender.com/ingest_file
         run: |
+          touch response.txt
           echo "🔎 Sending request with EDITOR_API_KEY..."
           RESPONSE=$(curl -v -s -o response.txt -w "%{http_code}" -X POST "$INGEST_API_URL" \
             -H "x-api-key: ${{ secrets.EDITOR_API_KEY }}" \
@@ -78,9 +81,16 @@ jobs:
           cat response.txt || echo "(no body)"
 
           if [ "$RESPONSE" -ne 200 ]; then
-            echo "⚠️ U-DIG IT ingest API returned error (status $RESPONSE). Skipping without failing."
-            echo "::notice file=.github/workflows/udigit-sync.yaml::Ingest skipped because API returned $RESPONSE"
+            echo "::notice file=.github/workflows/udigit-sync.yaml::Ingest skipped – API returned $RESPONSE"
             exit 0
           else
             echo "✅ Sync successful"
           fi
+
+      - name: Upload sync logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-logs
+          path: response.txt
+          retention-days: 14

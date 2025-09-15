@@ -55,7 +55,8 @@ jobs:
               echo "::warning file=frontend/src::eslint-report.json missing, lint run may have crashed"
             fi
           elif [ "${{ matrix.task }}" == "type-check" ]; then
-            npx tsc -p tsconfig.json --noEmit --pretty false || EXIT=$?
+            touch tsc-report.txt
+            npx tsc -p tsconfig.ci.json --noEmit --pretty false > tsc-report.txt 2>&1 || EXIT=$?
           elif [ "${{ matrix.task }}" == "prettier" ]; then
             npx prettier --check . | sed 's/^/::warning::/' || true
           fi
@@ -77,6 +78,14 @@ jobs:
         with:
           name: frontend-eslint-results
           path: eslint-report.json
+          retention-days: 14
+
+      - name: Upload TypeScript report artifact
+        if: always() && matrix.task == 'type-check'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-tsc-report
+          path: tsc-report.txt
           retention-days: 14
 
   build:
@@ -108,6 +117,7 @@ jobs:
             coverage/coverage-summary.json
             jest-report.json
             eslint-report.json
+            tsc-report.txt
           retention-days: 14
 
   e2e:
