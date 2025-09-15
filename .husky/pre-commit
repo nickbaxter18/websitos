@@ -3,10 +3,10 @@
 echo "✅ Husky pre-commit running..."
 
 # Run lint-staged (prettier + eslint on staged files)
-npx lint-staged --config package.json || true
+pnpm lint-staged --config package.json || true
 
 # Optionally run type check and tests (uncomment if needed)
-# npm run type-check
-# npm test
+# pnpm type-check
+# pnpm test
 
 exit 0

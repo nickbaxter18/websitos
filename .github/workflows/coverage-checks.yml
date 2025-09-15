@@ -35,7 +35,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
+
+      - name: Setup pnpm (for frontend)
+        if: matrix.task == 'frontend'
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Cache pnpm (for frontend)
+        if: matrix.task == 'frontend'
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Setup Python (for backend)
         if: matrix.task == 'backend'
@@ -54,7 +66,7 @@ jobs:
 
       - name: Install frontend dependencies
         if: matrix.task == 'frontend'
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: Install backend dependencies
         if: matrix.task == 'backend'
@@ -67,7 +79,7 @@ jobs:
         if: matrix.task == 'frontend'
         run: |
           echo "::group:: Running Jest coverage"
-          npm run test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
+          pnpm test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
           echo "::endgroup::"
           if [ -f coverage/coverage-summary.json ]; then
             node -e "const s=require('./coverage/coverage-summary.json'); let failed=0; Object.entries(s.total).forEach(([k,v])=>{ if(v.pct<80){console.log('::error file=frontend/'+k+'::Coverage only '+v.pct+'%, below threshold'); failed=1}}); process.exit(failed)"
