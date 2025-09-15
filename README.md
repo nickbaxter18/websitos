@@ -3,6 +3,7 @@
 ![Frontend CI](https://github.com/nickbaxter18/websitos/actions/workflows/frontend-checks.yml/badge.svg)
 ![Backend CI](https://github.com/nickbaxter18/websitos/actions/workflows/backend-checks.yml/badge.svg)
 ![Coverage Checks](https://github.com/nickbaxter18/websitos/actions/workflows/coverage-checks.yml/badge.svg)
+![Sync](https://github.com/nickbaxter18/websitos/actions/workflows/udigit-sync.yaml/badge.svg)
 ![PR Summary](https://github.com/nickbaxter18/websitos/actions/workflows/pr-summary.yml/badge.svg)
 ![Render Deploy](https://github.com/nickbaxter18/websitos/actions/workflows/render-deploy.yml/badge.svg)
 [![Deploy Now](https://img.shields.io/badge/Deploy-Now-brightgreen)](https://github.com/nickbaxter18/websitos/actions/workflows/render-deploy.yml)
@@ -30,6 +31,7 @@ npm run dev
 - Frontend CI runs linting, build, Jest, and Playwright smoke tests.
 - Backend CI runs Black, mypy, pytest, and API smoke tests.
 - Coverage workflow enforces **80% minimum coverage** for both frontend and backend.
+- Sync workflow uploads repo snapshot to U-DIG IT ingest API.
 - PR Summary workflow posts CI diagnostics to pull requests.
 - **Render Deploy workflow** uses `RENDER_DEPLOY_HOOK` to trigger a deploy of the service on Render.
 - After deploy, **smoke tests** validate:
