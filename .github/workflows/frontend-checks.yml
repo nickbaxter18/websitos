@@ -55,7 +55,7 @@ jobs:
               echo "::warning file=frontend/src::eslint-report.json missing, lint run may have crashed"
             fi
           elif [ "${{ matrix.task }}" == "type-check" ]; then
-            npx tsc --noEmit --pretty false || EXIT=$?
+            npx tsc -p tsconfig.json --noEmit --pretty false || EXIT=$?
           elif [ "${{ matrix.task }}" == "prettier" ]; then
             npx prettier --check . | sed 's/^/::warning::/' || true
           fi

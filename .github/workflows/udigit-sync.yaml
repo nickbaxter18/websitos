@@ -41,7 +41,8 @@ jobs:
           done
           if [ "$STATUS" -ne 200 ]; then
             echo "⚠️ Ingest API not reachable after retries (status $STATUS). Skipping sync."
-            exit 78 # mark skipped
+            echo "::notice file=.github/workflows/udigit-sync.yaml::Ingest skipped because API unreachable"
+            exit 0
           fi
 
       - name: Download repo archive
@@ -78,7 +79,8 @@ jobs:
 
           if [ "$RESPONSE" -ne 200 ]; then
             echo "⚠️ U-DIG IT ingest API returned error (status $RESPONSE). Skipping without failing."
-            exit 78 # mark skipped
+            echo "::notice file=.github/workflows/udigit-sync.yaml::Ingest skipped because API returned $RESPONSE"
+            exit 0
           else
             echo "✅ Sync successful"
           fi

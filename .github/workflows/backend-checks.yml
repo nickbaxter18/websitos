@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "::add-matcher::.github/matchers/error.json"
-          echo "::add-matcher::.github/matchers/python.json"
+          echo "::add-matcher::.github/matchers/python.json || true"
           echo "::add-matcher::.github/matchers/pytest.json"
           echo "::add-matcher::.github/matchers/mypy.json"
           echo "::add-matcher::.github/matchers/generic-errors.json"
