@@ -1,5 +1,6 @@
 import React, { PropsWithChildren } from "react";
 import { render, screen } from "@testing-library/react";
+import { jest } from "@jest/globals";
 import Dashboard from "@/pages/Dashboard";
 
 jest.mock("recharts", () => ({
