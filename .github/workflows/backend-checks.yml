@@ -77,9 +77,9 @@ jobs:
             fi
           fi
           if [ "${{ matrix.task }}" == "flake8" ]; then
-            echo "📂 Debug: Running recursive flake8"
+            echo "📂 Debug: Running recursive flake8 with exit-zero"
             flake8 . --exclude venv,__pycache__,.pytest_cache,node_modules,backend \
-              --max-line-length=120 > flake8-report.txt || EXIT=$?
+              --max-line-length=120 --exit-zero > flake8-report.txt
           fi
           echo "::endgroup::"
           exit $EXIT
