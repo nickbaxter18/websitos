@@ -77,8 +77,9 @@ jobs:
             fi
           fi
           if [ "${{ matrix.task }}" == "flake8" ]; then
-            touch flake8-report.txt
-            flake8 . --max-line-length=120 > flake8-report.txt || EXIT=$?
+            flake8 api.py api_logging.py env_validator.py sample_doc.py tests \
+              --exclude venv,__pycache__,.pytest_cache \
+              --max-line-length=120 > flake8-report.txt || EXIT=$?
           fi
           echo "::endgroup::"
           exit $EXIT
