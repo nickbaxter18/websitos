@@ -26,6 +26,17 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Cache pnpm
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -33,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --legacy-peer-deps
+          pnpm install --frozen-lockfile
           python -m pip install --upgrade pip
           pip install --prefer-binary -r requirements.txt
           pip install pytest pytest-github-actions-annotate-failures
@@ -41,7 +52,7 @@ jobs:
       - name: Run Ops Cycle
         run: |
           echo "::group:: Running Ops Cycle"
-          if ! npm run opscycle; then
+          if ! pnpm opscycle; then
             echo "::error file=ops/scripts/opsCycle.ts::Ops cycle failed"
             exit 1
           fi
@@ -50,7 +61,7 @@ jobs:
       - name: Run Security Scan
         run: |
           echo "::group:: Running Security Scan"
-          if ! npm run secscan; then
+          if ! pnpm secscan; then
             echo "::warning file=scripts/scan-secrets.ts::Security scan flagged issues"
             exit 0
           fi

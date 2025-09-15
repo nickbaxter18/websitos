@@ -30,13 +30,24 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Cache pnpm
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: Validate Environment
         run: |
           echo "::group:: Validating Environment"
-          if ! npm run validate-env; then
+          if ! pnpm validate-env; then
             echo "::error file=src/validateEnv.ts::Environment validation failed - missing or invalid variable detected"
             if [ -f .env.example ]; then
               while read -r var; do
@@ -52,7 +63,7 @@ jobs:
       - name: Validate Schema
         run: |
           echo "::group:: Validating Schema"
-          if ! npm run validate; then
+          if ! pnpm validate; then
             echo "::error file=v2/core/schema-validator.ts::Schema validation failed - invalid schema definition"
             if [ -f config/schema.json ]; then
               echo "::warning file=v2/core/schema-validator.ts::Check config/schema.json for missing or invalid keys"
