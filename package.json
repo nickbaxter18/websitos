@@ -24,7 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "validate": "ts-node v2/core/schema-validator.ts",
-    "validate-env": "ts-node --esm src/validateEnv.ts",
+    "validate-env": "node --loader ts-node/esm src/validateEnv.ts",
     "verify-assets": "node scripts/verifyAssets.js",
     "prepare": "husky",
     "start": "node server.js",
@@ -84,57 +84,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.4.0",
     "typescript-eslint": "8.43.0",
-    "vite": "7.1.5"
-  },
-  "jest": {
-    "preset": "ts-jest/presets/default-esm",
-    "testEnvironment": "jsdom",
-    "testEnvironmentOptions": {
-      "customExportConditions": [
-        "node",
-        "node-addons"
-      ]
-    },
-    "extensionsToTreatAsEsm": [
-      ".ts",
-      ".tsx"
-    ],
-    "transform": {
-      "^.+\\.(ts|tsx)$": [
-        "ts-jest",
-        {
-          "useESM": true
-        }
-      ]
-    },
-    "transformIgnorePatterns": [],
-    "testPathIgnorePatterns": [
-      "<rootDir>/tests/e2e/",
-      "<rootDir>/WEBSITEOS/tests/",
-      "<rootDir>/WEBSITEOS/v2/core/modules/special/",
-      "<rootDir>/WEBSITEOS/src/",
-      "<rootDir>/WEBSITEOS/v2/tests/"
-    ],
-    "modulePathIgnorePatterns": [
-      "<rootDir>/WEBSITEOS/",
-      "<rootDir>/toolkit_playbooks/"
-    ],
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/src/setupTests.ts"
-    ],
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1",
-      "^v2/(.*)$": "<rootDir>/v2/$1",
-      "\\.(css|less|scss)$": "identity-obj-proxy"
-    }
+    "vite": "7.1.5",
+    "tailwindcss-animate": "^1.0.7"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,html,md}": "prettier --write",
