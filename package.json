@@ -91,7 +91,9 @@
       "default",
       "jest-github-actions-reporter"
     ],
-    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/setupTests.ts"
+    ],
     "testPathIgnorePatterns": [
       "<rootDir>/tests/e2e/",
       "<rootDir>/WEBSITEOS/tests/e2e/"
@@ -103,8 +105,8 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,html}": "prettier --write",
-    "*.{md,yml,yaml}": "prettier --write --parser yaml",
+    "*.{js,jsx,ts,tsx,json,css,html,md}": "prettier --write",
+    "*.{yml,yaml}": "prettier --write --parser yaml",
     "*.{js,jsx,ts,tsx}": "eslint --fix"
   },
   "directories": {
