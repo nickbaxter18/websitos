@@ -2,10 +2,6 @@
 
 echo "✅ Husky pre-commit running..."
 
-pnpm dlx lint-staged || true
-
-# Optionally run type check and tests
-# pnpm dlx tsc --noEmit
-# pnpm dlx jest
+npx pnpm dlx lint-staged || true
 
 exit 0
