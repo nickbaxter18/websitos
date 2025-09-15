@@ -3,4 +3,4 @@
 
 # Run lint and filtered unit tests before pushing
 npm run lint
-npx jest --ignorePatterns="tests/e2e/|WEBSITEOS/"
+npx jest --config=jest.config.js --ignorePatterns="tests/e2e/|WEBSITEOS/"
