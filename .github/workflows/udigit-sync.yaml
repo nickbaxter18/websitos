@@ -25,14 +25,23 @@ jobs:
           EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
 
       - name: Probe ingest API endpoint
+        env:
+          INGEST_API_URL: https://websitos2.onrender.com/ingest_file
         run: |
           echo "🔎 Probing ingest API..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://websitos.onrender.com/ingest_file || echo "000")
-          echo "Probe returned status: $STATUS"
+          for i in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$INGEST_API_URL" || echo "000")
+            echo "Probe returned status: $STATUS"
+            if [ "$STATUS" -eq 200 ]; then
+              echo "✅ Ingest API reachable"
+              break
+            fi
+            echo "⚠️ Ingest API not reachable (status $STATUS). Retrying..."
+            sleep $((5 * i))
+          done
           if [ "$STATUS" -ne 200 ]; then
-            echo "⚠️ Ingest API not reachable (status $STATUS). Skipping sync."
-            echo "::warning file=.github/workflows/udigit-sync.yaml::Ingest API not reachable (status $STATUS)"
-            exit 0
+            echo "⚠️ Ingest API not reachable after retries (status $STATUS). Skipping sync."
+            exit 78 # mark skipped
           fi
 
       - name: Download repo archive
@@ -54,9 +63,11 @@ jobs:
             -x "__pycache__/*"
 
       - name: Upload snapshot to U-DIG IT ingest API (with debug)
+        env:
+          INGEST_API_URL: https://websitos2.onrender.com/ingest_file
         run: |
           echo "🔎 Sending request with EDITOR_API_KEY..."
-          RESPONSE=$(curl -v -s -o response.txt -w "%{http_code}" -X POST "https://websitos.onrender.com/ingest_file" \
+          RESPONSE=$(curl -v -s -o response.txt -w "%{http_code}" -X POST "$INGEST_API_URL" \
             -H "x-api-key: ${{ secrets.EDITOR_API_KEY }}" \
             -F "file=@repo-snapshot.zip")
 
@@ -67,8 +78,7 @@ jobs:
 
           if [ "$RESPONSE" -ne 200 ]; then
             echo "⚠️ U-DIG IT ingest API returned error (status $RESPONSE). Skipping without failing."
-            echo "::warning file=.github/workflows/udigit-sync.yaml::U-DIG IT ingest API returned error (status $RESPONSE)"
-            exit 0
+            exit 78 # mark skipped
           else
             echo "✅ Sync successful"
           fi
