@@ -2,6 +2,6 @@
 
 echo "✅ Husky pre-commit running..."
 
-npx pnpm dlx lint-staged || true
+npx lint-staged --config package.json || true
 
 exit 0
