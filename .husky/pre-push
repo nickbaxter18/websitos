@@ -1,9 +1,6 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Ensure global npm bin is in PATH (so pnpm is found)
-export PATH="$PATH:$(npm bin -g)"
-
 # Run lint and filtered unit tests before pushing
-pnpm lint
-pnpm jest --config=jest.config.js --ignorePatterns="tests/e2e/|WEBSITEOS/"
+npx pnpm lint
+npx pnpm jest --config=jest.config.js --ignorePatterns="tests/e2e/|WEBSITEOS/"
