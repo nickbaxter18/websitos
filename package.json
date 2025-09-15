@@ -115,6 +115,10 @@
       "<rootDir>/WEBSITEOS/src/",
       "<rootDir>/WEBSITEOS/v2/tests/"
     ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/WEBSITEOS/",
+      "<rootDir>/toolkit_playbooks/"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",
