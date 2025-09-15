@@ -1,6 +1,13 @@
 import "@testing-library/jest-dom";
-
-// Polyfill TextEncoder/TextDecoder for React Router and other libs in Jest
 import { TextEncoder, TextDecoder } from "util";
-(global as any).TextEncoder = TextEncoder;
-(global as any).TextDecoder = TextDecoder;
+
+declare global {
+  // Augment NodeJS global type so TextEncoder/TextDecoder exist
+   
+  var TextEncoder: typeof TextEncoder;
+   
+  var TextDecoder: typeof TextDecoder;
+}
+
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
