@@ -19,6 +19,9 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'javascript', 'python' ]
+    defaults:
+      run:
+        working-directory: .
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
@@ -47,7 +50,7 @@ jobs:
         if: matrix.language == 'javascript'
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10
 
       - name: Cache pnpm (for JS/TS)
         if: matrix.language == 'javascript'

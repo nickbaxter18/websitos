@@ -43,7 +43,7 @@ jobs:
         if: matrix.task == 'frontend'
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10
 
       - name: Cache pnpm (for frontend)
         if: matrix.task == 'frontend'
