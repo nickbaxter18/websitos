@@ -28,10 +28,15 @@ npm run dev
 
 ## CI/CD
 
-- Frontend CI runs linting, build, Jest, and Playwright smoke tests.
-- Backend CI runs Black, mypy, pytest, and API smoke tests.
+- Frontend CI runs linting, build, Jest, Playwright smoke tests, and **TypeScript type-checks**.
+  - Uses `tsconfig.ci.json` for CI-only strict rules.
+  - Always produces `tsc-report.txt` artifact for debugging.
+  - Shims for missing types are in `global.d.ts`.
+- Backend CI runs Black, mypy, pytest, and flake8.
 - Coverage workflow enforces **80% minimum coverage** for both frontend and backend.
 - Sync workflow uploads repo snapshot to U-DIG IT ingest API.
+  - Retries API probes up to 3 times.
+  - Skips cleanly with `::notice` if API is unreachable.
 - PR Summary workflow posts CI diagnostics to pull requests.
 - **Render Deploy workflow** uses `RENDER_DEPLOY_HOOK` to trigger a deploy of the service on Render.
 - After deploy, **smoke tests** validate:
