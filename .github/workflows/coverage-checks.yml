@@ -17,6 +17,9 @@ jobs:
       fail-fast: true
       matrix:
         task: [frontend, backend]
+    defaults:
+      run:
+        working-directory: .
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
