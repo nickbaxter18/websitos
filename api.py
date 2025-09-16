@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Dict
+from typing import Dict, Any
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File
@@ -46,35 +46,35 @@ app.add_middleware(
 
 
 @app.get("/api/health", tags=["system"])
-async def healthcheck() -> Dict[str, str]:
-    return {"ok": "true"}
+async def healthcheck() -> Dict[str, Any]:
+    return {"ok": True}
 
 
 @app.get("/health", tags=["system"])
-async def health_alias() -> Dict[str, str]:
-    return {"ok": "true"}
+async def health_alias() -> Dict[str, Any]:
+    return {"ok": True}
 
 
 @app.get("/api/status", tags=["system"])
-async def status() -> Dict[str, str]:
-    return {"ok": "true", "version": str(app.version), "title": str(app.title)}
+async def status() -> Dict[str, Any]:
+    return {"ok": True, "version": app.version, "title": app.title}
 
 
 @app.get("/api/version", tags=["system"])
-async def version() -> Dict[str, str]:
-    return {"version": str(app.version), "title": str(app.title)}
+async def version() -> Dict[str, Any]:
+    return {"version": app.version, "title": app.title}
 
 
 # Stub endpoints for tests
 @app.post("/logs", tags=["system"])
-async def upload_logs(file: UploadFile = File(...)) -> Dict[str, str]:
-    return {"ok": "true", "filename": str(file.filename)}
+async def upload_logs(file: UploadFile = File(...)) -> Dict[str, Any]:
+    return {"ok": True, "filename": file.filename}
 
 
 @app.post("/analyze", tags=["system"])
-async def analyze_file(file: UploadFile = File(...)) -> Dict[str, str]:
+async def analyze_file(file: UploadFile = File(...)) -> Dict[str, Any]:
     content = await file.read()
-    return {"ok": "true", "size": str(len(content))}
+    return {"ok": True, "size": len(content)}
 
 
 DIST_DIR = os.path.join(BASE_DIR, "dist")
