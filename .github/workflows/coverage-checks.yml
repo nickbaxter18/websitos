@@ -133,21 +133,45 @@ jobs:
           path: coverage
           merge-multiple: true
 
+      - name: Normalize coverage paths
+        run: |
+          mv coverage/coverage-frontend coverage/frontend || true
+          mv coverage/coverage-backend coverage/backend || true
+          mv coverage/coverage-e2e coverage/e2e || true
+
       - name: Verify Coverage Files
         run: |
           echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
           echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
           echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
 
-      - name: Upload aggregated coverage to Codecov
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: coverage/frontend/lcov.info
+          flags: frontend
+          override_commit: ${{ github.sha }}
+          override_branch: ${{ github.ref_name }}
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload backend coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           files: |
-            coverage/frontend/lcov.info
             coverage/backend/coverage.xml
             coverage/backend/lcov.info
-            coverage/e2e/lcov.info
-          flags: frontend,backend,e2e
+          flags: backend
+          override_commit: ${{ github.sha }}
+          override_branch: ${{ github.ref_name }}
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload e2e coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: coverage/e2e/lcov.info
+          flags: e2e
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
           fail_ci_if_error: false
