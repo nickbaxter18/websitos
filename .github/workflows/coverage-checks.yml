@@ -129,11 +129,11 @@ jobs:
 
       - name: Upload coverage directly to Codecov
         if: always()
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/**/lcov.info,./coverage/**/coverage.xml,./coverage/**/cobertura-coverage.xml
           flags: ${{ matrix.task }}
+          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
 
   upload-codecov:
@@ -155,8 +155,8 @@ jobs:
           echo "📂 Coverage directory contents:" && ls -lh coverage || true
 
       - name: Upload aggregated coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/**/lcov.info,./coverage/**/coverage.xml,./coverage/**/cobertura-coverage.xml
+          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
