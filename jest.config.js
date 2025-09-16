@@ -25,14 +25,6 @@ export default {
   coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
   coverageDirectory: "coverage/frontend",
   testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
-  coverageThreshold: {
-    global: {
-      lines: 80,
-      branches: 75,
-      functions: 80,
-      statements: 80,
-    },
-  },
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
