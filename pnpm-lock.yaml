@@ -4054,6 +4054,10 @@ packages:
   zod@4.1.8:
     resolution: {integrity: sha512-5R1P+WwQqmmMIEACyzSvo4JXHY5WiAFHRMg+zBZKgKS+Q1viRa0C1hmUKtHltoIFKtIdki3pRxkmpP74jnNYHQ==}
 
+Enter the new date: (yy-mm-dd)
+
+The current date is: 2025-09-16T00:00:00.000Z
+
 snapshots:
 
   '@actions/core@1.11.1':
