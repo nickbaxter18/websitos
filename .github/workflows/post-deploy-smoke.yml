@@ -27,6 +27,7 @@ jobs:
           #!/bin/bash
           URL=$1
           NAME=$2
+          FILE=$3
           MAX_RETRIES=5
           DELAY=5
 
@@ -49,7 +50,7 @@ jobs:
                 sleep $DELAY
                 DELAY=$((DELAY*2))
               else
-                echo "::error::$NAME check failed after $MAX_RETRIES attempts"
+                echo "::error file=smoke/$FILE.sh,line=1::$NAME check failed after $MAX_RETRIES attempts (status $STATUS)"
                 exit 1
               fi
             fi
@@ -58,16 +59,16 @@ jobs:
           chmod +x check_endpoint.sh
 
       - name: Check API Health
-        run: ./check_endpoint.sh https://websitos.onrender.com/api/health "API Health"
+        run: ./check_endpoint.sh https://websitos.onrender.com/api/health "API Health" api_health
 
       - name: Check Extended Status
-        run: ./check_endpoint.sh https://websitos.onrender.com/api/status "API Extended Status"
+        run: ./check_endpoint.sh https://websitos.onrender.com/api/status "API Extended Status" api_status
 
       - name: Check Root Health
-        run: ./check_endpoint.sh https://websitos.onrender.com/health "Root Health"
+        run: ./check_endpoint.sh https://websitos.onrender.com/health "Root Health" root_health
 
       - name: Check Frontend Homepage
-        run: ./check_endpoint.sh https://websitos.onrender.com/ "Frontend Homepage"
+        run: ./check_endpoint.sh https://websitos.onrender.com/ "Frontend Homepage" frontend_homepage
 
       - name: Upload Smoke Test Logs
         if: always()

@@ -48,7 +48,10 @@ pnpm dev
   - Always produces `tsc-report.txt` artifact for debugging.
   - Shims for missing types are in `global.d.ts`.
 - Backend CI runs Black, mypy, pytest, and flake8.
-- Coverage workflow enforces **80% minimum coverage** for both frontend and backend.
+- Coverage workflow enforces **minimum coverage thresholds** for both frontend and backend.
+  - Thresholds are **centrally defined in `coverage.config.json`**.
+  - Both Jest and Pytest read this file to apply the same limits locally and in CI.
+  - CI annotates pull requests inline if coverage falls below thresholds.
 - Sync workflow uploads repo snapshot to U-DIG IT ingest API.
   - Retries API probes up to 3 times.
   - Skips cleanly with `::notice` if API is unreachable.

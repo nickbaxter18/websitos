@@ -43,6 +43,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Enable problem matchers
+        run: |
+          echo "::add-matcher::.github/matchers/eslint.json"
+          echo "::add-matcher::.github/matchers/jest.json"
+          echo "::add-matcher::.github/matchers/ts.json"
+
       - name: Run ESLint
         if: matrix.task == 'lint'
         run: |

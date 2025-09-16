@@ -92,7 +92,7 @@ importers:
         version: 18.3.7(@types/react@18.3.24)
       '@typescript-eslint/parser':
         specifier: 8.43.0
-        version: 8.43.0(eslint@9.35.0)(typescript@5.9.2)
+        version: 10.43.0(eslint@9.35.0)(typescript@5.9.2)
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.7.0(vite@7.1.5(@types/node@20.19.14))
@@ -101,7 +101,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       concurrently:
         specifier: ^8.2.2
-        version: 8.2.2
+        version: 10.2.2
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -137,7 +137,7 @@ importers:
         version: 1.55.0
       postcss:
         specifier: ^8.4.32
-        version: 8.5.6
+        version: 10.5.6
       prettier:
         specifier: ^3.2.5
         version: 3.6.2
@@ -158,7 +158,7 @@ importers:
         version: 5.9.2
       typescript-eslint:
         specifier: 8.43.0
-        version: 8.43.0(eslint@9.35.0)(typescript@5.9.2)
+        version: 10.43.0(eslint@9.35.0)(typescript@5.9.2)
       vite:
         specifier: 7.1.5
         version: 7.1.5(@types/node@20.19.14)

@@ -85,7 +85,7 @@ jobs:
           pnpm test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
           echo "::endgroup::"
           if [ -f coverage/coverage-summary.json ]; then
-            node -e "const s=require('./coverage/coverage-summary.json'); let failed=0; Object.entries(s.total).forEach(([k,v])=>{ if(v.pct<80){console.log('::error file=frontend/'+k+'::Coverage only '+v.pct+'%, below threshold'); failed=1}}); process.exit(failed)"
+            node scripts/annotate-coverage.js coverage/coverage-summary.json
           else
             echo "::error file=frontend/tests::coverage-summary.json missing"; exit 1
           fi
@@ -98,18 +98,7 @@ jobs:
           pytest --cov=api --cov-report=xml --cov-report=term-missing || EXIT=$?
           echo "::endgroup::"
           if [ -f coverage.xml ]; then
-            python - <<EOF
-import xml.etree.ElementTree as ET, sys
-root = ET.parse('coverage.xml').getroot()
-failed = 0
-for cls in root.findall('.//class'):
-    name = cls.get('name')
-    line_rate = float(cls.get('line-rate',0))
-    if line_rate < 0.8:
-        print(f"::error file=backend/{name}::Coverage only {line_rate*100:.1f}% below threshold")
-        failed = 1
-sys.exit(failed)
-EOF
+            python scripts/annotate_coverage.py coverage.xml
           else
             echo "::error file=backend/tests::coverage.xml missing"; exit 1
           fi
