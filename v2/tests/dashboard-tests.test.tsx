@@ -3,7 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { jest } from "@jest/globals";
 import Dashboard from "@/pages/Dashboard";
 
-jest.mock("recharts", () => ({
+// ESM-safe mock for recharts
+jest.unstable_mockModule("recharts", () => ({
   ResponsiveContainer: ({ children }: PropsWithChildren<Record<string, never>>) => (
     <div data-testid="health-chart">{children}</div>
   ),
