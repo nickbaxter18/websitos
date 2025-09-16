@@ -57,24 +57,24 @@ async def health_alias() -> Dict[str, str]:
 
 @app.get("/api/status", tags=["system"])
 async def status() -> Dict[str, str]:
-    return {"ok": "true", "version": app.version, "title": app.title}
+    return {"ok": "true", "version": str(app.version), "title": str(app.title)}
 
 
 @app.get("/api/version", tags=["system"])
 async def version() -> Dict[str, str]:
-    return {"version": app.version, "title": app.title}
+    return {"version": str(app.version), "title": str(app.title)}
 
 
 # Stub endpoints for tests
 @app.post("/logs", tags=["system"])
 async def upload_logs(file: UploadFile = File(...)) -> Dict[str, str]:
-    return {"ok": "true", "filename": file.filename}
+    return {"ok": "true", "filename": str(file.filename)}
 
 
 @app.post("/analyze", tags=["system"])
 async def analyze_file(file: UploadFile = File(...)) -> Dict[str, str]:
     content = await file.read()
-    return {"ok": "true", "size": len(content)}
+    return {"ok": "true", "size": str(len(content))}
 
 
 DIST_DIR = os.path.join(BASE_DIR, "dist")
