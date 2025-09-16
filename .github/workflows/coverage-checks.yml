@@ -81,25 +81,15 @@ jobs:
         if: ${{ matrix.task == 'frontend' }}
         run: |
           echo ">>> Running Jest with coverage"
-          pnpm test:ci || { echo "❌ Jest found 0 tests"; exit 1; }
+          pnpm test:ci -- --coverage --coverageDirectory=coverage/frontend || { echo "❌ Jest found 0 tests"; exit 1; }
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         run: |
           echo ">>> Running Pytest with coverage"
-          pytest --cov=backend --cov=api --cov-report=xml:coverage/coverage.xml --cov-report=term-missing || EXIT=$?
+          pytest --cov=backend --cov=api --cov-report=xml:coverage/backend/coverage.xml --cov-report=term-missing || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
-          if [ -f coverage/coverage.xml ]; then
-            python scripts/annotate_coverage.py coverage/coverage.xml
-          else
-            echo "::error file=backend/tests::coverage.xml missing"; exit 1
-          fi
-          ls -R coverage || true
           exit ${EXIT:-0}
-
-      - name: Install Playwright Browsers
-        if: ${{ matrix.task == 'e2e' }}
-        run: pnpm exec playwright install --with-deps
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
@@ -109,7 +99,6 @@ jobs:
           echo ">>> Running Playwright with NYC coverage"
           pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || EXIT=$?
           echo ">>> Playwright finished with exit code ${EXIT:-0}"
-          ls -R coverage/e2e || true
           exit ${EXIT:-0}
 
       - name: Upload coverage artifact
@@ -117,21 +106,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.task }}
-          path: coverage
-
-      - name: Upload coverage directly to Codecov
-        if: always()
-        uses: codecov/codecov-action@v3
-        with:
-          files: |
-            coverage/lcov.info
-            coverage/cobertura-coverage.xml
-            coverage/coverage-frontend/lcov.info
-            coverage/coverage-backend/coverage.xml
-            coverage/coverage-e2e/lcov.info
-          flags: ${{ matrix.task }}
-          commit_parent: ${{ github.sha }}
-          fail_ci_if_error: false
+          path: coverage/${{ matrix.task }}
 
   upload-codecov:
     needs: coverage
@@ -149,16 +124,11 @@ jobs:
 
       - name: Verify Coverage Files
         run: |
-          echo "📂 Coverage directory contents:" && ls -lh coverage || true
+          echo "📂 Coverage directory contents:" && ls -R coverage || true
 
       - name: Upload aggregated coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: |
-            coverage/lcov.info
-            coverage/cobertura-coverage.xml
-            coverage/coverage-frontend/lcov.info
-            coverage/coverage-backend/coverage.xml
-            coverage/coverage-e2e/lcov.info
+          directory: coverage
           commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
