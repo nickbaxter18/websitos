@@ -1,9 +1,9 @@
 echo "✅ Husky pre-push running..."
 
 # Run TypeScript type-checks
-pnpm type-check || exit 1
+npx pnpm type-check || exit 1
 
 # Run Jest unit tests only (no e2e/integration)
-pnpm test:unit || exit 1
+npx pnpm test:unit || exit 1
 
 exit 0
