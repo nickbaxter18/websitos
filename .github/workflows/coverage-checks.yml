@@ -87,7 +87,7 @@ jobs:
           echo ">>> Running Pytest with coverage"
           pytest --cov=backend --cov=api \
             --cov-report=xml:coverage/backend/coverage.xml \
-            --cov-report=cobertura:coverage/backend/cobertura-coverage.xml \
+            --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
           exit ${EXIT:-0}
@@ -106,7 +106,8 @@ jobs:
           echo ">>> Building frontend with coverage instrumentation"
           NODE_ENV=test pnpm build
           echo ">>> Running Playwright with NYC coverage"
-          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || EXIT=$?
+          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || EXIT=$?
+          if [ ! -f coverage/e2e/lcov.info ]; then echo "⚠️ No E2E coverage file found"; fi
           echo ">>> Playwright finished with exit code ${EXIT:-0}"
           exit ${EXIT:-0}
 
@@ -133,7 +134,9 @@ jobs:
 
       - name: Verify Coverage Files
         run: |
-          echo "📂 Coverage directory contents:" && ls -R coverage || true
+          echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
+          echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
+          echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
 
       - name: Upload aggregated coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -141,9 +144,10 @@ jobs:
           files: |
             coverage/frontend/lcov.info
             coverage/backend/coverage.xml
-            coverage/backend/cobertura-coverage.xml
+            coverage/backend/lcov.info
             coverage/e2e/lcov.info
           flags: frontend,backend,e2e
           commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
+          disable_search: true
           verbose: true
