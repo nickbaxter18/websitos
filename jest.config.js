@@ -1,15 +1,3 @@
-import fs from "fs";
-import path from "path";
-
-// Load thresholds from central config
-const configPath = path.resolve("./coverage.config.json");
-let thresholds = {};
-try {
-  thresholds = JSON.parse(fs.readFileSync(configPath, "utf8")).thresholds;
-} catch (e) {
-  console.warn("⚠️ Could not load coverage.config.json, using defaults");
-}
-
 export default {
   testEnvironment: "jsdom",
   transform: {
@@ -17,10 +5,7 @@ export default {
   },
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  testPathIgnorePatterns: [
-    "<rootDir>/tests/e2e/", // skip Playwright tests during pre-push
-    "<rootDir>/WEBSITEOS/", // skip legacy tests
-  ],
+  testPathIgnorePatterns: ["<rootDir>/tests/e2e/", "<rootDir>/WEBSITEOS/"],
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
@@ -34,18 +19,25 @@ export default {
     "!**/dist/**",
     "!**/coverage/**",
     "!**/*.d.ts",
+    "!**/jest.config.js",
+    "!**/babel.config.js",
   ],
-  coverageReporters: ["text", "lcov", "json-summary"],
+  coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
   testMatch: [
-    "<rootDir>/src/**/*.(test|spec).{js,jsx,ts,tsx}",
-    "<rootDir>/v2/**/*.(test|spec).{js,jsx,ts,tsx}",
+    "<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
+    "<rootDir>/v2/**/*.{test,spec}.{js,jsx,ts,tsx}",
   ],
   coverageThreshold: {
     global: {
-      lines: thresholds.lines || 80,
-      branches: thresholds.branches || 75,
-      functions: thresholds.functions || 80,
-      statements: thresholds.statements || 80,
+      lines: 80,
+      branches: 75,
+      functions: 80,
+      statements: 80,
     },
   },
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
+  testTimeout: 30000,
+  watchPlugins: ["jest-watch-typeahead/filename", "jest-watch-typeahead/testname"],
 };
