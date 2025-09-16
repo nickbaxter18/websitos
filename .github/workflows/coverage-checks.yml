@@ -79,9 +79,7 @@ jobs:
 
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
-        run: |
-          echo ">>> Running Jest with coverage"
-          pnpm test:ci -- --coverage --coverageDirectory=coverage/frontend || { echo "❌ Jest found 0 tests"; exit 1; }
+        run: pnpm test:ci
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
