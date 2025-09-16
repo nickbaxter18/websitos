@@ -4,10 +4,50 @@ coverage:
       default:
         target: 80%
         threshold: 1%
+      backend:
+        target: 90%
+      frontend:
+        target: 80%
+      e2e:
+        target: 70%
     patch:
       default:
         target: 80%
 
 comment:
-  layout: "reach, diff, files"
+  layout: "reach, diff, flags, files"
   behavior: default
+  require_changes: true
+
+github_checks:
+  annotations: true
+
+flags:
+  frontend:
+    paths:
+      - src/
+      - v2/
+  backend:
+    paths:
+      - backend/
+      - api.py
+  e2e:
+    paths:
+      - tests/e2e/
+
+component_management:
+  individual_components:
+    - component_id: frontend
+      name: Frontend
+      paths:
+        - src/
+        - v2/
+    - component_id: backend
+      name: Backend
+      paths:
+        - backend/
+        - api.py
+    - component_id: e2e
+      name: E2E
+      paths:
+        - tests/e2e/
