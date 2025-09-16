@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-require-imports, no-undef */
+
 const fs = require("fs");
 
 // Thresholds — keep in sync with codecov.yml and coverage.config.json
