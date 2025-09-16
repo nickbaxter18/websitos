@@ -84,7 +84,7 @@ jobs:
           pnpm test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
           echo ">>> Jest finished with exit code ${EXIT:-0}"
           if [ -f coverage/coverage-summary.json ]; then
-            node scripts/annotate-coverage.js coverage/coverage-summary.json
+            node scripts/annotate-coverage.cjs coverage/coverage-summary.json
           else
             echo "::error file=frontend/tests::coverage-summary.json missing"; exit 1
           fi
