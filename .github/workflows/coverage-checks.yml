@@ -81,15 +81,7 @@ jobs:
         if: ${{ matrix.task == 'frontend' }}
         run: |
           echo ">>> Running Jest with coverage"
-          pnpm test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
-          echo ">>> Jest finished with exit code ${EXIT:-0}"
-          if [ -f coverage/coverage-summary.json ]; then
-            node scripts/annotate-coverage.cjs coverage/coverage-summary.json
-          else
-            echo "::error file=frontend/tests::coverage-summary.json missing"; exit 1
-          fi
-          ls -R coverage || true
-          exit ${EXIT:-0}
+          pnpm test:ci || { echo "❌ Jest found 0 tests"; exit 1; }
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
@@ -131,7 +123,12 @@ jobs:
         if: always()
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverage/**/lcov.info,./coverage/**/coverage.xml,./coverage/**/cobertura-coverage.xml
+          files: |
+            coverage/lcov.info
+            coverage/cobertura-coverage.xml
+            coverage/coverage-frontend/lcov.info
+            coverage/coverage-backend/coverage.xml
+            coverage/coverage-e2e/lcov.info
           flags: ${{ matrix.task }}
           commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
@@ -157,6 +154,11 @@ jobs:
       - name: Upload aggregated coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverage/**/lcov.info,./coverage/**/coverage.xml,./coverage/**/cobertura-coverage.xml
+          files: |
+            coverage/lcov.info
+            coverage/cobertura-coverage.xml
+            coverage/coverage-frontend/lcov.info
+            coverage/coverage-backend/coverage.xml
+            coverage/coverage-e2e/lcov.info
           commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
