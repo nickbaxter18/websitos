@@ -85,7 +85,10 @@ jobs:
         if: ${{ matrix.task == 'backend' }}
         run: |
           echo ">>> Running Pytest with coverage"
-          pytest --cov=backend --cov=api --cov-report=xml:coverage/backend/coverage.xml --cov-report=term-missing || EXIT=$?
+          pytest --cov=backend --cov=api \
+            --cov-report=xml:coverage/backend/coverage.xml \
+            --cov-report=cobertura:coverage/backend/cobertura-coverage.xml \
+            --cov-report=term-missing || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
           exit ${EXIT:-0}
 
@@ -135,6 +138,12 @@ jobs:
       - name: Upload aggregated coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          directory: coverage
+          files: |
+            coverage/frontend/lcov.info
+            coverage/backend/coverage.xml
+            coverage/backend/cobertura-coverage.xml
+            coverage/e2e/lcov.info
+          flags: frontend,backend,e2e
           commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
+          verbose: true
