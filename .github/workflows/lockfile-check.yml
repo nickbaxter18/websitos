@@ -34,14 +34,23 @@ jobs:
 
       - name: Ensure no package-lock.json present
         run: |
+          echo ">>> Checking for forbidden package-lock.json"
           if [ -f package-lock.json ]; then
             echo "::error file=package-lock.json::package-lock.json should not exist. Please delete it and use pnpm-lock.yaml."
             exit 1
           fi
+          echo "✅ No package-lock.json found"
 
       - name: Install dependencies without updating lockfile
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: |
+          echo ">>> Installing dependencies with frozen lockfile"
+          pnpm install --frozen-lockfile --ignore-scripts || { echo "::error::pnpm install failed during lockfile check"; exit 1; }
 
       - name: Check if pnpm-lock.yaml is in sync
         run: |
-          git diff --exit-code pnpm-lock.yaml || (echo "::error file=pnpm-lock.yaml::Lockfile is out of sync with package.json. Run 'pnpm install' locally and commit the changes." && exit 1)
+          echo ">>> Verifying pnpm-lock.yaml sync with package.json"
+          if ! git diff --exit-code pnpm-lock.yaml; then
+            echo "::error file=pnpm-lock.yaml::Lockfile is out of sync with package.json. Run 'pnpm install' locally and commit the changes."
+            exit 1
+          fi
+          echo "✅ pnpm-lock.yaml is up to date"

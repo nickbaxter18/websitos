@@ -16,62 +16,61 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download frontend ESLint report
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
-          name: frontend-eslint-report
-          path: artifacts/frontend-eslint
+          path: artifacts
 
-      - name: Download frontend Jest results
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: frontend-jest-results
-          path: artifacts/frontend-jest
-
-      - name: Download backend pytest results
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: backend-pytest-results
-          path: artifacts/backend-pytest
-
-      - name: Download backend flake8 report
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: backend-flake8-report
-          path: artifacts/backend-flake8
-
-      - name: Download frontend coverage report
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: coverage-frontend
-          path: artifacts/coverage-frontend
-
-      - name: Download backend coverage report
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: coverage-backend
-          path: artifacts/coverage-backend
-
-      - name: Generate PR Summary
+      - name: Validate Reports
         run: |
-          echo "### ✅ CI & Deploy Summary" >> summary.md
+          echo "### ✅ CI & Deploy Summary" > summary.md
           echo "- Frontend, Backend, Coverage, and Deploy jobs completed" >> summary.md
           echo "---" >> summary.md
+
           echo "### 📊 Coverage Reports" >> summary.md
-          ls artifacts/coverage-frontend || echo "(no frontend coverage found)" >> summary.md
-          ls artifacts/coverage-backend || echo "(no backend coverage found)" >> summary.md
+          if [ -f artifacts/coverage-frontend/coverage-summary.json ]; then
+            echo "- ✅ Frontend coverage found" >> summary.md
+          else
+            echo "- ❌ Frontend coverage missing" >> summary.md
+            echo "::error::Frontend coverage report missing"
+          fi
+          if [ -f artifacts/coverage-backend/coverage.xml ]; then
+            echo "- ✅ Backend coverage found" >> summary.md
+          else
+            echo "- ❌ Backend coverage missing" >> summary.md
+            echo "::error::Backend coverage report missing"
+          fi
+
           echo "---" >> summary.md
           echo "### 🔎 Lint & Test Reports" >> summary.md
-          ls artifacts/frontend-eslint || echo "(no frontend ESLint report found)" >> summary.md
-          ls artifacts/frontend-jest || echo "(no frontend Jest results found)" >> summary.md
-          ls artifacts/backend-pytest || echo "(no backend pytest results found)" >> summary.md
-          ls artifacts/backend-flake8 || echo "(no backend flake8 report found)" >> summary.md
+
+          if [ -f artifacts/frontend-eslint/eslint-report.json ]; then
+            echo "- ✅ ESLint report found" >> summary.md
+          else
+            echo "- ❌ ESLint report missing" >> summary.md
+            echo "::error::Frontend ESLint report missing"
+          fi
+
+          if [ -f artifacts/frontend-jest/jest-report.json ]; then
+            echo "- ✅ Jest results found" >> summary.md
+          else
+            echo "- ❌ Jest results missing" >> summary.md
+            echo "::error::Frontend Jest results missing"
+          fi
+
+          if [ -f artifacts/backend-pytest/pytest-report.json ]; then
+            echo "- ✅ Pytest results found" >> summary.md
+          else
+            echo "- ❌ Pytest results missing" >> summary.md
+            echo "::error::Backend pytest results missing"
+          fi
+
+          if [ -f artifacts/backend-flake8/flake8-report.txt ]; then
+            echo "- ✅ Flake8 report found" >> summary.md
+          else
+            echo "- ❌ Flake8 report missing" >> summary.md
+            echo "::error::Backend Flake8 report missing"
+          fi
 
       - name: Post PR Comment
         uses: marocchino/sticky-pull-request-comment@v2

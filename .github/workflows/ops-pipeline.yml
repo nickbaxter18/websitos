@@ -52,25 +52,26 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pnpm install --frozen-lockfile
+          echo ">>> Installing dependencies"
+          pnpm install --frozen-lockfile || { echo "::error::pnpm install failed"; exit 1; }
           python -m pip install --upgrade pip
-          pip install --prefer-binary -r requirements.txt
+          pip install --prefer-binary -r requirements.txt || { echo "::error::pip install failed"; exit 1; }
           pip install pytest pytest-github-actions-annotate-failures
 
       - name: Run Ops Cycle
         run: |
-          echo "::group:: Running Ops Cycle"
+          echo ">>> Starting Ops Cycle"
           if ! pnpm opscycle; then
             echo "::error file=ops/scripts/opsCycle.ts::Ops cycle failed"
             exit 1
           fi
-          echo "::endgroup::"
+          echo ">>> Finished Ops Cycle"
 
       - name: Run Security Scan
         run: |
-          echo "::group:: Running Security Scan"
+          echo ">>> Starting Security Scan"
           if ! pnpm secscan; then
             echo "::warning file=scripts/scan-secrets.ts::Security scan flagged issues"
             exit 0
           fi
-          echo "::endgroup::"
+          echo ">>> Finished Security Scan"

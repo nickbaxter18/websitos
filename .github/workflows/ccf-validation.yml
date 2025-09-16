@@ -50,22 +50,24 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          echo ">>> Installing dependencies"
+          pnpm install --frozen-lockfile || { echo "::error::pnpm install failed"; exit 1; }
 
       - name: Validate Environment
         run: |
-          echo "::group:: Validating Environment"
+          echo ">>> Starting Environment Validation"
           if ! pnpm validate-env; then
             echo "::error file=src/validateEnv.ts::Environment validation failed - missing or invalid variable detected"
             exit 1
           fi
-          echo "::endgroup::"
+          echo ">>> Finished Environment Validation"
 
       - name: Validate Schema
         run: |
-          echo "::group:: Validating Schema"
+          echo ">>> Starting Schema Validation"
           if ! pnpm validate; then
             echo "::error file=v2/core/schema-validator.ts::Schema validation failed - invalid schema definition"
             exit 1
           fi
-          echo "::endgroup::"
+          echo ">>> Finished Schema Validation"

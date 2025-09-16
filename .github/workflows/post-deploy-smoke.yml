@@ -8,7 +8,7 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    continue-on-error: true
+    continue-on-error: false
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
@@ -21,61 +21,48 @@ jobs:
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/generic-errors.json"
 
-      - name: Define endpoint check function
+      - name: Run smoke tests with retries
         run: |
-          cat > check_endpoint.sh <<'EOF'
-          #!/bin/bash
-          URL=$1
-          NAME=$2
-          FILE=$3
-          MAX_RETRIES=5
+          set +e
+          MAX_RETRIES=3
           DELAY=5
 
-          for i in $(seq 1 $MAX_RETRIES); do
-            echo "Checking $NAME at $URL (attempt $i/$MAX_RETRIES)..."
-            RESPONSE=$(curl -s --fail --connect-timeout 10 --max-time 30 -w "HTTPSTATUS:%{http_code}" -o response.txt "$URL" || true)
-            BODY=$(cat response.txt)
-            STATUS=$(echo $RESPONSE | sed -e 's/.*HTTPSTATUS://')
+          run_check() {
+            URL=$1
+            NAME=$2
+            FILE=$3
 
-            if [ "$STATUS" -eq 200 ]; then
-              echo "✅ $NAME OK"
-              echo "$BODY" | head -n 20
-              break
-            else
-              echo "⚠️ $NAME failed with status $STATUS"
-              echo "Response body (truncated):"
-              echo "$BODY" | head -n 20
-              if [ $i -lt $MAX_RETRIES ]; then
-                echo "Retrying in $DELAY seconds..."
-                sleep $DELAY
-                DELAY=$((DELAY*2))
+            for i in $(seq 1 $MAX_RETRIES); do
+              echo ">>> Checking $NAME at $URL (attempt $i/$MAX_RETRIES)"
+              RESPONSE=$(curl -s -o response.txt -w "%{http_code}" "$URL")
+              STATUS=$?
+
+              if [ "$STATUS" -eq 0 ] && grep -q "200" <<< "$RESPONSE"; then
+                echo "✅ $NAME OK"
+                return 0
               else
-                echo "::error file=smoke/$FILE.sh,line=1::$NAME check failed after $MAX_RETRIES attempts (status $STATUS)"
-                exit 1
+                echo "⚠️ $NAME failed with status $RESPONSE"
+                if [ $i -lt $MAX_RETRIES ]; then
+                  echo "Retrying in $DELAY seconds..."
+                  sleep $DELAY
+                  DELAY=$((DELAY*2))
+                else
+                  echo "::error file=smoke/$FILE.sh,line=1::$NAME check failed after $MAX_RETRIES attempts (status $RESPONSE)"
+                  return 1
+                fi
               fi
-            fi
-          done
-          EOF
-          chmod +x check_endpoint.sh
+            done
+          }
 
-      - name: Check API Health
-        run: ./check_endpoint.sh https://websitos.onrender.com/api/health "API Health" api_health
-
-      - name: Check Extended Status
-        run: ./check_endpoint.sh https://websitos.onrender.com/api/status "API Extended Status" api_status
-
-      - name: Check Root Health
-        run: ./check_endpoint.sh https://websitos.onrender.com/health "Root Health" root_health
-
-      - name: Check Frontend Homepage
-        run: ./check_endpoint.sh https://websitos.onrender.com/ "Frontend Homepage" frontend_homepage
+          run_check https://websitos.onrender.com/api/health "API Health" api_health || exit 1
+          run_check https://websitos.onrender.com/api/status "API Extended Status" api_status || exit 1
+          run_check https://websitos.onrender.com/health "Root Health" root_health || exit 1
+          run_check https://websitos.onrender.com/ "Frontend Homepage" frontend_homepage || exit 1
 
       - name: Upload Smoke Test Logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: post-deploy-smoke-logs
-          path: |
-            response.txt
-            *.log
+          path: response.txt
           retention-days: 14

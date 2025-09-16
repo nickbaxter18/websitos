@@ -41,37 +41,41 @@ jobs:
           fi
 
       - name: Setup Node.js (for JS/TS)
-        if: matrix.language == 'javascript'
+        if: ${{ matrix.language == 'javascript' }}
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
 
       - name: Setup pnpm (for JS/TS)
-        if: matrix.language == 'javascript'
+        if: ${{ matrix.language == 'javascript' }}
         uses: pnpm/action-setup@v2
         with:
           version: 10
 
       - name: Cache pnpm (for JS/TS)
-        if: matrix.language == 'javascript'
+        if: ${{ matrix.language == 'javascript' }}
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Setup Python (for backend)
-        if: matrix.language == 'python'
+        if: ${{ matrix.language == 'python' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install Node.js dependencies
-        if: matrix.language == 'javascript'
-        run: pnpm install --frozen-lockfile
+        if: ${{ matrix.language == 'javascript' }}
+        run: |
+          echo ">>> Installing Node.js dependencies"
+          pnpm install --frozen-lockfile || { echo "::error::pnpm install failed"; exit 1; }
 
       - name: Install Python dependencies
-        if: matrix.language == 'python'
-        run: pip install --prefer-binary -r requirements.txt || true
+        if: ${{ matrix.language == 'python' }}
+        run: |
+          echo ">>> Installing Python dependencies"
+          pip install --prefer-binary -r requirements.txt || { echo "::error::pip install failed"; exit 1; }
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -85,3 +89,6 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+
+      - name: Complete CodeQL Job
+        run: echo ">>> Finished CodeQL analysis for ${{ matrix.language }}"
