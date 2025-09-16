@@ -42,7 +42,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # -------------------------------------------------------------------
 # Logging Setup
 # -------------------------------------------------------------------
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 # -------------------------------------------------------------------
 # FastAPI Setup
@@ -70,6 +72,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # -------------------------------------------------------------------
 # Healthcheck Endpoint
 # -------------------------------------------------------------------
@@ -77,31 +80,28 @@ app.add_middleware(
 async def healthcheck():
     return {"ok": True}
 
+
 # Alias for non-API healthcheck (used in smoke tests)
 @app.get("/health", tags=["system"])
 async def health_alias():
     return {"ok": True}
+
 
 # -------------------------------------------------------------------
 # Status Endpoint
 # -------------------------------------------------------------------
 @app.get("/api/status", tags=["system"])
 async def status():
-    return {
-        "ok": True,
-        "version": app.version,
-        "title": app.title
-    }
+    return {"ok": True, "version": app.version, "title": app.title}
+
 
 # -------------------------------------------------------------------
 # Version Endpoint
 # -------------------------------------------------------------------
 @app.get("/api/version", tags=["system"])
 async def version():
-    return {
-        "version": app.version,
-        "title": app.title
-    }
+    return {"version": app.version, "title": app.title}
+
 
 # -------------------------------------------------------------------
 # Static Frontend Mount + Catch-All

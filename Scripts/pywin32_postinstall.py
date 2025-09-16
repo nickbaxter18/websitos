@@ -40,6 +40,7 @@ class Tee:
 sys.stderr = Tee(sys.stderr)
 sys.stdout = Tee(sys.stdout)
 
+
 # -------------------------------------------------------------------
 # Stubs to satisfy Ruff linting
 # -------------------------------------------------------------------
@@ -47,7 +48,9 @@ def verify_destination(location: str) -> str:
     """Validate that the given destination directory exists."""
     location = os.path.abspath(location)
     if not os.path.isdir(location):
-        raise argparse.ArgumentTypeError(f'Path "{location}" is not an existing directory!')
+        raise argparse.ArgumentTypeError(
+            f'Path "{location}" is not an existing directory!'
+        )
     return location
 
 

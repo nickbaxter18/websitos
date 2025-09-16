@@ -4,6 +4,7 @@ import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
+
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()

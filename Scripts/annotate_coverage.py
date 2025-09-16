@@ -45,7 +45,7 @@ def main():
             emit_error(
                 coverage_file,
                 1,
-                f"Pytest {ctype} coverage {pct:.1f}% < required {THRESHOLDS[ctype]}%"
+                f"Pytest {ctype} coverage {pct:.1f}% < required {THRESHOLDS[ctype]}%",
             )
             sys.exit(1)
 
