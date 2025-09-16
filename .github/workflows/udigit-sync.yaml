@@ -7,9 +7,11 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    environment: Websitos
+    environment: Websitos   # ✅ ensure secrets from Websitos are available
     permissions:
       contents: read
+    env:
+      EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
     steps:
       - name: Checkout repository (debug only)
         uses: actions/checkout@v4
@@ -19,15 +21,13 @@ jobs:
       - name: Verify EDITOR_API_KEY presence
         run: |
           echo ">>> Checking EDITOR_API_KEY secret"
-          if [ -z "${{ secrets.EDITOR_API_KEY }}" ]; then
+          if [ -z "$EDITOR_API_KEY" ]; then
             echo "::error file=.github/workflows/udigit-sync.yaml::EDITOR_API_KEY not available"
             exit 1
           else
             echo "✅ EDITOR_API_KEY is available (masked)"
             echo "Length: ${#EDITOR_API_KEY}" # safe, does not reveal value
           fi
-        env:
-          EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
 
       - name: Probe ingest API endpoint
         continue-on-error: false
@@ -78,7 +78,7 @@ jobs:
         run: |
           echo ">>> Uploading snapshot to ingest API"
           RESPONSE=$(curl -s --fail --connect-timeout 10 --max-time 60 -v -o response.txt -w "%{http_code}" -X POST "$INGEST_API_URL" \
-            -H "x-api-key: ${{ secrets.EDITOR_API_KEY }}" \
+            -H "x-api-key: $EDITOR_API_KEY" \
             -F "file=@repo-snapshot.zip" || echo "000")
 
           echo "--- HTTP Status Code ---"

@@ -105,6 +105,10 @@ jobs:
           ls -R coverage || true
           exit ${EXIT:-0}
 
+      - name: Install Playwright Browsers
+        if: ${{ matrix.task == 'e2e' }}
+        run: pnpm exec playwright install --with-deps
+
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |

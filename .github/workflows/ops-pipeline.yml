@@ -70,8 +70,15 @@ jobs:
       - name: Run Security Scan
         run: |
           echo ">>> Starting Security Scan"
-          if ! pnpm secscan; then
-            echo "::warning file=scripts/scan-secrets.ts::Security scan flagged issues"
-            exit 0
+          if pnpm secscan --json > secscan.json; then
+            HIGH=$(jq '.advisories | map(select(.severity == "high" or .severity == "critical")) | length' secscan.json)
+            if [ "$HIGH" -gt 0 ]; then
+              echo "::error file=scripts/scan-secrets.ts::High/Critical vulnerabilities found ($HIGH)"
+              exit 1
+            else
+              echo "✅ No high/critical vulnerabilities"
+            fi
+          else
+            echo "::warning::Security scan failed to run properly"
           fi
           echo ">>> Finished Security Scan"

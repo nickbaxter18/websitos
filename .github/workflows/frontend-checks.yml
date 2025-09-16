@@ -105,10 +105,9 @@ jobs:
           path: jest-report.json
           retention-days: 14
 
-      - name: Build frontend with coverage instrumentation
+      - name: Install Playwright Browsers
         if: ${{ matrix.task == 'test:e2e' }}
-        run: |
-          NODE_ENV=test pnpm build
+        run: pnpm exec playwright install --with-deps
 
       - name: Run Playwright E2E tests with coverage
         if: ${{ matrix.task == 'test:e2e' }}
