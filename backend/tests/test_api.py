@@ -44,6 +44,8 @@ def test_analyze_upload(tmp_path):
     sample_file.write_text("hello world")
 
     with open(sample_file, "rb") as f:
-        response = client.post("/analyze", files={"file": ("sample.txt", f, "text/plain")})
+        response = client.post(
+            "/analyze", files={"file": ("sample.txt", f, "text/plain")}
+        )
 
     assert response.status_code in (200, 404)  # allow if endpoint not present

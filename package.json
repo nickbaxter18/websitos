@@ -25,6 +25,7 @@
     "lint-staged": "lint-staged",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "format:all": "black . && prettier --write . && eslint . --fix",
     "validate": "ts-node v2/core/schema-validator.ts",
     "validate-env": "node --loader ts-node/esm --experimental-specifier-resolution=node src/validateEnv.ts",
     "verify-assets": "node scripts/verifyAssets.js",
