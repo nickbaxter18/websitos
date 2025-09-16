@@ -90,6 +90,15 @@ jobs:
           fi
           exit ${EXIT:-0}
 
+      - name: Print Jest Coverage Summary
+        if: always() && matrix.task == 'frontend'
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            cat coverage/coverage-summary.json
+          else
+            echo "⚠️ No Jest coverage summary found"
+          fi
+
       - name: Run backend coverage (Pytest)
         if: matrix.task == 'backend'
         run: |
@@ -102,6 +111,15 @@ jobs:
             echo "::error file=backend/tests::coverage.xml missing"; exit 1
           fi
           exit ${EXIT:-0}
+
+      - name: Print Pytest Coverage Summary
+        if: always() && matrix.task == 'backend'
+        run: |
+          if [ -f coverage.xml ]; then
+            head -n 50 coverage.xml
+          else
+            echo "⚠️ No Pytest coverage XML found"
+          fi
 
   upload-codecov:
     needs: coverage
