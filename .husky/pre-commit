@@ -2,6 +2,13 @@
 
 echo "✅ Husky pre-commit running..."
 
+# Run lint-staged (ESLint + Prettier)
 npx lint-staged --config package.json || true
+
+# Run Black on backend code automatically
+if command -v black > /dev/null 2>&1; then
+  echo ">>> Running Black reformat on backend"
+  black backend || true
+fi
 
 exit 0
