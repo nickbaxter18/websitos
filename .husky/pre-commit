@@ -1,14 +1,10 @@
 #!/bin/sh
 
+. "$(dirname "$0")/_/husky.sh"
+
 echo "✅ Husky pre-commit running..."
 
-# Run lint-staged (ESLint + Prettier)
+# Run lint-staged (Prettier, ESLint, Black on staged files only)
 npx lint-staged --config package.json || true
-
-# Run Black on backend code automatically
-if command -v black > /dev/null 2>&1; then
-  echo ">>> Running Black reformat on backend"
-  black backend || true
-fi
 
 exit 0

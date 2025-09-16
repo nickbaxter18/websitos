@@ -1,5 +1,13 @@
 #!/bin/sh
 
-# Run lint and filtered unit tests before pushing
-npx pnpm exec eslint src v2 ops
-npx pnpm exec jest --config=jest.config.js --ignorePatterns="tests/e2e/|WEBSITEOS/"
+. "$(dirname "$0")/_/husky.sh"
+
+echo "✅ Husky pre-push running..."
+
+# Run TypeScript type-checks
+pnpm type-check || exit 1
+
+# Run Jest unit tests only (no e2e/integration)
+pnpm test:unit || exit 1
+
+exit 0
