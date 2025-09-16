@@ -27,6 +27,19 @@ export default {
     "^v2/(.*)$": "<rootDir>/v2/$1",
     "\\.(css|less|scss)$": "identity-obj-proxy",
   },
+  collectCoverageFrom: [
+    "src/**/*.{js,jsx,ts,tsx}",
+    "v2/**/*.{js,jsx,ts,tsx}",
+    "!**/node_modules/**",
+    "!**/dist/**",
+    "!**/coverage/**",
+    "!**/*.d.ts",
+  ],
+  coverageReporters: ["text", "lcov", "json-summary"],
+  testMatch: [
+    "<rootDir>/src/**/*.(test|spec).{js,jsx,ts,tsx}",
+    "<rootDir>/v2/**/*.(test|spec).{js,jsx,ts,tsx}",
+  ],
   coverageThreshold: {
     global: {
       lines: thresholds.lines || 80,

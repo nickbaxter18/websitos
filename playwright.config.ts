@@ -7,8 +7,10 @@ export default defineConfig({
     port: 5173, // ✅ match Vite dev server
     reuseExistingServer: !process.env.CI,
   },
+  reporter: [["list"], ["json", { outputFile: "coverage/e2e/playwright-report.json" }]],
   use: {
     baseURL: "http://localhost:5173", // ✅ match Vite dev server
     headless: true,
+    trace: "on-first-retry",
   },
 });

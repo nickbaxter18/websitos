@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        task: [frontend, backend]
+        task: [frontend, backend, e2e]
     defaults:
       run:
         working-directory: .
@@ -32,20 +32,20 @@ jobs:
           echo "::add-matcher::.github/matchers/python.json"
           echo "::add-matcher::.github/matchers/ts.json"
 
-      - name: Setup Node.js (for frontend)
-        if: matrix.task == 'frontend'
+      - name: Setup Node.js (for frontend/e2e)
+        if: matrix.task != 'backend'
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
 
-      - name: Setup pnpm (for frontend)
-        if: matrix.task == 'frontend'
+      - name: Setup pnpm (for frontend/e2e)
+        if: matrix.task != 'backend'
         uses: pnpm/action-setup@v2
         with:
           version: 10
 
-      - name: Cache pnpm (for frontend)
-        if: matrix.task == 'frontend'
+      - name: Cache pnpm (for frontend/e2e)
+        if: matrix.task != 'backend'
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
@@ -67,7 +67,7 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Install frontend dependencies
-        if: matrix.task == 'frontend'
+        if: matrix.task == 'frontend' || matrix.task == 'e2e'
         run: pnpm install --frozen-lockfile
 
       - name: Install backend dependencies
@@ -103,10 +103,10 @@ jobs:
         if: matrix.task == 'backend'
         run: |
           echo "::group:: Running Pytest coverage"
-          pytest --cov=api --cov-report=xml --cov-report=term-missing || EXIT=$?
+          pytest --cov=backend --cov=api --cov-report=xml:coverage/coverage.xml --cov-report=term-missing || EXIT=$?
           echo "::endgroup::"
-          if [ -f coverage.xml ]; then
-            python scripts/annotate_coverage.py coverage.xml
+          if [ -f coverage/coverage.xml ]; then
+            python scripts/annotate_coverage.py coverage/coverage.xml
           else
             echo "::error file=backend/tests::coverage.xml missing"; exit 1
           fi
@@ -115,11 +115,17 @@ jobs:
       - name: Print Pytest Coverage Summary
         if: always() && matrix.task == 'backend'
         run: |
-          if [ -f coverage.xml ]; then
-            head -n 50 coverage.xml
+          if [ -f coverage/coverage.xml ]; then
+            head -n 50 coverage/coverage.xml
           else
             echo "⚠️ No Pytest coverage XML found"
           fi
+
+      - name: Run e2e coverage (Playwright)
+        if: matrix.task == 'e2e'
+        run: |
+          NODE_ENV=test pnpm build
+          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test
 
   upload-codecov:
     needs: coverage
@@ -130,9 +136,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify Coverage Files
+        run: |
+          echo "📂 Coverage directory contents:" && ls -lh coverage || true
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info,./coverage.xml
+          files: ./coverage/lcov.info,./coverage/coverage.xml,./coverage/e2e/lcov.info
           fail_ci_if_error: true

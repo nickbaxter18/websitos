@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        task: [lint, prettier, type-check, test:unit]
+        task: [lint, prettier, type-check, test:unit, test:e2e]
     defaults:
       run:
         working-directory: .
@@ -80,7 +80,7 @@ jobs:
       - name: Run TypeScript type-check
         if: matrix.task == 'type-check'
         run: |
-          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-report.txt 2>&1 || true
+          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck | tee tsc-report.txt || true
           if [ ! -s tsc-report.txt ]; then echo 'No TSC output' > tsc-report.txt; fi
 
       - name: Upload TSC report
@@ -103,4 +103,22 @@ jobs:
         with:
           name: frontend-jest-results
           path: jest-report.json
+          retention-days: 14
+
+      - name: Build frontend with coverage instrumentation
+        if: matrix.task == 'test:e2e'
+        run: |
+          NODE_ENV=test pnpm build
+
+      - name: Run Playwright E2E tests with coverage
+        if: matrix.task == 'test:e2e'
+        run: |
+          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test
+
+      - name: Upload Playwright E2E results
+        if: always() && matrix.task == 'test:e2e'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-playwright-results
+          path: coverage/e2e/lcov.info
           retention-days: 14
