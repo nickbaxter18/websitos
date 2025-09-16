@@ -50,13 +50,13 @@ jobs:
           echo "::add-matcher::.github/matchers/ts.json"
 
       - name: Run ESLint
-        if: matrix.task == 'lint'
+        if: ${{ matrix.task == 'lint' }}
         run: |
           pnpm exec eslint src v2 ops --format json --output-file eslint-report.json || true
           if [ ! -f eslint-report.json ]; then echo '{}' > eslint-report.json; fi
 
       - name: Upload ESLint report
-        if: always() && matrix.task == 'lint'
+        if: ${{ always() && matrix.task == 'lint' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-eslint-report
@@ -64,13 +64,13 @@ jobs:
           retention-days: 14
 
       - name: Run Prettier
-        if: matrix.task == 'prettier'
+        if: ${{ matrix.task == 'prettier' }}
         run: |
           pnpm exec prettier --check . > prettier-report.txt 2>&1 || true
           if [ ! -s prettier-report.txt ]; then echo 'No Prettier output' > prettier-report.txt; fi
 
       - name: Upload Prettier report
-        if: always() && matrix.task == 'prettier'
+        if: ${{ always() && matrix.task == 'prettier' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-prettier-report
@@ -78,13 +78,13 @@ jobs:
           retention-days: 14
 
       - name: Run TypeScript type-check
-        if: matrix.task == 'type-check'
+        if: ${{ matrix.task == 'type-check' }}
         run: |
           pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck | tee tsc-report.txt || true
           if [ ! -s tsc-report.txt ]; then echo 'No TSC output' > tsc-report.txt; fi
 
       - name: Upload TSC report
-        if: always() && matrix.task == 'type-check'
+        if: ${{ always() && matrix.task == 'type-check' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-tsc-report
@@ -92,13 +92,13 @@ jobs:
           retention-days: 14
 
       - name: Run Jest unit tests
-        if: matrix.task == 'test:unit'
+        if: ${{ matrix.task == 'test:unit' }}
         run: |
           npx pnpm exec jest --json --outputFile=jest-report.json --reporters=default --reporters=jest-github-actions-reporter || true
           if [ ! -s jest-report.json ]; then echo '{}' > jest-report.json; fi
 
       - name: Upload Jest results
-        if: always() && matrix.task == 'test:unit'
+        if: ${{ always() && matrix.task == 'test:unit' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-jest-results
@@ -106,17 +106,17 @@ jobs:
           retention-days: 14
 
       - name: Build frontend with coverage instrumentation
-        if: matrix.task == 'test:e2e'
+        if: ${{ matrix.task == 'test:e2e' }}
         run: |
           NODE_ENV=test pnpm build
 
       - name: Run Playwright E2E tests with coverage
-        if: matrix.task == 'test:e2e'
+        if: ${{ matrix.task == 'test:e2e' }}
         run: |
           pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test
 
       - name: Upload Playwright E2E results
-        if: always() && matrix.task == 'test:e2e'
+        if: ${{ always() && matrix.task == 'test:e2e' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-playwright-results

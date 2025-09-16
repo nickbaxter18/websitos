@@ -33,32 +33,32 @@ jobs:
           echo "::add-matcher::.github/matchers/ts.json"
 
       - name: Setup Node.js (for frontend/e2e)
-        if: matrix.task != 'backend'
+        if: ${{ matrix.task != 'backend' }}
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
 
       - name: Setup pnpm (for frontend/e2e)
-        if: matrix.task != 'backend'
+        if: ${{ matrix.task != 'backend' }}
         uses: pnpm/action-setup@v2
         with:
           version: 10
 
       - name: Cache pnpm (for frontend/e2e)
-        if: matrix.task != 'backend'
+        if: ${{ matrix.task != 'backend' }}
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Setup Python (for backend)
-        if: matrix.task == 'backend'
+        if: ${{ matrix.task == 'backend' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Cache pip wheels (for backend)
-        if: matrix.task == 'backend'
+        if: ${{ matrix.task == 'backend' }}
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -67,18 +67,18 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Install frontend dependencies
-        if: matrix.task == 'frontend' || matrix.task == 'e2e'
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
         run: pnpm install --frozen-lockfile
 
       - name: Install backend dependencies
-        if: matrix.task == 'backend'
+        if: ${{ matrix.task == 'backend' }}
         run: |
           python -m pip install --upgrade pip
           echo ">>> Installing backend dependencies"
           pip install --prefer-binary -r requirements.txt || pip install -r requirements.txt
 
       - name: Run frontend coverage (Jest)
-        if: matrix.task == 'frontend'
+        if: ${{ matrix.task == 'frontend' }}
         run: |
           echo ">>> Running Jest with coverage"
           pnpm test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
@@ -92,7 +92,7 @@ jobs:
           exit ${EXIT:-0}
 
       - name: Run backend coverage (Pytest)
-        if: matrix.task == 'backend'
+        if: ${{ matrix.task == 'backend' }}
         run: |
           echo ">>> Running Pytest with coverage"
           pytest --cov=backend --cov=api --cov-report=xml:coverage/coverage.xml --cov-report=term-missing || EXIT=$?
@@ -106,7 +106,7 @@ jobs:
           exit ${EXIT:-0}
 
       - name: Run e2e coverage (Playwright)
-        if: matrix.task == 'e2e'
+        if: ${{ matrix.task == 'e2e' }}
         run: |
           echo ">>> Building frontend with coverage instrumentation"
           NODE_ENV=test pnpm build
