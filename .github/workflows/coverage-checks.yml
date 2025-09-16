@@ -89,6 +89,14 @@ jobs:
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
           exit ${EXIT:-0}
 
+      - name: Ensure coverage directory for E2E
+        if: ${{ matrix.task == 'e2e' }}
+        run: mkdir -p coverage/e2e
+
+      - name: Install Playwright Browsers
+        if: ${{ matrix.task == 'e2e' }}
+        run: pnpm exec playwright install --with-deps
+
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |
