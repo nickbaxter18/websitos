@@ -17,7 +17,7 @@
     "preview": "vite preview",
     "test": "pnpm run test:unit && pnpm run test:e2e",
     "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --clearCache && cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:ci": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --coverage --coverageReporters=json-summary --coverageReporters=lcov --coverageReporters=cobertura --json --outputFile=jest-report.json",
+    "test:ci": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage --coverageReporters=json-summary --coverageReporters=lcov --coverageReporters=cobertura --json --outputFile=jest-report.json",
     "test:e2e": "playwright test",
     "type-check": "tsc --noEmit",
     "lint": "eslint src v2 ops",

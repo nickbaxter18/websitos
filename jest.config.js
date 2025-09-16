@@ -23,10 +23,8 @@ export default {
     "!**/babel.config.js",
   ],
   coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
-  testMatch: [
-    "<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
-    "<rootDir>/v2/**/*.{test,spec}.{js,jsx,ts,tsx}",
-  ],
+  coverageDirectory: "coverage/frontend",
+  testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
   coverageThreshold: {
     global: {
       lines: 80,
