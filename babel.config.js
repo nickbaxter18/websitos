@@ -9,9 +9,5 @@ export default {
     "@babel/preset-env",
     "@babel/preset-typescript",
   ],
-  env: {
-    test: {
-      plugins: ["istanbul"],
-    },
-  },
+  // Removed istanbul plugin here, since Jest automatically handles coverage instrumentation
 };
