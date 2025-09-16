@@ -67,7 +67,7 @@ jobs:
         if: matrix.task == 'prettier'
         run: |
           pnpm exec prettier --check . > prettier-report.txt 2>&1 || true
-          if [ ! -f prettier-report.txt ]; then echo 'No Prettier output' > prettier-report.txt; fi
+          if [ ! -s prettier-report.txt ]; then echo 'No Prettier output' > prettier-report.txt; fi
 
       - name: Upload Prettier report
         if: always() && matrix.task == 'prettier'
@@ -81,7 +81,7 @@ jobs:
         if: matrix.task == 'type-check'
         run: |
           pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-report.txt 2>&1 || true
-          if [ ! -f tsc-report.txt ]; then echo 'No TSC output' > tsc-report.txt; fi
+          if [ ! -s tsc-report.txt ]; then echo 'No TSC output' > tsc-report.txt; fi
 
       - name: Upload TSC report
         if: always() && matrix.task == 'type-check'

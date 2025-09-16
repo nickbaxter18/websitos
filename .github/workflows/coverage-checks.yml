@@ -31,7 +31,6 @@ jobs:
           echo "::add-matcher::.github/matchers/error.json"
           echo "::add-matcher::.github/matchers/python.json"
           echo "::add-matcher::.github/matchers/ts.json"
-          echo "::add-matcher::.github/matchers/git.json"
 
       - name: Setup Node.js (for frontend)
         if: matrix.task == 'frontend'
