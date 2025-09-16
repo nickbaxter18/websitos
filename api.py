@@ -2,27 +2,21 @@
 
 import os
 import logging
-import hashlib
-import re
-from typing import List, Optional
-from uuid import uuid4
+from typing import Dict
 
-import numpy as np
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse, FileResponse, Response, RedirectResponse
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.responses import FileResponse
-from pydantic import BaseModel, Field
-
-from qdrant_client import QdrantClient
-from qdrant_client.http import models as qm
-from openai import OpenAI
 
 from api_logging import StructuredLoggingMiddleware
+
+# Optional deps (no stubs available)
+from qdrant_client import QdrantClient  # type: ignore
+from qdrant_client.http import models as qm  # type: ignore
+from openai import OpenAI  # type: ignore
 
 # -------------------------------------------------------------------
 # Env Config
@@ -72,18 +66,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # -------------------------------------------------------------------
 # Healthcheck Endpoint
 # -------------------------------------------------------------------
 @app.get("/api/health", tags=["system"])
-async def healthcheck():
+async def healthcheck() -> Dict[str, bool]:
     return {"ok": True}
 
 
-# Alias for non-API healthcheck (used in smoke tests)
 @app.get("/health", tags=["system"])
-async def health_alias():
+async def health_alias() -> Dict[str, bool]:
     return {"ok": True}
 
 
@@ -91,16 +83,16 @@ async def health_alias():
 # Status Endpoint
 # -------------------------------------------------------------------
 @app.get("/api/status", tags=["system"])
-async def status():
-    return {"ok": True, "version": app.version, "title": app.title}
+async def status() -> Dict[str, str]:
+    return {"ok": True, "version": app.version, "title": app.title}  # type: ignore
 
 
 # -------------------------------------------------------------------
 # Version Endpoint
 # -------------------------------------------------------------------
 @app.get("/api/version", tags=["system"])
-async def version():
-    return {"version": app.version, "title": app.title}
+async def version() -> Dict[str, str]:
+    return {"version": app.version, "title": app.title}  # type: ignore
 
 
 # -------------------------------------------------------------------
@@ -111,7 +103,7 @@ if os.path.isdir(DIST_DIR):
     app.mount("/", StaticFiles(directory=DIST_DIR, html=True), name="frontend")
 
     @app.get("/{full_path:path}")
-    async def catch_all(full_path: str):
+    async def catch_all(full_path: str) -> Response:
         index_file = os.path.join(DIST_DIR, "index.html")
         if os.path.exists(index_file):
             return FileResponse(index_file)
