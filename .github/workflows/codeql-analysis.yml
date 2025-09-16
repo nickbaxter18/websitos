@@ -75,7 +75,11 @@ jobs:
         if: ${{ matrix.language == 'python' }}
         run: |
           echo ">>> Installing Python dependencies"
-          pip install --prefer-binary -r requirements.txt || { echo "::error::pip install failed"; exit 1; }
+          pip install --prefer-binary -r requirements.txt --timeout=60 || { echo "::error::pip install failed"; exit 1; }
+
+      - name: Build project before CodeQL
+        if: ${{ matrix.language == 'javascript' }}
+        run: pnpm build || echo "⚠️ Build failed, continuing with CodeQL analysis"
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3

@@ -13,11 +13,6 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from api_logging import StructuredLoggingMiddleware
 
-# Optional deps (no stubs available)
-from qdrant_client import QdrantClient  # type: ignore
-from qdrant_client.http import models as qm  # type: ignore
-from openai import OpenAI  # type: ignore
-
 # -------------------------------------------------------------------
 # Env Config
 # -------------------------------------------------------------------

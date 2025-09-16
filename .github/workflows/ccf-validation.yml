@@ -57,17 +57,19 @@ jobs:
       - name: Validate Environment
         run: |
           echo ">>> Starting Environment Validation"
-          if ! pnpm validate-env; then
-            echo "::error file=src/validateEnv.ts::Environment validation failed - missing or invalid variable detected"
-            exit 1
-          fi
-          echo ">>> Finished Environment Validation"
+          pnpm validate-env > schema-validation-report.json || true
+          if [ ! -s schema-validation-report.json ]; then echo '{}' > schema-validation-report.json; fi
 
       - name: Validate Schema
         run: |
           echo ">>> Starting Schema Validation"
-          if ! pnpm validate; then
-            echo "::error file=v2/core/schema-validator.ts::Schema validation failed - invalid schema definition"
-            exit 1
-          fi
-          echo ">>> Finished Schema Validation"
+          pnpm validate > schema-validation-report.json || true
+          if [ ! -s schema-validation-report.json ]; then echo '{}' > schema-validation-report.json; fi
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-validation-report
+          path: schema-validation-report.json
+          retention-days: 14

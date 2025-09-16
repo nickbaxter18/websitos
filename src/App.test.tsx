@@ -4,6 +4,5 @@ import App from "./App";
 
 test("renders App without crashing (smoke test)", () => {
   render(<App />);
-  // ✅ If render() completes, the test passes
   expect(true).toBe(true);
 });

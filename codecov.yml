@@ -11,3 +11,15 @@ coverage:
 comment:
   layout: "reach, diff, files"
   behavior: default
+
+# Ensure thresholds stay in sync with coverage.config.json
+# coverage.config.json defines: lines: 80, branches: 75, functions: 80, statements: 80
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
