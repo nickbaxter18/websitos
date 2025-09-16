@@ -74,58 +74,47 @@ jobs:
         if: matrix.task == 'backend'
         run: |
           python -m pip install --upgrade pip
-          pip install --prefer-binary -r requirements.txt || pip install --prefer-binary -r requirements.txt
-          pip install pytest pytest-cov pytest-github-actions-annotate-failures
+          echo ">>> Installing backend dependencies"
+          pip install --prefer-binary -r requirements.txt || pip install -r requirements.txt
 
       - name: Run frontend coverage (Jest)
         if: matrix.task == 'frontend'
         run: |
-          echo "::group:: Running Jest coverage"
+          echo ">>> Running Jest with coverage"
           pnpm test:ci -- --coverage --coverageReporters=json-summary --coverageReporters=lcov || EXIT=$?
-          echo "::endgroup::"
+          echo ">>> Jest finished with exit code ${EXIT:-0}"
           if [ -f coverage/coverage-summary.json ]; then
             node scripts/annotate-coverage.js coverage/coverage-summary.json
           else
             echo "::error file=frontend/tests::coverage-summary.json missing"; exit 1
           fi
+          ls -R coverage || true
           exit ${EXIT:-0}
-
-      - name: Print Jest Coverage Summary
-        if: always() && matrix.task == 'frontend'
-        run: |
-          if [ -f coverage/coverage-summary.json ]; then
-            cat coverage/coverage-summary.json
-          else
-            echo "⚠️ No Jest coverage summary found"
-          fi
 
       - name: Run backend coverage (Pytest)
         if: matrix.task == 'backend'
         run: |
-          echo "::group:: Running Pytest coverage"
+          echo ">>> Running Pytest with coverage"
           pytest --cov=backend --cov=api --cov-report=xml:coverage/coverage.xml --cov-report=term-missing || EXIT=$?
-          echo "::endgroup::"
+          echo ">>> Pytest finished with exit code ${EXIT:-0}"
           if [ -f coverage/coverage.xml ]; then
             python scripts/annotate_coverage.py coverage/coverage.xml
           else
             echo "::error file=backend/tests::coverage.xml missing"; exit 1
           fi
+          ls -R coverage || true
           exit ${EXIT:-0}
-
-      - name: Print Pytest Coverage Summary
-        if: always() && matrix.task == 'backend'
-        run: |
-          if [ -f coverage/coverage.xml ]; then
-            head -n 50 coverage/coverage.xml
-          else
-            echo "⚠️ No Pytest coverage XML found"
-          fi
 
       - name: Run e2e coverage (Playwright)
         if: matrix.task == 'e2e'
         run: |
+          echo ">>> Building frontend with coverage instrumentation"
           NODE_ENV=test pnpm build
-          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test
+          echo ">>> Running Playwright with NYC coverage"
+          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || EXIT=$?
+          echo ">>> Playwright finished with exit code ${EXIT:-0}"
+          ls -R coverage/e2e || true
+          exit ${EXIT:-0}
 
   upload-codecov:
     needs: coverage
