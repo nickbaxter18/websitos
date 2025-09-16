@@ -1,7 +1,9 @@
 try:
     from pydantic_settings import BaseSettings  # Pydantic v2
 except ImportError:
-    from pydantic import BaseSettings  # fallback for Pydantic v1
+    from pydantic import BaseSettings as LegacyBaseSettings  # fallback for Pydantic v1
+
+    BaseSettings = LegacyBaseSettings
 
 from pydantic import ValidationError
 
