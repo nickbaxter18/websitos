@@ -1,7 +1,3 @@
-#!/bin/sh
-
-. "$(dirname "$0")/_/husky.sh"
-
 echo "✅ Husky pre-push running..."
 
 # Run TypeScript type-checks
