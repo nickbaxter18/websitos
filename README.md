@@ -7,7 +7,7 @@
 ![PR Summary](https://github.com/nickbaxter18/websitos/actions/workflows/pr-summary.yml/badge.svg)
 ![Render Deploy](https://github.com/nickbaxter18/websitos/actions/workflows/render-deploy.yml/badge.svg)
 [![Deploy Now](https://img.shields.io/badge/Deploy-Now-brightgreen)](https://github.com/nickbaxter18/websitos/actions/workflows/render-deploy.yml)
-[![codecov](https://codecov.io/gh/nickbaxter18/websitos/branch/main/graph/badge.svg)](https://codecov.io/gh/nickbaxter18/websitos)
+[![codecov](https://codecov.io/gh/nickbaxter18/websitos/branch/main/graph/badge.svg?token=${CODECOV_TOKEN}&cachebust=1)](https://codecov.io/gh/nickbaxter18/websitos)
 
 ---
 
