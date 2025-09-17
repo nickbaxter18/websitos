@@ -79,7 +79,10 @@ jobs:
 
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
-        run: pnpm test:ci
+        run: |
+          pnpm test:ci
+          echo ">>> Checking coverage/frontend before artifact upload"
+          ls -R coverage/frontend || echo "❌ No coverage for frontend"
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
@@ -90,25 +93,23 @@ jobs:
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
+          echo ">>> Checking coverage/backend before artifact upload"
+          ls -R coverage/backend || echo "❌ No coverage for backend"
           exit ${EXIT:-0}
-
-      - name: Ensure coverage directory for E2E
-        if: ${{ matrix.task == 'e2e' }}
-        run: mkdir -p coverage/e2e
-
-      - name: Install Playwright Browsers
-        if: ${{ matrix.task == 'e2e' }}
-        run: pnpm exec playwright install --with-deps
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |
+          mkdir -p coverage/e2e
+          pnpm exec playwright install --with-deps
           echo ">>> Building frontend with coverage instrumentation"
           NODE_ENV=test pnpm build
           echo ">>> Running Playwright with NYC coverage"
           pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || EXIT=$?
           if [ ! -f coverage/e2e/lcov.info ]; then echo "⚠️ No E2E coverage file found"; fi
           echo ">>> Playwright finished with exit code ${EXIT:-0}"
+          echo ">>> Checking coverage/e2e before artifact upload"
+          ls -R coverage/e2e || echo "❌ No coverage for e2e"
           exit ${EXIT:-0}
 
       - name: Upload coverage artifact
@@ -116,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.task }}
-          path: coverage/${{ matrix.task }}
+          path: coverage/${{ matrix.task }}/**
 
   upload-codecov:
     needs: coverage
@@ -127,11 +128,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download coverage artifacts
+      - name: Download frontend coverage
         uses: actions/download-artifact@v4
         with:
-          path: coverage
-          merge-multiple: true
+          name: frontend
+          path: coverage/frontend
+
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend
+          path: coverage/backend
+
+      - name: Download e2e coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e
+          path: coverage/e2e
 
       - name: Debug coverage file contents
         run: |
@@ -147,6 +160,7 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/frontend/lcov.info
           flags: frontend
+          slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
           disable_search: true
@@ -160,6 +174,7 @@ jobs:
             ${{ github.workspace }}/coverage/backend/coverage.xml
             ${{ github.workspace }}/coverage/backend/lcov.info
           flags: backend
+          slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
           disable_search: true
@@ -171,6 +186,7 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/e2e/lcov.info
           flags: e2e
+          slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
           disable_search: true
@@ -189,6 +205,7 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/lcov.info
           flags: all
+          slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
           disable_search: true
