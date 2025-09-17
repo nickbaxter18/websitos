@@ -1,0 +1,12 @@
+[run]
+branch = True
+source =
+    backend
+    api.py
+
+[report]
+omit =
+    */tests/*
+    */node_modules/*
+    */migrations/*
+    */__pycache__/*
