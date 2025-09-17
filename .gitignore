@@ -1,9 +1,16 @@
-# Node
+# Dependencies
 node_modules/
 
-# Build outputs
+# Build artifacts
 dist/
+.next/
+out/
+
+# Coverage & debug
 coverage/
+.nyc_output/
+vite-debug.log
+preview.log
 
 # Logs
 npm-debug.log*
