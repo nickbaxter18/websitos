@@ -90,7 +90,6 @@ jobs:
           echo ">>> Running Pytest with coverage"
           pytest --cov=backend --cov=api \
             --cov-report=xml:coverage/backend/coverage.xml \
-            --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
           echo ">>> Checking coverage/backend before artifact upload"
@@ -175,9 +174,7 @@ jobs:
       - name: Upload backend coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: |
-            ${{ github.workspace }}/coverage/backend/coverage.xml
-            ${{ github.workspace }}/coverage/backend/lcov.info
+          files: ${{ github.workspace }}/coverage/backend/coverage.xml
           flags: backend
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
@@ -187,6 +184,7 @@ jobs:
           verbose: true
 
       - name: Upload e2e coverage to Codecov
+        if: ${{ hashFiles('coverage/e2e/lcov.info') != '' }}
         uses: codecov/codecov-action@v3
         with:
           files: ${{ github.workspace }}/coverage/e2e/lcov.info
