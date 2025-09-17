@@ -85,11 +85,11 @@ jobs:
           ls -lh coverage/frontend || echo "❌ No coverage for frontend"
           head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage file"
 
-      - name: Run backend coverage (Pytest)
+      - name: Run backend coverage (Pytest with branch coverage)
         if: ${{ matrix.task == 'backend' }}
         run: |
-          echo ">>> Running Pytest with coverage"
-          pytest --cov=backend --cov=api \
+          echo ">>> Running Pytest with line + branch coverage"
+          pytest --cov=backend --cov=api --cov-branch \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing || EXIT=$?

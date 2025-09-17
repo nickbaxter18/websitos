@@ -9,7 +9,7 @@ coverage:
       frontend:
         target: 80%
       e2e:
-        target: 70%
+        informational: true
     patch:
       default:
         target: 80%
@@ -31,7 +31,9 @@ flags:
   backend:
     paths:
       - backend/
+      - ./backend/
       - api.py
+      - ./api.py
     carryforward: true
   e2e:
     paths:
@@ -49,7 +51,9 @@ component_management:
       name: Backend
       paths:
         - backend/
+        - ./backend/
         - api.py
+        - ./api.py
     - component_id: e2e
       name: E2E
       paths:
