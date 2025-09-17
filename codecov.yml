@@ -27,13 +27,16 @@ flags:
     paths:
       - src/
       - v2/
+    carryforward: true
   backend:
     paths:
       - backend/
       - api.py
+    carryforward: true
   e2e:
     paths:
       - tests/e2e/
+    carryforward: true
 
 component_management:
   individual_components:
