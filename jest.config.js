@@ -1,6 +1,21 @@
 import fs from "fs";
 
-const config = JSON.parse(fs.readFileSync("./coverage.config.json", "utf-8"));
+let config = {
+  globalThreshold: 80,
+  frontendThreshold: 80,
+  backendThreshold: 90,
+  backendJsThreshold: 80,
+  e2eThreshold: 70,
+};
+
+try {
+  const file = fs.readFileSync("./coverage.config.json", "utf-8");
+  if (file) {
+    config = JSON.parse(file);
+  }
+} catch (e) {
+  console.warn("⚠️ Using default coverage thresholds (coverage.config.json missing or invalid)");
+}
 
 export default {
   projects: [
