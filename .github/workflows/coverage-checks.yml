@@ -82,7 +82,8 @@ jobs:
         run: |
           pnpm test:ci
           echo ">>> Checking coverage/frontend before artifact upload"
-          ls -R coverage/frontend || echo "❌ No coverage for frontend"
+          ls -lh coverage/frontend || echo "❌ No coverage for frontend"
+          head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage file"
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
@@ -183,7 +184,7 @@ jobs:
           echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
           head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e coverage"
 
-      - name: Upload frontend coverage to Codecov
+      - name: Upload frontend coverage to Codecov (LCOV only)
         uses: codecov/codecov-action@v3
         with:
           files: ${{ github.workspace }}/coverage/frontend/lcov.info
