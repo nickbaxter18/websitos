@@ -35,6 +35,7 @@ export default {
         "<rootDir>/WEBSITEOS/",
         "<rootDir>/dist/",
         "<rootDir>/v2/",
+        "<rootDir>/backend/", // 🚫 ignore backend for Jest (Python handles backend)
       ],
       setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
       moduleNameMapper: {
@@ -66,36 +67,6 @@ export default {
       restoreMocks: true,
       testTimeout: 30000,
       watchPlugins: ["jest-watch-typeahead/filename", "jest-watch-typeahead/testname"],
-    },
-    {
-      displayName: "backend-js",
-      testEnvironment: "node",
-      coverageProvider: "v8",
-      transform: {
-        "^.+\\.(js|jsx)$": "babel-jest",
-      },
-      moduleFileExtensions: ["js", "jsx", "json", "node"],
-      collectCoverageFrom: [
-        "backend/**/*.{js,jsx}",
-        "!**/node_modules/**",
-        "!**/dist/**",
-        "!**/coverage/**",
-      ],
-      coverageThreshold: {
-        global: {
-          lines: config.backendJsThreshold,
-          branches: config.backendJsThreshold,
-          functions: config.backendJsThreshold,
-          statements: config.backendJsThreshold,
-        },
-      },
-      coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
-      coverageDirectory: "coverage/backend-js",
-      testMatch: ["<rootDir>/backend/**/*.test.[jt]s?(x)"],
-      clearMocks: true,
-      resetMocks: true,
-      restoreMocks: true,
-      testTimeout: 30000,
     },
   ],
 };

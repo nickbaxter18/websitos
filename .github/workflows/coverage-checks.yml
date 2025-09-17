@@ -12,9 +12,9 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45   # extended to support Playwright installs
     strategy:
-      fail-fast: true
+      fail-fast: false    # ✅ prevent other jobs from being canceled when one fails
       matrix:
         task: [frontend, backend, e2e]
     defaults:
@@ -24,7 +24,7 @@ jobs:
       - name: Checkout repository (robust)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1   # only latest commit, avoids massive fetch
+          fetch-depth: 1
           persist-credentials: false
           clean: true
 
@@ -145,6 +145,13 @@ jobs:
           ls -lh coverage/e2e || echo "❌ No coverage for e2e"
           exit ${EXIT:-0}
 
+      - name: Cache Playwright Browsers
+        if: ${{ matrix.task == 'e2e' }}
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - name: Upload coverage artifact (frontend)
         if: ${{ matrix.task == 'frontend' }}
         uses: actions/upload-artifact@v4
@@ -174,7 +181,7 @@ jobs:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1   # avoid hanging on tags
+          fetch-depth: 1
           persist-credentials: false
           clean: true
 
