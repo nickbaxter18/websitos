@@ -1,4 +1,4 @@
-import fs from "fs";
+const fs = require("fs");
 
 let config = {
   globalThreshold: 80,
@@ -17,7 +17,7 @@ try {
   console.warn("⚠️ Using default coverage thresholds (coverage.config.json missing or invalid)");
 }
 
-export default {
+module.exports = {
   projects: [
     {
       displayName: "frontend",
