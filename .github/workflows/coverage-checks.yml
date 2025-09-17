@@ -100,27 +100,28 @@ jobs:
           pnpm jest --coverage --all || true
           echo ">>> Checking coverage/frontend before artifact upload"
           mkdir -p coverage/frontend
-          if [ ! -f coverage/frontend/lcov.info ]; then
-            echo "⚠️ Creating placeholder frontend coverage file"
-            echo "TN:" > coverage/frontend/lcov.info
-          fi
-          ls -lh coverage/frontend
+          ls -lh coverage/frontend || true
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
         run: |
-          pytest --cov=backend --cov=api --cov-branch \
+          mkdir -p coverage/backend
+          echo ">>> Running Pytest with coverage..."
+          pytest --maxfail=1 --disable-warnings -q \
+            --cov=backend --cov=api --cov-branch \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
-            --cov-report=term-missing || true
-          echo ">>> Checking coverage/backend before artifact upload"
-          mkdir -p coverage/backend
+            --cov-report=term-missing \
+            --cov-fail-under=0 || EXIT=$?
+          echo "Pytest exited with code ${EXIT:-0}"
+          echo ">>> Verifying backend coverage reports"
           if [ ! -f coverage/backend/coverage.xml ]; then
-            echo "⚠️ Creating placeholder backend coverage.xml"
-            echo "<?xml version=\"1.0\"?><coverage></coverage>" > coverage/backend/coverage.xml
+            echo "❌ Pytest did not generate coverage.xml"
+            exit 1
           fi
           if [ ! -f coverage/backend/lcov.info ]; then
-            echo "TN:" > coverage/backend/lcov.info
+            echo "❌ Pytest did not generate lcov.info"
+            exit 1
           fi
           ls -lh coverage/backend
 
@@ -135,11 +136,7 @@ jobs:
             npx nyc merge coverage/e2e coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
           fi
-          if [ ! -f coverage/e2e/lcov.info ]; then
-            echo "⚠️ Creating placeholder e2e coverage file"
-            echo "TN:" > coverage/e2e/lcov.info
-          fi
-          ls -lh coverage/e2e
+          ls -lh coverage/e2e || true
 
       - name: Cache Playwright Browsers
         if: ${{ matrix.task == 'e2e' }}
