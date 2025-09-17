@@ -24,7 +24,7 @@ module.exports = {
       displayName: "frontend",
       testEnvironment: "jsdom",
       transform: {
-        "^.+\\.[tj]sx?$": ["babel-jest", { configFile: "./.babelrc.cjs" }],
+        "^.+\\.[tj]sx?$": "babel-jest",
       },
       extensionsToTreatAsEsm: [".ts", ".tsx"],
       moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],

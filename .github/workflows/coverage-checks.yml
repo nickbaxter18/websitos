@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v19
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v20
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -90,6 +90,10 @@ jobs:
           for i in 1 2 3; do
             pip install --prefer-binary -r requirements.txt && break || (echo "❌ pip install failed, retrying..." && sleep 10)
           done
+
+      - name: Ensure nyc installed (backend)
+        if: ${{ matrix.task == 'backend' }}
+        run: pnpm add -D nyc
 
       - name: Clean workspace caches
         run: |
