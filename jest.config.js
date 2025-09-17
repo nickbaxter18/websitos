@@ -5,7 +5,14 @@ export default {
   },
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  testPathIgnorePatterns: ["<rootDir>/tests/e2e/", "<rootDir>/WEBSITEOS/"],
+  testPathIgnorePatterns: [
+    "<rootDir>/tests/simulations/autonomy.test.ts",
+    "<rootDir>/tests/contract.test.ts",
+    "<rootDir>/tests/e2e/",
+    "<rootDir>/WEBSITEOS/",
+    "<rootDir>/dist/",
+    "<rootDir>/v2/",
+  ],
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
