@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v10
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v12
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -132,13 +132,20 @@ jobs:
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
+        env:
+          NODE_V8_COVERAGE: .nyc_output
         run: |
           mkdir -p coverage/e2e
           pnpm exec playwright install --with-deps
-          echo ">>> Building app with coverage instrumentation"
-          NODE_ENV=test ENABLE_COVERAGE=true pnpm vite build --debug
 
-          echo ">>> Running Playwright tests with coverage instrumentation"
+          echo ">>> Building app with coverage instrumentation"
+          NODE_ENV=test ENABLE_COVERAGE=true pnpm vite build --config vite.config.ts --debug | tee vite-debug.log
+
+          echo ">>> Starting instrumented preview server"
+          nohup pnpm vite preview --port=4173 > preview.log 2>&1 &
+          sleep 5
+
+          echo ">>> Running Playwright tests against instrumented preview"
           pnpm exec playwright test --reporter=list || true
 
           echo ">>> Checking raw NYC output"
@@ -164,7 +171,7 @@ jobs:
 
           ls -lh coverage/e2e
 
-      - name: Upload raw NYC and dist for debugging
+      - name: Upload raw NYC, dist, and debug logs for troubleshooting
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -173,6 +180,9 @@ jobs:
             dist/**
             .nyc_output/**
             coverage/e2e/**
+            vite-debug.log
+            preview.log
+            .babelrc
           retention-days: 5
 
       - name: Cache Playwright Browsers
