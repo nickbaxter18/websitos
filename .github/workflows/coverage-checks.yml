@@ -83,10 +83,10 @@ jobs:
           rm -rf dist coverage node_modules/.cache || true
           pnpm jest --clearCache || true
 
-      - name: Run frontend coverage (Jest)
+      - name: Run frontend coverage (Jest with --all)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm test:ci
+          pnpm jest --coverage --all
           echo ">>> Checking coverage/frontend before artifact upload"
           ls -lh coverage/frontend || echo "❌ No coverage for frontend"
           head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage file"
@@ -190,7 +190,7 @@ jobs:
           echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
           head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage"
           echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
-          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend XML"
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend coverage"
           head -n 20 coverage/backend/lcov.info || echo "❌ Missing backend LCOV"
           echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
           head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e coverage"
@@ -240,6 +240,7 @@ jobs:
       - name: Merge coverage fallback
         run: |
           echo ">>> Merging all coverage into one report as fallback"
+          pnpm add -g nyc || true
           npx nyc merge coverage coverage/coverage-final.json || true
           npx nyc report --reporter=lcov --report-dir=coverage || true
           ls -lh coverage || true
