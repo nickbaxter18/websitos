@@ -97,10 +97,9 @@ jobs:
       - name: Run frontend coverage (Jest with --all)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm jest --coverage --all || EXIT=$?
+          pnpm jest --coverage --all
           echo ">>> Checking coverage/frontend before artifact upload"
           ls -lh coverage/frontend || echo "❌ No coverage for frontend"
-          exit ${EXIT:-0}
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
@@ -109,9 +108,8 @@ jobs:
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing \
-            --cov-fail-under=75 || EXIT=$?
+            --cov-fail-under=75
           ls -lh coverage/backend || echo "❌ No backend coverage"
-          exit ${EXIT:-0}
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
@@ -119,7 +117,7 @@ jobs:
           mkdir -p coverage/e2e
           pnpm exec playwright install --with-deps
           NODE_ENV=test pnpm build
-          pnpm exec playwright test --reporter=list || EXIT=$?
+          pnpm exec playwright test --reporter=list
           if [ -s coverage/e2e/coverage-final.json ]; then
             npx nyc merge coverage/e2e coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
@@ -127,7 +125,6 @@ jobs:
             rm -f coverage/e2e/lcov.info || true
           fi
           ls -lh coverage/e2e || echo "❌ No e2e coverage"
-          exit ${EXIT:-0}
 
       - name: Cache Playwright Browsers
         if: ${{ matrix.task == 'e2e' }}
@@ -156,6 +153,10 @@ jobs:
         with:
           name: e2e
           path: coverage/e2e/**
+
+      - name: Finalize logs for GitHub UI
+        if: always()
+        run: echo "✅ Coverage job finished cleanly, logs should be downloadable."
 
   upload-codecov:
     needs: coverage
