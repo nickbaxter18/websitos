@@ -20,6 +20,8 @@ jobs:
     defaults:
       run:
         working-directory: .
+    env:
+      NODE_OPTIONS: "--experimental-vm-modules"
     steps:
       - name: Checkout repository (robust)
         uses: actions/checkout@v4
@@ -57,7 +59,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v12
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v15
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -97,7 +99,7 @@ jobs:
       - name: Run frontend coverage (force reporters)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm jest --config jest.config.cjs --coverage --all \
+          pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
             --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
             --coverageDirectory=coverage/frontend
           echo ">>> Verifying frontend coverage files"
@@ -130,7 +132,7 @@ jobs:
           fi
           ls -lh coverage/backend
 
-      - name: Run e2e coverage (Playwright)
+      - name: Run e2e coverage (Playwright with instrumentation)
         if: ${{ matrix.task == 'e2e' }}
         env:
           NODE_V8_COVERAGE: .nyc_output
@@ -139,29 +141,22 @@ jobs:
           pnpm exec playwright install --with-deps
 
           echo ">>> Building app with coverage instrumentation"
-          NODE_ENV=test ENABLE_COVERAGE=true pnpm vite build --config vite.config.ts --debug | tee vite-debug.log
+          VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts --debug | tee vite-debug.log
 
           echo ">>> Starting instrumented preview server"
           nohup pnpm vite preview --port=4173 > preview.log 2>&1 &
           sleep 5
 
-          echo ">>> Running Playwright tests against instrumented preview"
+          echo ">>> Running Playwright tests"
           pnpm exec playwright test --reporter=list || true
 
-          echo ">>> Checking raw NYC output"
-          ls -R .nyc_output || echo "No .nyc_output at root"
-          ls -R dist/.nyc_output || echo "No .nyc_output in dist"
-          ls -R coverage/e2e || echo "No merged coverage yet"
-
+          echo ">>> Checking and merging browser coverage"
           if [ -d .nyc_output ]; then
-            echo ">>> Merging coverage from root .nyc_output"
             npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
-          elif [ -d dist/.nyc_output ]; then
-            echo ">>> Merging coverage from dist/.nyc_output"
-            npx nyc merge dist/.nyc_output coverage/e2e/coverage-merged.json || true
+            npx nyc report --reporter=lcov --report-dir=coverage/e2e || true
+          else
+            echo "⚠️ No .nyc_output found"
           fi
-
-          npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
 
           echo ">>> Verifying e2e coverage files"
           if [ ! -s coverage/e2e/lcov.info ]; then
@@ -170,6 +165,10 @@ jobs:
           fi
 
           ls -lh coverage/e2e
+
+      - name: Enforce coverage thresholds
+        run: |
+          npx nyc check-coverage --branches=70 --functions=70 --lines=70 --statements=70
 
       - name: Upload raw NYC, dist, and debug logs for troubleshooting
         if: always()

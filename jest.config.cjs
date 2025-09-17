@@ -28,13 +28,10 @@ module.exports = {
       extensionsToTreatAsEsm: [".ts", ".tsx"],
       moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
       testPathIgnorePatterns: [
-        "<rootDir>/tests/simulations/autonomy.test.ts",
-        "<rootDir>/tests/contract.test.ts",
-        "<rootDir>/tests/e2e/",
-        "<rootDir>/WEBSITEOS/",
         "<rootDir>/dist/",
-        "<rootDir>/v2/",
-        "<rootDir>/backend/",
+        "<rootDir>/coverage/",
+        "<rootDir>/WEBSITEOS/",
+        "<rootDir>/backend/"
       ],
       setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
       moduleNameMapper: {
@@ -47,7 +44,7 @@ module.exports = {
         "!**/dist/**",
         "!**/coverage/**",
         "!**/*.d.ts",
-        "!**/jest.config.js",
+        "!**/jest.config.cjs",
         "!**/babel.config.js",
       ],
       coverageThreshold: {
@@ -60,7 +57,10 @@ module.exports = {
       },
       coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
       coverageDirectory: "coverage/frontend",
-      testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
+      testMatch: [
+        "**/__tests__/**/*.[jt]s?(x)",
+        "**/?(*.)+(spec|test).[jt]s?(x)"
+      ],
       clearMocks: true,
       resetMocks: true,
       restoreMocks: true,
