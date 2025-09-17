@@ -22,7 +22,6 @@ export default {
     {
       displayName: "frontend",
       testEnvironment: "jsdom",
-      coverageProvider: "v8",
       transform: {
         "^.+\\.(ts|tsx|js|jsx)$": "babel-jest",
       },
@@ -35,7 +34,7 @@ export default {
         "<rootDir>/WEBSITEOS/",
         "<rootDir>/dist/",
         "<rootDir>/v2/",
-        "<rootDir>/backend/", // 🚫 ignore backend for Jest (Python handles backend)
+        "<rootDir>/backend/",
       ],
       setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
       moduleNameMapper: {
@@ -59,14 +58,11 @@ export default {
           statements: config.frontendThreshold,
         },
       },
-      coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
       coverageDirectory: "coverage/frontend",
       testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
       clearMocks: true,
       resetMocks: true,
       restoreMocks: true,
-      testTimeout: 30000,
-      watchPlugins: ["jest-watch-typeahead/filename", "jest-watch-typeahead/testname"],
     },
   ],
 };

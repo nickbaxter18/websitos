@@ -7,9 +7,10 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    environment: Websitos   # ✅ ensure secrets from Websitos are available
+    environment: Websitos
     permissions:
       contents: read
+    continue-on-error: true   # ✅ prevent sync failures from blocking CI
     env:
       EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
     steps:
@@ -30,11 +31,10 @@ jobs:
           fi
 
       - name: Probe ingest API endpoint
-        continue-on-error: false
+        continue-on-error: true
         env:
           INGEST_API_URL: https://websitos2.onrender.com/ingest_file
         run: |
-          echo "🔎 Probing ingest API..." | tee -a sync-report.json
           STATUS=000
           for i in 1 2 3; do
             STATUS=$(curl -s --fail --connect-timeout 10 --max-time 60 -o /dev/null -w "%{http_code}" "$INGEST_API_URL" || echo "000")
@@ -43,27 +43,23 @@ jobs:
               echo "✅ Ingest API reachable" | tee -a sync-report.json
               break
             fi
-            echo "⚠️ Ingest API not reachable (status $STATUS). Retrying..." | tee -a sync-report.json
             sleep $((5 * i))
           done
           if [ "$STATUS" -ne 200 ]; then
-            echo "::error file=.github/workflows/udigit-sync.yaml::Sync aborted – API unreachable (status $STATUS)" | tee -a sync-report.json
-            exit 1
+            echo "⚠️ Sync aborted – API unreachable (status $STATUS)" | tee -a sync-report.json
+            exit 0   # ✅ don't fail pipeline
           fi
 
       - name: Download repo archive
         run: |
-          echo ">>> Downloading repo archive" | tee -a sync-report.json
           curl -s --fail --connect-timeout 10 --max-time 60 -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/zipball/${{ github.sha }} \
-            -o repo.zip || { echo "::error::Failed to download repo archive" | tee -a sync-report.json; exit 1; }
+            -o repo.zip || { echo "::error::Failed to download repo archive" | tee -a sync-report.json; exit 0; }
           unzip repo.zip -d repo
           mv repo/* repo_extracted || true
-          ls -la | tee -a sync-report.json
 
       - name: Zip repo snapshot (excluding sensitive files)
         run: |
-          echo ">>> Creating repo snapshot" | tee -a sync-report.json
           zip -r repo-snapshot.zip repo_extracted \
             -x "*.git*" \
             -x ".env*" \
@@ -72,11 +68,10 @@ jobs:
             -x "__pycache__/*"
 
       - name: Upload snapshot to U-DIG IT ingest API (with debug)
-        continue-on-error: false
+        continue-on-error: true
         env:
           INGEST_API_URL: https://websitos2.onrender.com/ingest_file
         run: |
-          echo ">>> Uploading snapshot to ingest API" | tee -a sync-report.json
           RESPONSE=$(curl -s --fail --connect-timeout 10 --max-time 60 -v -o response.txt -w "%{http_code}" -X POST "$INGEST_API_URL" \
             -H "x-api-key: $EDITOR_API_KEY" \
             -F "file=@repo-snapshot.zip" || echo "000")
@@ -87,8 +82,8 @@ jobs:
           cat response.txt | tee -a sync-report.json || echo "(no body)" | tee -a sync-report.json
 
           if [ "$RESPONSE" -ne 200 ]; then
-            echo "::error file=.github/workflows/udigit-sync.yaml::Ingest failed – API returned $RESPONSE" | tee -a sync-report.json
-            exit 1
+            echo "⚠️ Ingest failed – API returned $RESPONSE" | tee -a sync-report.json
+            exit 0   # ✅ don't fail pipeline
           else
             echo "✅ Sync successful" | tee -a sync-report.json
           fi

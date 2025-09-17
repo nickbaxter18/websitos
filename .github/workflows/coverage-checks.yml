@@ -12,9 +12,9 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 45   # extended to support Playwright installs
+    timeout-minutes: 45
     strategy:
-      fail-fast: false    # ✅ prevent other jobs from being canceled when one fails
+      fail-fast: false
       matrix:
         task: [frontend, backend, e2e]
     defaults:
@@ -30,7 +30,6 @@ jobs:
 
       - name: Retry fetch tags if needed
         run: |
-          echo ">>> Running extra git fetch step to avoid hangs"
           for i in 1 2 3; do
             git fetch --prune --tags --verbose && break || sleep 10
           done
@@ -86,41 +85,32 @@ jobs:
         if: ${{ matrix.task == 'backend' }}
         run: |
           python -m pip install --upgrade pip
-          echo ">>> Installing backend dependencies"
           for i in 1 2 3; do
             pip install --prefer-binary -r requirements.txt && break || (echo "❌ pip install failed, retrying..." && sleep 10)
           done
 
       - name: Clean workspace caches
         run: |
-          echo ">>> Cleaning dist, coverage, and Jest cache"
           rm -rf dist coverage node_modules/.cache || true
           pnpm jest --clearCache || true
 
       - name: Run frontend coverage (Jest with --all)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm jest --coverage --all
+          pnpm jest --coverage --all || EXIT=$?
           echo ">>> Checking coverage/frontend before artifact upload"
           ls -lh coverage/frontend || echo "❌ No coverage for frontend"
-          head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage file"
+          exit ${EXIT:-0}
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
         run: |
-          echo ">>> Running Pytest with line + branch coverage and fail-under threshold"
           pytest --cov=backend --cov=api --cov-branch \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing \
             --cov-fail-under=75 || EXIT=$?
-          echo ">>> Pytest finished with exit code ${EXIT:-0}"
-          echo ">>> Checking coverage/backend before artifact upload"
-          ls -lh coverage/backend || echo "❌ No coverage for backend"
-          wc -l coverage/backend/coverage.xml || echo "❌ Missing backend coverage.xml"
-          wc -l coverage/backend/lcov.info || echo "❌ Missing backend lcov.info"
-          head -n 20 coverage/backend/coverage.xml || echo "❌ Empty backend XML"
-          head -n 20 coverage/backend/lcov.info || echo "❌ Empty backend LCOV"
+          ls -lh coverage/backend || echo "❌ No backend coverage"
           exit ${EXIT:-0}
 
       - name: Run e2e coverage (Playwright)
@@ -128,21 +118,15 @@ jobs:
         run: |
           mkdir -p coverage/e2e
           pnpm exec playwright install --with-deps
-          echo ">>> Building frontend with coverage instrumentation"
           NODE_ENV=test pnpm build
-          echo ">>> Running Playwright tests with browser coverage"
           pnpm exec playwright test --reporter=list || EXIT=$?
           if [ -s coverage/e2e/coverage-final.json ]; then
-            echo ">>> Merging E2E browser coverage into LCOV"
             npx nyc merge coverage/e2e coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
           else
-            echo "⚠️ E2E coverage is empty – skipping merge"
             rm -f coverage/e2e/lcov.info || true
           fi
-          echo ">>> Playwright finished with exit code ${EXIT:-0}"
-          echo ">>> Checking coverage/e2e before artifact upload"
-          ls -lh coverage/e2e || echo "❌ No coverage for e2e"
+          ls -lh coverage/e2e || echo "❌ No e2e coverage"
           exit ${EXIT:-0}
 
       - name: Cache Playwright Browsers
@@ -153,21 +137,21 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Upload coverage artifact (frontend)
-        if: ${{ matrix.task == 'frontend' }}
+        if: ${{ matrix.task == 'frontend' && hashFiles('coverage/frontend/lcov.info') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend
-          path: coverage/frontend/lcov.info
+          path: coverage/frontend/**
 
       - name: Upload coverage artifact (backend)
-        if: ${{ matrix.task == 'backend' }}
+        if: ${{ matrix.task == 'backend' && hashFiles('coverage/backend/coverage.xml') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: backend
-          path: coverage/backend/*
+          path: coverage/backend/**
 
       - name: Upload coverage artifact (e2e)
-        if: ${{ matrix.task == 'e2e' }}
+        if: ${{ matrix.task == 'e2e' && hashFiles('coverage/e2e/lcov.info') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: e2e
@@ -178,18 +162,22 @@ jobs:
     runs-on: ubuntu-latest
     environment: websitos
     steps:
-      - name: Checkout repository (full history)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
           clean: true
 
-      - name: Download frontend coverage
+      - name: Debug artifacts before download
+        run: gh run view ${{ github.run_id }} --log --json artifacts || true
+
+      - name: Download frontend coverage (retry)
         uses: actions/download-artifact@v4
         with:
           name: frontend
           path: coverage/frontend
+        continue-on-error: true
 
       - name: Download backend coverage
         uses: actions/download-artifact@v4
@@ -204,22 +192,14 @@ jobs:
           path: coverage/e2e
         continue-on-error: true
 
-      - name: Remove empty coverage files
-        run: |
-          echo ">>> Removing empty coverage files before upload"
-          find coverage -type f -size 0 -print -delete || true
-
       - name: Debug coverage file contents
         run: |
           echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
-          head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage"
           echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
-          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend coverage"
-          head -n 20 coverage/backend/lcov.info || echo "❌ Missing backend LCOV"
           echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
-          head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e coverage"
 
-      - name: Upload frontend coverage to Codecov (LCOV only)
+      - name: Upload frontend coverage to Codecov
+        if: ${{ hashFiles('coverage/frontend/lcov.info') != '' }}
         uses: codecov/codecov-action@v3
         with:
           files: ${{ github.workspace }}/coverage/frontend/lcov.info
@@ -228,11 +208,11 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
 
-      - name: Upload backend coverage to Codecov (XML + LCOV)
+      - name: Upload backend coverage to Codecov
+        if: ${{ hashFiles('coverage/backend/coverage.xml') != '' }}
         uses: codecov/codecov-action@v3
         with:
           files: |
@@ -243,11 +223,10 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
 
-      - name: Upload e2e coverage to Codecov (if exists)
+      - name: Upload e2e coverage to Codecov
         if: ${{ hashFiles('coverage/e2e/lcov.info') != '' }}
         uses: codecov/codecov-action@v3
         with:
@@ -257,19 +236,18 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
 
       - name: Merge coverage fallback
         run: |
-          echo ">>> Merging all coverage into one report as fallback"
           pnpm add -g nyc || true
           npx nyc merge coverage coverage/coverage-final.json || true
           npx nyc report --reporter=lcov --report-dir=coverage || true
           ls -lh coverage || true
 
-      - name: Upload merged fallback coverage (no flag)
+      - name: Upload merged fallback coverage
+        if: ${{ hashFiles('coverage/lcov.info') != '' }}
         uses: codecov/codecov-action@v3
         with:
           files: ${{ github.workspace }}/coverage/lcov.info
@@ -277,6 +255,5 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
