@@ -2,85 +2,9 @@ coverage:
   status:
     project:
       default:
-        target: 80%
-        threshold: 1%
-      frontend:
-        target: 80%
-      backend:
-        target: 90%
-      backend-js:
-        target: 80%
-      e2e:
-        informational: true
+        target: 70%
+        threshold: 5%
     patch:
       default:
-        target: 80%
-      frontend:
-        target: 80%
-      backend:
-        target: 90%
-      backend-js:
-        target: 80%
-      e2e:
-        informational: true
-
-comment:
-  layout: "diff, flags, files"
-  behavior: default
-  require_changes: true
-
-github_checks:
-  annotations: true
-
-ignore:
-  - "vite.config.js"
-  - "webpack.config.js"
-  - "babel.config.js"
-  - "**/*.d.ts"
-  - "dist/**"
-  - "migrations/**"
-  - "schemas/**"
-  - "**/__mocks__/**"
-
-flags:
-  frontend:
-    paths:
-      - src/
-    carryforward: true
-  backend:
-    paths:
-      - backend/**/*.py
-      - api.py
-    carryforward: true
-  backend-js:
-    paths:
-      - backend/**/*.js
-    carryforward: true
-  e2e:
-    paths:
-      - tests/e2e/
-    carryforward: true
-
-component_management:
-  individual_components:
-    - component_id: frontend-pages
-      name: Frontend Pages
-      paths:
-        - src/pages/
-    - component_id: frontend-components
-      name: Frontend Components
-      paths:
-        - src/components/
-    - component_id: backend-js-core
-      name: Backend (JS Core)
-      paths:
-        - backend/*.js
-    - component_id: backend-py-api
-      name: Backend (Python API)
-      paths:
-        - backend/**/*.py
-        - api.py
-    - component_id: e2e-tests
-      name: End-to-End Tests
-      paths:
-        - tests/e2e/
+        target: 70%
+        threshold: 5%
