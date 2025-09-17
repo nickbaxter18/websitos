@@ -91,12 +91,15 @@ jobs:
           echo ">>> Running Pytest with coverage"
           pytest --cov=backend --cov=api \
             --cov-report=xml:coverage/backend/coverage.xml \
+            --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
           echo ">>> Checking coverage/backend before artifact upload"
           ls -lh coverage/backend || echo "❌ No coverage for backend"
           wc -l coverage/backend/coverage.xml || echo "❌ Missing backend coverage.xml"
-          head -n 40 coverage/backend/coverage.xml || echo "❌ Empty backend XML"
+          wc -l coverage/backend/lcov.info || echo "❌ Missing backend lcov.info"
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Empty backend XML"
+          head -n 20 coverage/backend/lcov.info || echo "❌ Empty backend LCOV"
           exit ${EXIT:-0}
 
       - name: Run e2e coverage (Playwright)
@@ -133,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend
-          path: coverage/backend/coverage.xml
+          path: coverage/backend/*
 
       - name: Upload coverage artifact (e2e)
         if: ${{ matrix.task == 'e2e' }}
@@ -181,7 +184,8 @@ jobs:
           echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
           head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage"
           echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
-          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend coverage"
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend XML"
+          head -n 20 coverage/backend/lcov.info || echo "❌ Missing backend LCOV"
           echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
           head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e coverage"
 
@@ -198,10 +202,12 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
-      - name: Upload backend coverage to Codecov (XML only)
+      - name: Upload backend coverage to Codecov (XML + LCOV)
         uses: codecov/codecov-action@v3
         with:
-          files: ${{ github.workspace }}/coverage/backend/coverage.xml
+          files: |
+            ${{ github.workspace }}/coverage/backend/coverage.xml
+            ${{ github.workspace }}/coverage/backend/lcov.info
           flags: backend
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
@@ -232,11 +238,10 @@ jobs:
           npx nyc report --reporter=lcov --report-dir=coverage || true
           ls -lh coverage || true
 
-      - name: Upload merged fallback coverage
+      - name: Upload merged fallback coverage (no flag)
         uses: codecov/codecov-action@v3
         with:
           files: ${{ github.workspace }}/coverage/lcov.info
-          flags: all
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
