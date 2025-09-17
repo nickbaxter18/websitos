@@ -106,7 +106,7 @@ jobs:
           NODE_ENV=test pnpm build
           echo ">>> Running Playwright with NYC coverage"
           pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || EXIT=$?
-          if [ ! -f coverage/e2e/lcov.info ]; then echo "⚠️ No E2E coverage file found"; fi
+          if [ ! -s coverage/e2e/lcov.info ]; then echo "⚠️ E2E coverage is empty – removing file" && rm -f coverage/e2e/lcov.info; fi
           echo ">>> Playwright finished with exit code ${EXIT:-0}"
           echo ">>> Checking coverage/e2e before artifact upload"
           ls -R coverage/e2e || echo "❌ No coverage for e2e"
@@ -146,6 +146,11 @@ jobs:
           name: e2e
           path: coverage/e2e
 
+      - name: Remove empty coverage files
+        run: |
+          echo ">>> Removing empty coverage files before upload"
+          find coverage -type f -size 0 -print -delete || true
+
       - name: Debug coverage file contents
         run: |
           echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
@@ -163,7 +168,7 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          disable_search: true
+          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
 
@@ -177,7 +182,7 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          disable_search: true
+          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
 
@@ -189,7 +194,7 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          disable_search: true
+          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
 
@@ -208,6 +213,6 @@ jobs:
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
-          disable_search: true
+          commit_parent: ${{ github.sha }}
           fail_ci_if_error: false
           verbose: true
