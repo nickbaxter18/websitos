@@ -18,12 +18,13 @@ try {
 }
 
 module.exports = {
+  coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
   projects: [
     {
       displayName: "frontend",
       testEnvironment: "jsdom",
       transform: {
-        "^.+\\.[tj]sx?$": ["babel-jest", { configFile: "./.babelrc.js" }],
+        "^.+\\.[tj]sx?$": ["babel-jest", { configFile: "./.babelrc.cjs" }],
       },
       extensionsToTreatAsEsm: [".ts", ".tsx"],
       moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
@@ -40,6 +41,7 @@ module.exports = {
       },
       collectCoverageFrom: [
         "src/**/*.{js,jsx,ts,tsx}",
+        "tests/**/*.{js,jsx,ts,tsx}",
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
@@ -55,7 +57,6 @@ module.exports = {
           statements: config.frontendThreshold,
         },
       },
-      coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
       coverageDirectory: "coverage/frontend",
       testMatch: [
         "**/__tests__/**/*.[jt]s?(x)",
