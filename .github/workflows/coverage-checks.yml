@@ -145,6 +145,7 @@ jobs:
   upload-codecov:
     needs: coverage
     runs-on: ubuntu-latest
+    environment: websitos
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
