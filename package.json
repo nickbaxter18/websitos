@@ -98,7 +98,8 @@
     "typescript": "^5.4.0",
     "typescript-eslint": "8.43.0",
     "vite": "7.1.5",
-    "vite-plugin-istanbul": "5.0.0"
+    "vite-plugin-istanbul": "5.0.0",
+    "vite-tsconfig-paths": "5.1.4"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,html,md}": "prettier --write",

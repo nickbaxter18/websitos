@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import istanbul from "vite-plugin-istanbul";
+import tsconfigPaths from "vite-tsconfig-paths";
 import path from "path";
 
 const enableCoverage = process.env.VITE_COVERAGE === "true";
@@ -17,6 +18,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    tsconfigPaths(),
     ...(enableCoverage
       ? [
           istanbul({
