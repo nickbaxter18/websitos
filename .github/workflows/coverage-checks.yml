@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v6
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v7
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -97,7 +97,7 @@ jobs:
       - name: Run frontend coverage (Jest with --all)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm jest --coverage --all
+          pnpm jest --config jest.config.cjs --coverage --all
           echo ">>> Verifying frontend coverage files"
           mkdir -p coverage/frontend
           if [ ! -s coverage/frontend/lcov.info ]; then
