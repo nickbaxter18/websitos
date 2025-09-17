@@ -1,5 +1,24 @@
-# Ignore CI trigger file
-ci-trigger.txt
+# Node
+node_modules/
 
-# Ignore embedded repo folder
-/WEBSITEOS
+# Build outputs
+dist/
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.*
+
+# Babel - enforce only .cjs
+.babelrc.js
+
+# Editor
+.vscode/
+.idea/
+.DS_Store

@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v20
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v21
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -93,7 +93,7 @@ jobs:
 
       - name: Ensure nyc installed (backend)
         if: ${{ matrix.task == 'backend' }}
-        run: pnpm add -D nyc
+        run: npm install -g nyc
 
       - name: Clean workspace caches
         run: |
@@ -160,9 +160,10 @@ jobs:
           pnpm exec playwright test --reporter=list --require tests/playwright-coverage-hook.ts || true
 
           echo ">>> Checking and merging browser coverage"
+          ls -lh .nyc_output || echo "⚠️ .nyc_output empty"
           if [ -d .nyc_output ]; then
-            pnpm exec nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
-            pnpm exec nyc report --reporter=lcov --report-dir=coverage/e2e || true
+            npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
+            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
           else
             echo "⚠️ No .nyc_output found"
           fi
@@ -222,3 +223,105 @@ jobs:
       - name: Finalize logs for GitHub UI
         if: always()
         run: echo "✅ Coverage job finished cleanly, logs should be downloadable."
+
+  upload-codecov:
+    needs: coverage
+    runs-on: ubuntu-latest
+    environment: websitos
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          clean: true
+
+      - name: Debug artifacts before download
+        run: gh run view ${{ github.run_id }} --log --json artifacts || true
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: coverage/frontend
+
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend
+          path: coverage/backend
+
+      - name: Download e2e coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e
+          path: coverage/e2e
+
+      - name: Debug coverage file contents
+        run: |
+          echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
+          head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend lcov.info"
+          echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend coverage.xml"
+          echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
+          head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e lcov.info"
+
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/frontend/lcov.info
+          flags: frontend
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ${{ github.repository }}
+          override_commit: ${{ github.sha }}
+          override_branch: ${{ github.ref_name }}
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: |
+            ${{ github.workspace }}/coverage/backend/coverage.xml
+            ${{ github.workspace }}/coverage/backend/lcov.info
+          flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ${{ github.repository }}
+          override_commit: ${{ github.sha }}
+          override_branch: ${{ github.ref_name }}
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload e2e coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/e2e/lcov.info
+          flags: e2e
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ${{ github.repository }}
+          override_commit: ${{ github.sha }}
+          override_branch: ${{ github.ref_name }}
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Merge coverage fallback
+        run: |
+          pnpm add -g nyc || true
+          npx nyc merge coverage coverage/coverage-final.json || true
+          npx nyc report --reporter=lcov --report-dir=coverage || true
+          ls -lh coverage || true
+
+      - name: Final coverage debug
+        run: ls -lhR coverage || true
+
+      - name: Upload merged fallback coverage
+        if: ${{ hashFiles('coverage/lcov.info') != '' }}
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ${{ github.repository }}
+          override_commit: ${{ github.sha }}
+          override_branch: ${{ github.ref_name }}
+          fail_ci_if_error: false
+          verbose: true

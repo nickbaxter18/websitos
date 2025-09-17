@@ -1,17 +1,20 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
-  reporter: [["list"], ["json", { outputFile: "coverage/e2e/playwright-report.json" }]],
-  use: {
-    baseURL: "http://localhost:5173",
-    headless: true,
-    trace: "on-first-retry",
+  testDir: "./tests",
+  timeout: 30 * 1000,
+  expect: {
+    timeout: 5000,
   },
-  webServer: {
-    command: "pnpm dev",
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000, // wait up to 60s for server
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"], headless: true, browserName: "chromium" },
+    },
+  ],
+  use: {
+    trace: "on-first-retry",
+    video: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
 });
