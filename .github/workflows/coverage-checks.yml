@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v9
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v10
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -135,21 +135,26 @@ jobs:
         run: |
           mkdir -p coverage/e2e
           pnpm exec playwright install --with-deps
-          NODE_ENV=test ENABLE_COVERAGE=true pnpm build
+          echo ">>> Building app with coverage instrumentation"
+          NODE_ENV=test ENABLE_COVERAGE=true pnpm vite build --debug
 
           echo ">>> Running Playwright tests with coverage instrumentation"
           pnpm exec playwright test --reporter=list || true
 
           echo ">>> Checking raw NYC output"
-          ls -lh .nyc_output || echo "No NYC raw output"
+          ls -R .nyc_output || echo "No .nyc_output at root"
+          ls -R dist/.nyc_output || echo "No .nyc_output in dist"
+          ls -R coverage/e2e || echo "No merged coverage yet"
 
-          if [ -s .nyc_output/out.json ] || [ -s coverage/e2e/coverage-final.json ]; then
-            echo ">>> Merging raw coverage"
+          if [ -d .nyc_output ]; then
+            echo ">>> Merging coverage from root .nyc_output"
             npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
-            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
-          else
-            echo "⚠️ No raw coverage found, Playwright build likely not instrumented"
+          elif [ -d dist/.nyc_output ]; then
+            echo ">>> Merging coverage from dist/.nyc_output"
+            npx nyc merge dist/.nyc_output coverage/e2e/coverage-merged.json || true
           fi
+
+          npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
 
           echo ">>> Verifying e2e coverage files"
           if [ ! -s coverage/e2e/lcov.info ]; then
@@ -159,12 +164,15 @@ jobs:
 
           ls -lh coverage/e2e
 
-      - name: Upload raw NYC output for debugging
+      - name: Upload raw NYC and dist for debugging
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-nyc-output
-          path: .nyc_output/**
+          name: e2e-debug
+          path: |
+            dist/**
+            .nyc_output/**
+            coverage/e2e/**
           retention-days: 5
 
       - name: Cache Playwright Browsers

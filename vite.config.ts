@@ -2,7 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import istanbul from "vite-plugin-istanbul";
 
-// ✅ Ensure instrumentation is always applied during CI builds
+// ✅ Always log when instrumentation is enabled
+console.log("✅ Vite Istanbul coverage plugin enabled for instrumentation");
+
 export default defineConfig({
   plugins: [
     react(),
@@ -11,7 +13,7 @@ export default defineConfig({
       exclude: ["node_modules", "tests/"],
       extension: [".js", ".ts", ".jsx", ".tsx"],
       cypress: true,
-      requireEnv: false, // always inject coverage, even if no env flag set
+      requireEnv: false, // always instrument, regardless of env vars
     }),
   ],
 });
