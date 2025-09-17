@@ -115,7 +115,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.task }}
+          name: ${{ matrix.task }}
           path: coverage/${{ matrix.task }}
 
   upload-codecov:
@@ -132,14 +132,6 @@ jobs:
         with:
           path: coverage
           merge-multiple: true
-
-      - name: Normalize coverage paths
-        run: |
-          echo "Before normalization:" && ls -R coverage || true
-          if [ -d coverage/coverage-frontend ]; then mv coverage/coverage-frontend coverage/frontend; fi
-          if [ -d coverage/coverage-backend ]; then mv coverage/coverage-backend coverage/backend; fi
-          if [ -d coverage/coverage-e2e ]; then mv coverage/coverage-e2e coverage/e2e; fi
-          echo "After normalization:" && ls -R coverage || true
 
       - name: Debug coverage file contents
         run: |
