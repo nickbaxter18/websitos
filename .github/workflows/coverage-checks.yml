@@ -77,6 +77,12 @@ jobs:
           echo ">>> Installing backend dependencies"
           pip install --prefer-binary -r requirements.txt || pip install -r requirements.txt
 
+      - name: Clean workspace caches
+        run: |
+          echo ">>> Cleaning dist, coverage, and Jest cache"
+          rm -rf dist coverage node_modules/.cache || true
+          pnpm jest --clearCache || true
+
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
         run: |
