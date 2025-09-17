@@ -93,7 +93,8 @@ jobs:
             --cov-report=term-missing || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
           echo ">>> Checking coverage/backend before artifact upload"
-          ls -R coverage/backend || echo "❌ No coverage for backend"
+          ls -lh coverage/backend || echo "❌ No coverage for backend"
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend XML"
           exit ${EXIT:-0}
 
       - name: Run e2e coverage (Playwright)
@@ -104,19 +105,40 @@ jobs:
           echo ">>> Building frontend with coverage instrumentation"
           NODE_ENV=test pnpm build
           echo ">>> Running Playwright with NYC coverage"
-          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || EXIT=$?
-          if [ ! -s coverage/e2e/lcov.info ]; then echo "⚠️ E2E coverage is empty – removing file" && rm -f coverage/e2e/lcov.info; fi
+          pnpm exec playwright test --reporter=list || EXIT=$?
+          if [ -s coverage/e2e/coverage-final.json ]; then
+            echo ">>> Merging E2E browser coverage into LCOV"
+            npx nyc merge coverage/e2e coverage/e2e/coverage-merged.json || true
+            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
+          else
+            echo "⚠️ E2E coverage is empty – skipping merge"
+            rm -f coverage/e2e/lcov.info || true
+          fi
           echo ">>> Playwright finished with exit code ${EXIT:-0}"
           echo ">>> Checking coverage/e2e before artifact upload"
-          ls -R coverage/e2e || echo "❌ No coverage for e2e"
+          ls -lh coverage/e2e || echo "❌ No coverage for e2e"
           exit ${EXIT:-0}
 
-      - name: Upload coverage artifact
-        if: always()
+      - name: Upload coverage artifact (frontend)
+        if: ${{ matrix.task == 'frontend' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.task }}
-          path: coverage/${{ matrix.task }}/**
+          name: frontend
+          path: coverage/frontend/lcov.info
+
+      - name: Upload coverage artifact (backend)
+        if: ${{ matrix.task == 'backend' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend
+          path: coverage/backend/coverage.xml
+
+      - name: Upload coverage artifact (e2e)
+        if: ${{ matrix.task == 'e2e' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e
+          path: coverage/e2e/**
 
   upload-codecov:
     needs: coverage
