@@ -9,12 +9,10 @@ export default {
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^v2/(.*)$": "<rootDir>/v2/$1",
     "\\.(css|less|scss)$": "identity-obj-proxy",
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",
-    "v2/**/*.{js,jsx,ts,tsx}",
     "!**/node_modules/**",
     "!**/dist/**",
     "!**/coverage/**",
