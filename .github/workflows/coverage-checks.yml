@@ -189,6 +189,7 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/frontend/lcov.info
           flags: frontend
+          token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
@@ -201,6 +202,7 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/backend/coverage.xml
           flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
@@ -214,6 +216,7 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/e2e/lcov.info
           flags: e2e
+          token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
@@ -233,6 +236,7 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/lcov.info
           flags: all
+          token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
