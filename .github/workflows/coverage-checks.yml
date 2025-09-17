@@ -30,6 +30,9 @@ jobs:
           persist-credentials: false
           clean: true
 
+      - name: Ensure no stray .babelrc.js
+        run: if [ -f .babelrc.js ]; then echo "❌ .babelrc.js found"; exit 1; fi
+
       - name: Retry fetch tags if needed
         run: |
           for i in 1 2 3; do
@@ -59,7 +62,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v21
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v22
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -120,7 +123,7 @@ jobs:
           mkdir -p coverage/backend
           echo ">>> Running Pytest with coverage..."
           pytest backend/tests --maxfail=1 --disable-warnings -q \
-            --cov=backend --cov=api --cov-branch \
+            --cov=backend --cov=api --cov-branch --cov-append \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=json:coverage/backend/coverage.json \
