@@ -20,6 +20,7 @@ export default {
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",
+    "backend/**/*.{js,jsx}",
     "!**/node_modules/**",
     "!**/dist/**",
     "!**/coverage/**",
