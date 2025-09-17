@@ -49,4 +49,229 @@ jobs:
           echo "::add-matcher::.github/matchers/python.json"
           echo "::add-matcher::.github/matchers/ts.json"
 
-      # Remaining steps unchanged...
+      - name: Setup Node.js (for frontend/e2e)
+        if: ${{ matrix.task != 'backend' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm (for frontend/e2e)
+        if: ${{ matrix.task != 'backend' }}
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Cache pnpm (for frontend/e2e)
+        if: ${{ matrix.task != 'backend' }}
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v22
+
+      - name: Setup Python (for backend)
+        if: ${{ matrix.task == 'backend' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip wheels (for backend)
+        if: ${{ matrix.task == 'backend' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install frontend dependencies (with retry)
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
+        run: |
+          for i in 1 2 3; do
+            pnpm install --frozen-lockfile && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
+          done
+
+      - name: Install backend dependencies (with retry)
+        if: ${{ matrix.task == 'backend' }}
+        run: |
+          python -m pip install --upgrade pip
+          for i in 1 2 3; do
+            pip install --prefer-binary -r requirements.txt && break || (echo "❌ pip install failed, retrying..." && sleep 10)
+          done
+
+      - name: Ensure nyc installed (backend)
+        if: ${{ matrix.task == 'backend' }}
+        run: npm install -g nyc
+
+      - name: Clean workspace caches
+        run: |
+          rm -rf dist coverage node_modules/.cache || true
+          pnpm jest --clearCache || true
+
+      - name: Run frontend coverage (force reporters)
+        if: ${{ matrix.task == 'frontend' }}
+        run: |
+          pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
+            --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
+            --coverageDirectory=coverage/frontend
+          echo ">>> Verifying frontend coverage files"
+          mkdir -p coverage/frontend
+          if [ ! -s coverage/frontend/lcov.info ]; then
+            echo "❌ Missing frontend lcov.info"
+            exit 1
+          fi
+          ls -lh coverage/frontend
+
+      - name: Run backend coverage (Pytest with branch coverage + threshold)
+        if: ${{ matrix.task == 'backend' }}
+        run: |
+          mkdir -p coverage/backend
+          echo ">>> Running Pytest with coverage..."
+          pytest backend/tests --maxfail=1 --disable-warnings -q \
+            --cov=backend --cov=api --cov-branch --cov-append \
+            --cov-report=xml:coverage/backend/coverage.xml \
+            --cov-report=lcov:coverage/backend/lcov.info \
+            --cov-report=json:coverage/backend/coverage.json \
+            --cov-report=term-missing \
+            --cov-fail-under=0
+          echo ">>> Verifying backend coverage files"
+          if [ ! -s coverage/backend/coverage.xml ]; then
+            echo "❌ Missing backend coverage.xml"
+            exit 1
+          fi
+          if [ ! -s coverage/backend/lcov.info ]; then
+            echo "❌ Missing backend lcov.info"
+            exit 1
+          fi
+          ls -lh coverage/backend
+
+      - name: Enforce coverage thresholds
+        if: ${{ matrix.task == 'backend' }}
+        run: npx nyc check-coverage --branches=70 --functions=70 --lines=70 --statements=70
+
+      - name: Run e2e coverage (Playwright with instrumentation)
+        if: ${{ matrix.task == 'e2e' }}
+        env:
+          NODE_V8_COVERAGE: .nyc_output
+        run: |
+          mkdir -p coverage/e2e
+          pnpm exec playwright install --with-deps
+
+          echo ">>> Building app with coverage instrumentation"
+          VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts --debug | tee vite-debug.log
+
+          echo ">>> Starting instrumented preview server"
+          nohup pnpm vite preview --port=4173 > preview.log 2>&1 &
+          sleep 5
+
+          echo ">>> Running Playwright tests with coverage hook"
+          pnpm exec playwright test --reporter=list --require tests/playwright-coverage-hook.ts || true
+
+          echo ">>> Checking and merging browser coverage"
+          ls -lh .nyc_output || echo "⚠️ .nyc_output empty"
+          if [ -d .nyc_output ]; then
+            npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
+            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
+          else
+            echo "⚠️ No .nyc_output found"
+          fi
+
+          echo ">>> Verifying e2e coverage files"
+          if [ ! -s coverage/e2e/lcov.info ]; then
+            echo "❌ Missing e2e lcov.info"
+            exit 1
+          fi
+
+          ls -lh coverage/e2e
+
+      - name: Debug coverage files before Codecov upload
+        run: |
+          find coverage -name lcov.info -exec ls -lh {} +
+          find coverage -name lcov.info -exec head -n 20 {} +
+
+      - name: Upload coverage to Codecov (per-job)
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/${{ matrix.task }}/lcov.info
+          flags: ${{ matrix.task }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ${{ github.repository }}
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Upload raw NYC, dist, and debug logs for troubleshooting
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-${{ matrix.task }}
+          path: |
+            dist/**
+            .nyc_output/**
+            coverage/e2e/**
+            coverage/backend/coverage.json
+            coverage/**/coverage-final.json
+            vite-debug.log
+            preview.log
+            .babelrc.cjs
+          retention-days: 5
+
+      - name: Cache Playwright Browsers
+        if: ${{ matrix.task == 'e2e' }}
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+  upload-codecov:
+    needs: coverage
+    runs-on: ubuntu-latest
+    environment: websitos
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          clean: true
+
+      - name: Debug artifacts before download
+        run: gh run view ${{ github.run_id }} --log --json artifacts || true
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: coverage/frontend
+
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend
+          path: coverage/backend
+
+      - name: Download e2e coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e
+          path: coverage/e2e
+
+      - name: Debug coverage file contents
+        run: |
+          echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
+          head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend lcov.info"
+          echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend coverage.xml"
+          echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
+          head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e lcov.info"
+
+      - name: Upload merged coverage to Codecov (fallback)
+        uses: codecov/codecov-action@v3
+        with:
+          files: |
+            ${{ github.workspace }}/coverage/frontend/lcov.info
+            ${{ github.workspace }}/coverage/backend/lcov.info
+            ${{ github.workspace }}/coverage/e2e/lcov.info
+          flags: combined
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ${{ github.repository }}
+          fail_ci_if_error: true
+          verbose: true
