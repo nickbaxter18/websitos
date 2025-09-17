@@ -97,30 +97,33 @@ jobs:
       - name: Run frontend coverage (Jest with --all)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm jest --coverage --all || true
-          echo ">>> Checking coverage/frontend before artifact upload"
+          pnpm jest --coverage --all
+          echo ">>> Verifying frontend coverage files"
           mkdir -p coverage/frontend
-          ls -lh coverage/frontend || true
+          if [ ! -s coverage/frontend/lcov.info ]; then
+            echo "❌ Missing frontend lcov.info"
+            exit 1
+          fi
+          ls -lh coverage/frontend
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
         run: |
           mkdir -p coverage/backend
           echo ">>> Running Pytest with coverage..."
-          pytest --maxfail=1 --disable-warnings -q \
+          pytest backend/tests --maxfail=1 --disable-warnings -q \
             --cov=backend --cov=api --cov-branch \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=term-missing \
-            --cov-fail-under=0 || EXIT=$?
-          echo "Pytest exited with code ${EXIT:-0}"
-          echo ">>> Verifying backend coverage reports"
-          if [ ! -f coverage/backend/coverage.xml ]; then
-            echo "❌ Pytest did not generate coverage.xml"
+            --cov-fail-under=0
+          echo ">>> Verifying backend coverage files"
+          if [ ! -s coverage/backend/coverage.xml ]; then
+            echo "❌ Missing backend coverage.xml"
             exit 1
           fi
-          if [ ! -f coverage/backend/lcov.info ]; then
-            echo "❌ Pytest did not generate lcov.info"
+          if [ ! -s coverage/backend/lcov.info ]; then
+            echo "❌ Missing backend lcov.info"
             exit 1
           fi
           ls -lh coverage/backend
@@ -136,7 +139,12 @@ jobs:
             npx nyc merge coverage/e2e coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
           fi
-          ls -lh coverage/e2e || true
+          echo ">>> Verifying e2e coverage files"
+          if [ ! -s coverage/e2e/lcov.info ]; then
+            echo "❌ Missing e2e lcov.info"
+            exit 1
+          fi
+          ls -lh coverage/e2e
 
       - name: Cache Playwright Browsers
         if: ${{ matrix.task == 'e2e' }}
@@ -185,12 +193,11 @@ jobs:
       - name: Debug artifacts before download
         run: gh run view ${{ github.run_id }} --log --json artifacts || true
 
-      - name: Download frontend coverage (retry)
+      - name: Download frontend coverage
         uses: actions/download-artifact@v4
         with:
           name: frontend
           path: coverage/frontend
-        continue-on-error: true
 
       - name: Download backend coverage
         uses: actions/download-artifact@v4
@@ -198,18 +205,20 @@ jobs:
           name: backend
           path: coverage/backend
 
-      - name: Download e2e coverage (optional)
+      - name: Download e2e coverage
         uses: actions/download-artifact@v4
         with:
           name: e2e
           path: coverage/e2e
-        continue-on-error: true
 
       - name: Debug coverage file contents
         run: |
           echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
+          head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend lcov.info"
           echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend coverage.xml"
           echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
+          head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e lcov.info"
 
       - name: Upload frontend coverage to Codecov
         uses: codecov/codecov-action@v3

@@ -58,6 +58,7 @@ export default {
           statements: config.frontendThreshold,
         },
       },
+      coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
       coverageDirectory: "coverage/frontend",
       testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
       clearMocks: true,
