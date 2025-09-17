@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v15
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v17
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -119,6 +119,7 @@ jobs:
             --cov=backend --cov=api --cov-branch \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
+            --cov-report=json:coverage/backend/coverage.json \
             --cov-report=term-missing \
             --cov-fail-under=0
           echo ">>> Verifying backend coverage files"
@@ -147,13 +148,13 @@ jobs:
           nohup pnpm vite preview --port=4173 > preview.log 2>&1 &
           sleep 5
 
-          echo ">>> Running Playwright tests"
-          pnpm exec playwright test --reporter=list || true
+          echo ">>> Running Playwright tests with coverage hook"
+          pnpm exec playwright test --reporter=list --require tests/playwright-coverage-hook.ts || true
 
           echo ">>> Checking and merging browser coverage"
           if [ -d .nyc_output ]; then
-            npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
-            npx nyc report --reporter=lcov --report-dir=coverage/e2e || true
+            pnpm exec nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
+            pnpm exec nyc report --reporter=lcov --report-dir=coverage/e2e || true
           else
             echo "⚠️ No .nyc_output found"
           fi
@@ -168,7 +169,7 @@ jobs:
 
       - name: Enforce coverage thresholds
         run: |
-          npx nyc check-coverage --branches=70 --functions=70 --lines=70 --statements=70
+          pnpm exec nyc check-coverage --branches=70 --functions=70 --lines=70 --statements=70
 
       - name: Upload raw NYC, dist, and debug logs for troubleshooting
         if: always()
@@ -179,9 +180,10 @@ jobs:
             dist/**
             .nyc_output/**
             coverage/e2e/**
+            coverage/backend/coverage.json
             vite-debug.log
             preview.log
-            .babelrc
+            .babelrc.js
           retention-days: 5
 
       - name: Cache Playwright Browsers

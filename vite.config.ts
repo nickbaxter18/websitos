@@ -11,13 +11,15 @@ if (enableCoverage) {
 export default defineConfig({
   plugins: [
     react(),
-    enableCoverage &&
-      istanbul({
-        include: "src/*",
-        exclude: ["node_modules", "tests/"],
-        extension: [".js", ".ts", ".jsx", ".tsx"],
-        cypress: true,
-        requireEnv: false,
-      }),
-  ].filter(Boolean),
+    ...(enableCoverage
+      ? [
+          istanbul({
+            include: "src/**/*",
+            exclude: ["node_modules", "tests/"],
+            extension: [".js", ".ts", ".jsx", ".tsx"],
+            requireEnv: false,
+          }),
+        ]
+      : []),
+  ],
 });

@@ -23,7 +23,7 @@ module.exports = {
       displayName: "frontend",
       testEnvironment: "jsdom",
       transform: {
-        "^.+\\.(ts|tsx|js|jsx)$": "babel-jest",
+        "^.+\\.[tj]sx?$": ["babel-jest", { configFile: "./.babelrc.js" }],
       },
       extensionsToTreatAsEsm: [".ts", ".tsx"],
       moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
