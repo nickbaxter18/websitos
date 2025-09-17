@@ -135,9 +135,11 @@ jobs:
 
       - name: Normalize coverage paths
         run: |
-          mv coverage/coverage-frontend coverage/frontend || true
-          mv coverage/coverage-backend coverage/backend || true
-          mv coverage/coverage-e2e coverage/e2e || true
+          echo "Before normalization:" && ls -R coverage || true
+          if [ -d coverage/coverage-frontend ]; then mv coverage/coverage-frontend coverage/frontend; fi
+          if [ -d coverage/coverage-backend ]; then mv coverage/coverage-backend coverage/backend; fi
+          if [ -d coverage/coverage-e2e ]; then mv coverage/coverage-e2e coverage/e2e; fi
+          echo "After normalization:" && ls -R coverage || true
 
       - name: Debug coverage file contents
         run: |
@@ -155,6 +157,7 @@ jobs:
           flags: frontend
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
+          disable_search: true
           fail_ci_if_error: false
           verbose: true
 
@@ -167,6 +170,7 @@ jobs:
           flags: backend
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
+          disable_search: true
           fail_ci_if_error: false
           verbose: true
 
@@ -177,6 +181,24 @@ jobs:
           flags: e2e
           override_commit: ${{ github.sha }}
           override_branch: ${{ github.ref_name }}
+          disable_search: true
           fail_ci_if_error: false
           verbose: true
-          dry_run: true
+
+      - name: Merge coverage fallback
+        run: |
+          echo ">>> Merging all coverage into one report as fallback"
+          npx nyc merge coverage coverage/coverage-final.json || true
+          npx nyc report --reporter=lcov --report-dir=coverage || true
+          ls -lh coverage || true
+
+      - name: Upload merged fallback coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/lcov.info
+          flags: all
+          override_commit: ${{ github.sha }}
+          override_branch: ${{ github.ref_name }}
+          disable_search: true
+          fail_ci_if_error: false
+          verbose: true
