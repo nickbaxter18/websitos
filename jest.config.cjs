@@ -32,7 +32,8 @@ module.exports = {
         "<rootDir>/dist/",
         "<rootDir>/coverage/",
         "<rootDir>/WEBSITEOS/",
-        "<rootDir>/backend/"
+        "<rootDir>/backend/",
+        "<rootDir>/tests/e2e/", // exclude Playwright tests from Jest
       ],
       setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
       moduleNameMapper: {
