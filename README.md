@@ -11,6 +11,15 @@
 
 ---
 
+## Coverage
+
+[![Frontend Coverage](https://codecov.io/gh/nickbaxter18/websitos/branch/main/graph/badge.svg?flag=frontend)](https://app.codecov.io/gh/nickbaxter18/websitos/tree/main/src)
+[![Backend (JS) Coverage](https://codecov.io/gh/nickbaxter18/websitos/branch/main/graph/badge.svg?flag=backend-js)](https://app.codecov.io/gh/nickbaxter18/websitos/tree/main/backend)
+[![Backend (Python) Coverage](https://codecov.io/gh/nickbaxter18/websitos/branch/main/graph/badge.svg?flag=backend)](https://app.codecov.io/gh/nickbaxter18/websitos/tree/main/backend)
+[![E2E Coverage](https://codecov.io/gh/nickbaxter18/websitos/branch/main/graph/badge.svg?flag=e2e)](https://app.codecov.io/gh/nickbaxter18/websitos/tree/main/tests/e2e)
+
+---
+
 WebsiteOS v2 – Unified frontend, backend, and editor stack.
 
 ## Getting Started
