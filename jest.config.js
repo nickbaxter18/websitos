@@ -54,6 +54,8 @@ export default {
         global: {
           lines: config.frontendThreshold,
           branches: config.frontendThreshold,
+          functions: config.frontendThreshold,
+          statements: config.frontendThreshold,
         },
       },
       coverageReporters: ["text", "lcov", "json-summary", "cobertura"],
@@ -83,6 +85,8 @@ export default {
         global: {
           lines: config.backendJsThreshold,
           branches: config.backendJsThreshold,
+          functions: config.backendJsThreshold,
+          statements: config.backendJsThreshold,
         },
       },
       coverageReporters: ["text", "lcov", "json-summary", "cobertura"],

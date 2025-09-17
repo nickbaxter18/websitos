@@ -21,10 +21,19 @@ jobs:
       run:
         working-directory: .
     steps:
-      - name: Checkout repository (full history)
+      - name: Checkout repository (robust)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1   # only latest commit, avoids massive fetch
+          persist-credentials: false
+          clean: true
+
+      - name: Retry fetch tags if needed
+        run: |
+          echo ">>> Running extra git fetch step to avoid hangs"
+          for i in 1 2 3; do
+            git fetch --prune --tags --verbose && break || sleep 10
+          done
 
       - name: Enable problem matchers
         run: |
@@ -66,16 +75,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install frontend dependencies
+      - name: Install frontend dependencies (with retry)
         if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
-        run: pnpm install --frozen-lockfile
+        run: |
+          for i in 1 2 3; do
+            pnpm install --frozen-lockfile && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
+          done
 
-      - name: Install backend dependencies
+      - name: Install backend dependencies (with retry)
         if: ${{ matrix.task == 'backend' }}
         run: |
           python -m pip install --upgrade pip
           echo ">>> Installing backend dependencies"
-          pip install --prefer-binary -r requirements.txt || pip install -r requirements.txt
+          for i in 1 2 3; do
+            pip install --prefer-binary -r requirements.txt && break || (echo "❌ pip install failed, retrying..." && sleep 10)
+          done
 
       - name: Clean workspace caches
         run: |
@@ -83,23 +97,23 @@ jobs:
           rm -rf dist coverage node_modules/.cache || true
           pnpm jest --clearCache || true
 
-      - name: Run frontend + backend-js coverage (Jest with --all)
+      - name: Run frontend coverage (Jest with --all)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm jest --coverage --all --selectProjects frontend backend-js
-          echo ">>> Checking coverage directories before artifact upload"
+          pnpm jest --coverage --all
+          echo ">>> Checking coverage/frontend before artifact upload"
           ls -lh coverage/frontend || echo "❌ No coverage for frontend"
-          ls -lh coverage/backend-js || echo "❌ No coverage for backend-js"
+          head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage file"
 
-      - name: Run backend coverage (Pytest with branch coverage)
+      - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
         run: |
-          echo ">>> Running Pytest with line + branch coverage and unified thresholds"
+          echo ">>> Running Pytest with line + branch coverage and fail-under threshold"
           pytest --cov=backend --cov=api --cov-branch \
-            --cov-fail-under=$(jq .backendThreshold coverage.config.json) \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
-            --cov-report=term-missing || EXIT=$?
+            --cov-report=term-missing \
+            --cov-fail-under=75 || EXIT=$?
           echo ">>> Pytest finished with exit code ${EXIT:-0}"
           echo ">>> Checking coverage/backend before artifact upload"
           ls -lh coverage/backend || echo "❌ No coverage for backend"
@@ -138,13 +152,6 @@ jobs:
           name: frontend
           path: coverage/frontend/lcov.info
 
-      - name: Upload coverage artifact (backend-js)
-        if: ${{ matrix.task == 'frontend' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-js
-          path: coverage/backend-js/lcov.info
-
       - name: Upload coverage artifact (backend)
         if: ${{ matrix.task == 'backend' }}
         uses: actions/upload-artifact@v4
@@ -167,19 +174,15 @@ jobs:
       - name: Checkout repository (full history)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1   # avoid hanging on tags
+          persist-credentials: false
+          clean: true
 
       - name: Download frontend coverage
         uses: actions/download-artifact@v4
         with:
           name: frontend
           path: coverage/frontend
-
-      - name: Download backend-js coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-js
-          path: coverage/backend-js
 
       - name: Download backend coverage
         uses: actions/download-artifact@v4
@@ -203,10 +206,8 @@ jobs:
         run: |
           echo "📂 Coverage/frontend:" && ls -lh coverage/frontend || true
           head -n 20 coverage/frontend/lcov.info || echo "❌ Missing frontend coverage"
-          echo "📂 Coverage/backend-js:" && ls -lh coverage/backend-js || true
-          head -n 20 coverage/backend-js/lcov.info || echo "❌ Missing backend-js coverage"
           echo "📂 Coverage/backend:" && ls -lh coverage/backend || true
-          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend XML"
+          head -n 20 coverage/backend/coverage.xml || echo "❌ Missing backend coverage"
           head -n 20 coverage/backend/lcov.info || echo "❌ Missing backend LCOV"
           echo "📂 Coverage/e2e:" && ls -lh coverage/e2e || true
           head -n 20 coverage/e2e/lcov.info || echo "❌ Missing e2e coverage"
@@ -216,19 +217,6 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/frontend/lcov.info
           flags: frontend
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: ${{ github.repository }}
-          override_commit: ${{ github.sha }}
-          override_branch: ${{ github.ref_name }}
-          commit_parent: ${{ github.sha }}
-          fail_ci_if_error: false
-          verbose: true
-
-      - name: Upload backend-js coverage to Codecov (LCOV only)
-        uses: codecov/codecov-action@v3
-        with:
-          files: ${{ github.workspace }}/coverage/backend-js/lcov.info
-          flags: backend-js
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
           override_commit: ${{ github.sha }}
