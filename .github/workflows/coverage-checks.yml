@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v8
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v9
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -135,18 +135,37 @@ jobs:
         run: |
           mkdir -p coverage/e2e
           pnpm exec playwright install --with-deps
-          NODE_ENV=test pnpm build
+          NODE_ENV=test ENABLE_COVERAGE=true pnpm build
+
+          echo ">>> Running Playwright tests with coverage instrumentation"
           pnpm exec playwright test --reporter=list || true
-          if [ -s coverage/e2e/coverage-final.json ]; then
-            npx nyc merge coverage/e2e coverage/e2e/coverage-merged.json || true
+
+          echo ">>> Checking raw NYC output"
+          ls -lh .nyc_output || echo "No NYC raw output"
+
+          if [ -s .nyc_output/out.json ] || [ -s coverage/e2e/coverage-final.json ]; then
+            echo ">>> Merging raw coverage"
+            npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
+          else
+            echo "⚠️ No raw coverage found, Playwright build likely not instrumented"
           fi
+
           echo ">>> Verifying e2e coverage files"
           if [ ! -s coverage/e2e/lcov.info ]; then
             echo "❌ Missing e2e lcov.info"
             exit 1
           fi
+
           ls -lh coverage/e2e
+
+      - name: Upload raw NYC output for debugging
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-nyc-output
+          path: .nyc_output/**
+          retention-days: 5
 
       - name: Cache Playwright Browsers
         if: ${{ matrix.task == 'e2e' }}
