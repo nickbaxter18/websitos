@@ -99,7 +99,6 @@
     "vite-plugin-istanbul": "^5.0.0"
   },
   "lint-staged": {
-    "pnpm-lock.yaml": "git add",
     "*.{js,jsx,ts,tsx,json,css,html,md}": "prettier --write",
     "*.{yml,yaml}": "prettier --write --parser yaml",
     "*.{js,jsx,ts,tsx}": "eslint --fix",
