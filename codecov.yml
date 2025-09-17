@@ -8,6 +8,8 @@ coverage:
         target: 90%
       frontend:
         target: 80%
+      backend-js:
+        target: 80%
       e2e:
         informational: true
     patch:
@@ -30,10 +32,12 @@ flags:
     carryforward: true
   backend:
     paths:
-      - backend/
-      - ./backend/
+      - backend/**/*.py
       - api.py
-      - ./api.py
+    carryforward: true
+  backend-js:
+    paths:
+      - backend/**/*.js
     carryforward: true
   e2e:
     paths:
@@ -46,14 +50,15 @@ component_management:
       name: Frontend
       paths:
         - src/
-        - v2/
     - component_id: backend
-      name: Backend
+      name: Backend (Python)
       paths:
-        - backend/
-        - ./backend/
+        - backend/**/*.py
         - api.py
-        - ./api.py
+    - component_id: backend-js
+      name: Backend (JS)
+      paths:
+        - backend/**/*.js
     - component_id: e2e
       name: E2E
       paths:
