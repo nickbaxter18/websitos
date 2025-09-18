@@ -196,3 +196,31 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
+        env:
+          CODECOV_API_TOKEN: ${{ secrets.CODECOV_API_TOKEN }}
+
+      - name: Query Codecov API for raw coverage
+        run: |
+          echo "📡 Fetching raw coverage from Codecov API..."
+          curl -s \
+            -H "Authorization: token $CODECOV_API_TOKEN" \
+            https://api.codecov.io/api/v2/gh/${{ github.repository }}/commits/${{ github.sha }} \
+            | jq . > codecov_raw.json
+          echo "✅ Raw coverage saved to codecov_raw.json"
+
+      - name: Summarize coverage in logs (totals)
+        run: |
+          echo "📊 Codecov Coverage Totals:" 
+          cat codecov_raw.json | jq '.commit.totals'
+
+      - name: Summarize coverage in logs (per-file)
+        run: |
+          echo "📂 Per-file coverage:" 
+          cat codecov_raw.json | jq -r '.files[] | "\(.filename): \(.coverage.percent)% (\(.coverage.covered)/\(.coverage.lines) lines)"'
+
+      - name: Upload raw Codecov JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codecov-raw
+          path: codecov_raw.json
+          retention-days: 7
