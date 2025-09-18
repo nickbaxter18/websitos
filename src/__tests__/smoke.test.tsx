@@ -3,10 +3,17 @@ import path from "path";
 import { pathToFileURL } from "url";
 import "tsconfig-paths/register";
 
+const excludedDirs = ["v2"];
+
 async function importAllFromDir(dir: string, failures: string[]) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory() && excludedDirs.includes(entry.name)) {
+      continue; // 🚫 Skip excluded directories like v2
+    }
+
     if (entry.isDirectory()) {
       await importAllFromDir(fullPath, failures);
     } else if (
