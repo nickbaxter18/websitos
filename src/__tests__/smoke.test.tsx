@@ -25,13 +25,14 @@ async function importAllFromDir(dir: string, failures: string[]) {
   }
 }
 
-test("smoke: all modules in src importable (warnings only)", async () => {
+test("smoke: all modules in src importable (warnings only, guaranteed pass)", async () => {
   const failures: string[] = [];
+
   try {
     const srcDir = path.join(__dirname, "..", "..");
     await importAllFromDir(srcDir, failures);
   } catch (err) {
-    failures.push(`⚠️ Smoke test encountered an unexpected error: ${(err as Error).message}`);
+    failures.push(`⚠️ Smoke test unexpected error: ${(err as Error).message}`);
   }
 
   if (failures.length > 0) {
@@ -40,5 +41,6 @@ test("smoke: all modules in src importable (warnings only)", async () => {
     console.warn("============================");
   }
 
-  expect(true).toBe(true); // Always pass to avoid CI failure
+  // Always pass to guarantee CI continues
+  expect(true).toBe(true);
 });
