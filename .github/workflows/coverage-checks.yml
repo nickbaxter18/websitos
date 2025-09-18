@@ -111,7 +111,7 @@ jobs:
         run: |
           cd backend
           npm install --legacy-peer-deps
-          npx jest --config jest.config.cjs --coverage --passWithNoTests \
+          npx jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand \
             --coverageReporters=lcov
 
       - name: Run e2e coverage (Playwright with instrumentation)
