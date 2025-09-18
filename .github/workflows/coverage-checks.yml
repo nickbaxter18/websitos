@@ -99,7 +99,7 @@ jobs:
         run: |
           mkdir -p coverage/backend
           pytest backend/tests --maxfail=1 --disable-warnings -q \
-            --cov=backend --cov=api --cov-branch --cov-append \
+            --cov=backend --cov-branch --cov-append \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=json:coverage/backend/coverage.json \
