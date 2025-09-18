@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v26
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v27
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -67,7 +67,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v6
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v7
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -142,7 +142,8 @@ jobs:
           NODE_V8_COVERAGE: .nyc_output
         run: |
           mkdir -p coverage/e2e
-          pnpm exec playwright install --with-deps
+          # ✅ Only install Chromium to avoid heavy deps
+          pnpm exec playwright install --with-deps chromium
 
           echo ">>> Building app with coverage instrumentation"
           VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts | tee vite-debug.log
