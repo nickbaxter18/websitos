@@ -23,52 +23,78 @@ jobs:
 
       - name: Validate Reports
         run: |
-          echo "### ✅ CI & Deploy Summary" > summary.md
-          echo "- Frontend, Backend, Coverage, and Deploy jobs completed" >> summary.md
-          echo "---" >> summary.md
+          echo "## ✅ CI & Deploy Summary" > summary.md
+          echo "All checks have completed. Below is the breakdown of coverage and test reports." >> summary.md
+          echo "" >> summary.md
 
           echo "### 📊 Coverage Reports" >> summary.md
+          echo "| Area | Status | Coverage |" >> summary.md
+          echo "|------|--------|----------|" >> summary.md
+
           if [ -f artifacts/coverage-frontend/coverage-summary.json ]; then
-            echo "- ✅ Frontend coverage found" >> summary.md
+            total=$(jq -r '.total.lines.pct' artifacts/coverage-frontend/coverage-summary.json)
+            echo "| Frontend | ✅ Found | ${total}% |" >> summary.md
           else
-            echo "- ❌ Frontend coverage missing" >> summary.md
+            echo "| Frontend | ❌ Missing | N/A |" >> summary.md
             echo "::error::Frontend coverage report missing"
           fi
-          if [ -f artifacts/coverage-backend/coverage.xml ]; then
-            echo "- ✅ Backend coverage found" >> summary.md
+
+          if [ -f artifacts/coverage-backend/coverage-summary.json ]; then
+            total=$(jq -r '.total.lines.pct' artifacts/coverage-backend/coverage-summary.json)
+            echo "| Backend | ✅ Found | ${total}% |" >> summary.md
           else
-            echo "- ❌ Backend coverage missing" >> summary.md
+            echo "| Backend | ❌ Missing | N/A |" >> summary.md
             echo "::error::Backend coverage report missing"
           fi
 
+          if [ -f artifacts/coverage-backend-node/coverage-summary.json ]; then
+            total=$(jq -r '.total.lines.pct' artifacts/coverage-backend-node/coverage-summary.json)
+            echo "| Backend-Node | ✅ Found | ${total}% |" >> summary.md
+          else
+            echo "| Backend-Node | ❌ Missing | N/A |" >> summary.md
+            echo "::error::Backend-Node coverage report missing"
+          fi
+
+          if [ -f artifacts/coverage-e2e/coverage-summary.json ]; then
+            total=$(jq -r '.total.lines.pct' artifacts/coverage-e2e/coverage-summary.json)
+            echo "| E2E | ✅ Found | ${total}% |" >> summary.md
+          else
+            echo "| E2E | ❌ Missing | N/A |" >> summary.md
+            echo "::error::E2E coverage report missing"
+          fi
+
+          echo "" >> summary.md
           echo "---" >> summary.md
+          echo "" >> summary.md
           echo "### 🔎 Lint & Test Reports" >> summary.md
+          echo "| Report | Status |" >> summary.md
+          echo "|--------|--------|" >> summary.md
 
           if [ -f artifacts/frontend-eslint/eslint-report.json ]; then
-            echo "- ✅ ESLint report found" >> summary.md
+            echo "| ESLint | ✅ Found |" >> summary.md
           else
-            echo "- ❌ ESLint report missing" >> summary.md
+            echo "| ESLint | ❌ Missing |" >> summary.md
             echo "::error::Frontend ESLint report missing"
           fi
 
           if [ -f artifacts/frontend-jest/jest-report.json ]; then
-            echo "- ✅ Jest results found" >> summary.md
+            echo "| Jest (Frontend) | ✅ Found |" >> summary.md
           else
-            echo "- ❌ Jest results missing" >> summary.md
+            echo "| Jest (Frontend) | ❌ Missing |" >> summary.md
             echo "::error::Frontend Jest results missing"
           fi
 
           if [ -f artifacts/backend-pytest/pytest-report.json ]; then
-            echo "- ✅ Pytest results found" >> summary.md
+            echo "| Pytest (Backend) | ✅ Found |" >> summary.md
           else
-            echo "- ❌ Pytest results missing" >> summary.md
+            echo "| Pytest (Backend) | ❌ Missing |" >> summary.md
             echo "::error::Backend pytest results missing"
           fi
 
           if [ -f artifacts/backend-flake8/flake8-report.txt ]; then
-            echo "- ✅ Flake8 report found" >> summary.md
+            echo "| Flake8 | ✅ Found |" >> summary.md
           else
-            echo "- ❌ Flake8 report missing" >> summary.md
+            echo "| Flake8 | ❌ Missing |" >> summary.md
             echo "::error::Backend Flake8 report missing"
           fi
 

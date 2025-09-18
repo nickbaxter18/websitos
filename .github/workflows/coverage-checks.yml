@@ -105,7 +105,7 @@ jobs:
             --cov=./backend --cov-branch --cov-append \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
-            --cov-report=json:coverage/backend/coverage.json \
+            --cov-report=json:coverage/backend/coverage-summary.json \
             --cov-report=term-missing \
             --cov-fail-under=0 2>&1 | tee logs/backend.log
           echo $? > logs/exit-code.txt
@@ -113,11 +113,12 @@ jobs:
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
-          mkdir -p logs
+          mkdir -p logs backend/coverage
           cd backend
           pnpm install --frozen-lockfile
           pnpm exec jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
-            --coverageReporters=lcov 2>&1 | tee ../logs/backend-node.log
+            --coverageReporters=lcov --coverageReporters=json-summary --coverageDirectory=coverage \
+            2>&1 | tee ../logs/backend-node.log
           echo $? > ../logs/exit-code.txt
 
       - name: Run e2e coverage (Playwright with instrumentation)
@@ -142,8 +143,9 @@ jobs:
           if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
             npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
+            npx nyc report --reporter=json-summary --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
           else
-            npx nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
+            npx nyc --reporter=lcov --report-dir=coverage/e2e --reporter=json-summary --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
           fi
 
       - name: Upload coverage artifact
@@ -256,7 +258,7 @@ jobs:
       - name: Normalize and merge coverage files
         run: |
           mkdir -p coverage/merged
-          for file in coverage/coverage-*/lcov.info coverage/coverage-smoke/lcov.info; do
+          for file in coverage/*/lcov.info backend/coverage/lcov.info coverage-smoke/lcov.info; do
             sed -i "s|/home/runner/work/websitos/websitos/||g" $file || true
             cat $file >> coverage/merged/lcov.info || true
           done
