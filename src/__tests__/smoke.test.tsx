@@ -21,7 +21,9 @@ async function importAllFromDir(dir: string, failures: string[]) {
       (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) &&
       !entry.name.endsWith(".test.ts") &&
       !entry.name.endsWith(".test.tsx") &&
-      !entry.name.endsWith(".stories.tsx")
+      !entry.name.endsWith(".stories.tsx") &&
+      !entry.name.endsWith(".d.ts") &&
+      !entry.name.includes("vite-env")
     ) {
       try {
         await import(pathToFileURL(fullPath).href);
@@ -50,7 +52,13 @@ test("smoke: all modules importable (warnings only, never fails)", async () => {
 
   if (failures.length > 0) {
     console.warn("==== Smoke Test Warnings ====");
-    failures.forEach(f => console.warn(f));
+    for (const f of failures) {
+      try {
+        console.warn(f);
+      } catch (e) {
+        console.warn("⚠️ Failed to log warning:", (e as Error).message);
+      }
+    }
     console.warn("============================");
   }
 
