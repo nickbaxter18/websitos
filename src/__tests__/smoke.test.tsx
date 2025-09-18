@@ -4,7 +4,14 @@ import { pathToFileURL } from "url";
 import "tsconfig-paths/register";
 
 const excludedDirs = ["v2", "tests"];
-const excludedFiles = ["validateEnv", "vite-env", "Status.tsx", "Terms.tsx", "reload.ts"];
+const excludedFiles = [
+  "validateEnv",
+  "vite-env",
+  "Status.tsx",
+  "Terms.tsx",
+  "reload.ts",
+  "setupTests.ts"
+];
 
 async function importAllFromDir(dir: string, failures: string[]) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -53,13 +60,13 @@ test("smoke: all modules importable (warnings only, never fails)", async () => {
 
   if (Array.isArray(failures) && failures.length > 0) {
     console.warn("==== Smoke Test Warnings ====");
-    failures.forEach(f => {
+    for (let i = 0; i < failures.length; i++) {
       try {
-        console.warn(f);
+        console.warn(failures[i]);
       } catch {
         console.warn("⚠️ Failed to log smoke warning");
       }
-    });
+    }
     console.warn("============================");
   }
 
