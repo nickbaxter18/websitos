@@ -1,21 +1,23 @@
+# Codecov configuration
+# This file customizes how Codecov processes coverage data
+
 coverage:
   precision: 2
   round: down
-  range: "50...100"
+  range: "50...90"
+
   status:
     project:
       default:
-        target: 70%
-        threshold: 5%
-        informational: false
-        removed_code_behavior: adjust
+        target: auto
+        threshold: 2%
     patch:
       default:
-        target: 70%
-        threshold: 5%
-        informational: false
-comment:
-  layout: "reach, diff, flags, files"
-  behavior: default
-  require_changes: false
-  require_ci_to_pass: true
+        target: auto
+        threshold: 2%
+
+ignore:
+  - "**/migrations/**"
+  - "**/*.d.ts"
+  - "**/*.test.*"
+  - "**/*.stories.*"

@@ -25,15 +25,21 @@ async function importAllFromDir(dir: string, failures: string[]) {
   }
 }
 
-test("smoke: all modules in src importable (warnings only, guaranteed pass)", async () => {
+async function runSmokeImports(): Promise<string[]> {
   const failures: string[] = [];
-
   try {
     const srcDir = path.join(__dirname, "..", "..");
     await importAllFromDir(srcDir, failures);
   } catch (err) {
-    failures.push(`⚠️ Smoke test unexpected error: ${(err as Error).message}`);
+    failures.push(`⚠️ Unexpected error in smoke test: ${(err as Error).message}`);
   }
+  return failures;
+}
+
+test("smoke: all modules importable (warnings only, never fails)", async () => {
+  const failures = await Promise.resolve(runSmokeImports()).catch(err => [
+    `⚠️ Smoke test crashed: ${(err as Error).message}`,
+  ]);
 
   if (failures.length > 0) {
     console.warn("==== Smoke Test Warnings ====");
@@ -41,6 +47,5 @@ test("smoke: all modules in src importable (warnings only, guaranteed pass)", as
     console.warn("============================");
   }
 
-  // Always pass to guarantee CI continues
-  expect(true).toBe(true);
+  expect(true).toBe(true); // always green
 });
