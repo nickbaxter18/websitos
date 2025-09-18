@@ -2,7 +2,7 @@ name: PR Summary
 
 on:
   workflow_run:
-    workflows: ["Frontend Checks", "Backend Checks", "Coverage Checks", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests"]
+    workflows: ["Coverage Checks"]
     types:
       - completed
 
@@ -10,96 +10,30 @@ jobs:
   pr-summary:
     runs-on: ubuntu-latest
     if: always()
-    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download Artifacts
+      - name: Download Coverage Artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Validate Reports
+      - name: Generate PR Summary
         run: |
-          echo "## ✅ CI & Deploy Summary" > summary.md
-          echo "All checks have completed. Below is the breakdown of coverage and test reports." >> summary.md
-          echo "" >> summary.md
-
-          echo "### 📊 Coverage Reports" >> summary.md
+          echo "## ✅ CI Coverage Summary" > summary.md
           echo "| Area | Status | Coverage |" >> summary.md
           echo "|------|--------|----------|" >> summary.md
 
-          if [ -f artifacts/coverage-frontend/coverage-summary.json ]; then
-            total=$(jq -r '.total.lines.pct' artifacts/coverage-frontend/coverage-summary.json)
-            echo "| Frontend | ✅ Found | ${total}% |" >> summary.md
-          else
-            echo "| Frontend | ❌ Missing | N/A |" >> summary.md
-            echo "::error::Frontend coverage report missing"
-          fi
-
-          if [ -f artifacts/coverage-backend/coverage-summary.json ]; then
-            total=$(jq -r '.total.lines.pct' artifacts/coverage-backend/coverage-summary.json)
-            echo "| Backend | ✅ Found | ${total}% |" >> summary.md
-          else
-            echo "| Backend | ❌ Missing | N/A |" >> summary.md
-            echo "::error::Backend coverage report missing"
-          fi
-
-          if [ -f artifacts/coverage-backend-node/coverage-summary.json ]; then
-            total=$(jq -r '.total.lines.pct' artifacts/coverage-backend-node/coverage-summary.json)
-            echo "| Backend-Node | ✅ Found | ${total}% |" >> summary.md
-          else
-            echo "| Backend-Node | ❌ Missing | N/A |" >> summary.md
-            echo "::error::Backend-Node coverage report missing"
-          fi
-
-          if [ -f artifacts/coverage-e2e/coverage-summary.json ]; then
-            total=$(jq -r '.total.lines.pct' artifacts/coverage-e2e/coverage-summary.json)
-            echo "| E2E | ✅ Found | ${total}% |" >> summary.md
-          else
-            echo "| E2E | ❌ Missing | N/A |" >> summary.md
-            echo "::error::E2E coverage report missing"
-          fi
-
-          echo "" >> summary.md
-          echo "---" >> summary.md
-          echo "" >> summary.md
-          echo "### 🔎 Lint & Test Reports" >> summary.md
-          echo "| Report | Status |" >> summary.md
-          echo "|--------|--------|" >> summary.md
-
-          if [ -f artifacts/frontend-eslint/eslint-report.json ]; then
-            echo "| ESLint | ✅ Found |" >> summary.md
-          else
-            echo "| ESLint | ❌ Missing |" >> summary.md
-            echo "::error::Frontend ESLint report missing"
-          fi
-
-          if [ -f artifacts/frontend-jest/jest-report.json ]; then
-            echo "| Jest (Frontend) | ✅ Found |" >> summary.md
-          else
-            echo "| Jest (Frontend) | ❌ Missing |" >> summary.md
-            echo "::error::Frontend Jest results missing"
-          fi
-
-          if [ -f artifacts/backend-pytest/pytest-report.json ]; then
-            echo "| Pytest (Backend) | ✅ Found |" >> summary.md
-          else
-            echo "| Pytest (Backend) | ❌ Missing |" >> summary.md
-            echo "::error::Backend pytest results missing"
-          fi
-
-          if [ -f artifacts/backend-flake8/flake8-report.txt ]; then
-            echo "| Flake8 | ✅ Found |" >> summary.md
-          else
-            echo "| Flake8 | ❌ Missing |" >> summary.md
-            echo "::error::Backend Flake8 report missing"
-          fi
+          for area in frontend backend backend-node e2e; do
+            if [ -f artifacts/coverage-${area}/coverage-summary.json ]; then
+              total=$(jq -r '.total.lines.pct' artifacts/coverage-${area}/coverage-summary.json)
+              echo "| ${area} | ✅ Found | ${total}% |" >> summary.md
+            else
+              echo "| ${area} | ❌ Missing | N/A |" >> summary.md
+              echo "::error::${area} coverage report missing"
+            fi
+          done
 
       - name: Post PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: workflow-report
+          header: coverage-summary
           path: summary.md

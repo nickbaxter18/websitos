@@ -91,7 +91,7 @@ jobs:
       - name: Run frontend coverage (force reporters)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          mkdir -p logs
+          mkdir -p logs coverage/frontend
           pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
             --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
             --coverageDirectory=coverage/frontend 2>&1 | tee logs/frontend.log
@@ -148,12 +148,19 @@ jobs:
             npx nyc --reporter=lcov --report-dir=coverage/e2e --reporter=json-summary --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
           fi
 
-      - name: Upload coverage artifact
+      - name: Upload standardized coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.task }}
+          path: coverage/${{ matrix.task }}/coverage-summary.json
+          retention-days: 7
+
+      - name: Upload full coverage folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.task }}-full
           path: coverage/${{ matrix.task }}
-          retention-days: 1
+          retention-days: 7
 
       - name: Upload full logs
         if: always()
@@ -162,106 +169,25 @@ jobs:
           name: logs-${{ matrix.task }}
           path: logs
 
-      - name: Extract errors
-        if: failure()
-        run: |
-          grep -A 5 -B 5 -iE "error|fail|warn|exception" logs/${{ matrix.task }}*.log > logs/errors.log || echo "No errors found." > logs/errors.log
-
-      - name: Build debug report
-        if: failure()
-        run: |
-          mkdir -p logs
-          echo "## 🚨 Coverage Debug Report – ${{ matrix.task }}" > logs/debug-report.md
-          echo "" >> logs/debug-report.md
-          head -n 100 logs/errors.log >> logs/debug-report.md
-          echo "" >> logs/debug-report.md
-          echo "### ❌ Exit Code" >> logs/debug-report.md
-          cat logs/exit-code.txt >> logs/debug-report.md || echo "Unknown" >> logs/debug-report.md
-          echo "" >> logs/debug-report.md
-          if [ -f coverage/${{ matrix.task }}/coverage-summary.json ]; then
-            echo "### 📊 Coverage Summary" >> logs/debug-report.md
-            cat coverage/${{ matrix.task }}/coverage-summary.json | jq '.total' >> logs/debug-report.md
-          fi
-          echo "" >> logs/debug-report.md
-          echo "### ⚙️ Environment" >> logs/debug-report.md
-          echo "- Branch: $GITHUB_REF_NAME" >> logs/debug-report.md
-          echo "- Commit: $GITHUB_SHA" >> logs/debug-report.md
-          echo "- Node: $(node -v)" >> logs/debug-report.md
-          echo "- Runner: $RUNNER_OS" >> logs/debug-report.md
-
-      - name: Post debug report as PR comment
-        if: failure()
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: coverage-${{ matrix.task }}-debug
-          path: logs/debug-report.md
-
-  coverage-smoke:
-    runs-on: ubuntu-latest
-    continue-on-error: true   # 🚫 Non-blocking
-    env:
-      LOGS_API_TOKEN: ${{ secrets.LOGS_API_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 10
-      - run: pnpm install --frozen-lockfile
-      - run: |
-          mkdir -p logs
-          pnpm jest --config jest.smoke.config.cjs --coverage 2>&1 | tee logs/smoke.log || echo "⚠️ Smoke failed, continuing"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-smoke
-          path: coverage/smoke
-      - name: Upload smoke logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: logs-smoke
-          path: logs
-      - name: Build smoke debug report
-        if: failure()
-        run: |
-          mkdir -p logs
-          echo "## 🚨 Coverage Debug Report – smoke" > logs/debug-report.md
-          echo "" >> logs/debug-report.md
-          grep -A 5 -B 5 -iE "error|fail|warn|exception" logs/smoke.log > logs/errors.log || echo "No errors found." > logs/errors.log
-          head -n 100 logs/errors.log >> logs/debug-report.md
-      - name: Post smoke debug report as PR comment
-        if: failure()
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: coverage-smoke-debug
-          path: logs/debug-report.md
-
   upload-codecov:
-    needs: [coverage, coverage-smoke]
+    needs: [coverage]
     runs-on: ubuntu-latest
     environment: websitos
-    env:
-      LOGS_API_TOKEN: ${{ secrets.LOGS_API_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Download coverage artifacts
+      - name: Download all coverage artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ./coverage
+          path: ./coverage-artifacts
 
-      - name: Normalize and merge coverage files
+      - name: Merge coverage files
         run: |
           mkdir -p coverage/merged
-          for file in coverage/*/lcov.info backend/coverage/lcov.info coverage-smoke/lcov.info; do
-            sed -i "s|/home/runner/work/websitos/websitos/||g" $file || true
-            cat $file >> coverage/merged/lcov.info || true
-          done
+          find coverage-artifacts -name "lcov.info" -exec cat {} + > coverage/merged/lcov.info
           echo "✅ Final merged lcov preview:" && head -n 50 coverage/merged/lcov.info
 
       - name: Upload merged coverage to Codecov
@@ -273,35 +199,3 @@ jobs:
           verbose: true
         env:
           CODECOV_API_TOKEN: ${{ secrets.CODECOV_API_TOKEN }}
-
-      - name: Query Codecov API for raw coverage
-        run: |
-          echo "📡 Waiting 10s before fetching raw coverage..."
-          sleep 10
-          curl -s \
-            -H "Authorization: token $CODECOV_API_TOKEN" \
-            https://api.codecov.io/api/v2/gh/${{ github.repository }}/commits/${{ github.sha }} \
-            | jq . > codecov_raw.json
-          echo "✅ Raw coverage saved to codecov_raw.json"
-
-      - name: Summarize coverage in logs (totals)
-        run: |
-          echo "📊 Codecov Coverage Totals:" 
-          cat codecov_raw.json | jq '.commit.totals'
-
-      - name: Summarize coverage in logs (per-file)
-        continue-on-error: true
-        run: |
-          echo "📂 Per-file coverage:"
-          if jq -e '.files' codecov_raw.json >/dev/null; then
-            cat codecov_raw.json | jq -r '.files[]? | "\(.filename): \(.coverage.percent // \"N/A\")% (\(.coverage.covered // 0)/\(.coverage.lines // 0) lines)"'
-          else
-            echo "⚠️ No per-file coverage data available from Codecov"
-          fi
-
-      - name: Upload raw Codecov JSON artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: codecov-raw
-          path: codecov_raw.json
-          retention-days: 7
