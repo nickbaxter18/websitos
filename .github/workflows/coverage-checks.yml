@@ -274,7 +274,8 @@ jobs:
 
       - name: Query Codecov API for raw coverage
         run: |
-          echo "📡 Fetching raw coverage from Codecov API..."
+          echo "📡 Waiting 10s before fetching raw coverage..."
+          sleep 10
           curl -s \
             -H "Authorization: token $CODECOV_API_TOKEN" \
             https://api.codecov.io/api/v2/gh/${{ github.repository }}/commits/${{ github.sha }} \
@@ -287,9 +288,14 @@ jobs:
           cat codecov_raw.json | jq '.commit.totals'
 
       - name: Summarize coverage in logs (per-file)
+        continue-on-error: true
         run: |
-          echo "📂 Per-file coverage:" 
-          cat codecov_raw.json | jq -r '.files[] | "\(.filename): \(.coverage.percent)% (\(.coverage.covered)/\(.coverage.lines) lines)"'
+          echo "📂 Per-file coverage:"
+          if jq -e '.files' codecov_raw.json >/dev/null; then
+            cat codecov_raw.json | jq -r '.files[]? | "\(.filename): \(.coverage.percent // \"N/A\")% (\(.coverage.covered // 0)/\(.coverage.lines // 0) lines)"'
+          else
+            echo "⚠️ No per-file coverage data available from Codecov"
+          fi
 
       - name: Upload raw Codecov JSON artifact
         uses: actions/upload-artifact@v4
