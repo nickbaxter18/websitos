@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v25
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v26
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -67,7 +67,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v5
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v6
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -190,7 +190,6 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage/${{ matrix.task }}/lcov.info
           flags: ${{ matrix.task }}
-          token: ${{ secrets.CODECOV_TOKEN }}
           slug: ${{ github.repository }}
           fail_ci_if_error: true
           verbose: true
