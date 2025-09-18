@@ -6,6 +6,7 @@ module.exports = {
     "src/**/*.{js,jsx,ts,tsx}",
     "!src/**/*.d.ts",
     "!src/**/index.{js,ts}",
+    "!src/pages/**",   // 🚫 exclude all pages from Jest coverage (E2E only)
     "!src/__tests__/**"
   ],
   testPathIgnorePatterns: [
@@ -14,5 +15,5 @@ module.exports = {
   ],
   coverageDirectory: "coverage/frontend",
   coverageReporters: ["lcov", "text", "json-summary", "cobertura"],
-  passWithNoTests: true // ✅ allow empty test suites without failing
+  passWithNoTests: true
 };
