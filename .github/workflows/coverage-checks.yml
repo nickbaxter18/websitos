@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v38
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v39
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,9 +61,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v18
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v19
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      - name: Provide env file for validation
+        run: cp .env.ci .env.example
 
       - name: Install frontend dependencies (with retry)
         if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
