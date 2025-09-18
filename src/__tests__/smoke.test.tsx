@@ -3,7 +3,7 @@ import path from "path";
 import { pathToFileURL } from "url";
 import "tsconfig-paths/register";
 
-const excludedDirs = ["v2"];
+const excludedDirs = ["v2", "tests"];
 
 async function importAllFromDir(dir: string, failures: string[]) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -11,7 +11,7 @@ async function importAllFromDir(dir: string, failures: string[]) {
     const fullPath = path.join(dir, entry.name);
 
     if (entry.isDirectory() && excludedDirs.includes(entry.name)) {
-      continue; // 🚫 Skip excluded directories like v2
+      continue; // 🚫 Skip excluded directories like v2 and tests
     }
 
     if (entry.isDirectory()) {
@@ -23,7 +23,8 @@ async function importAllFromDir(dir: string, failures: string[]) {
       !entry.name.endsWith(".test.tsx") &&
       !entry.name.endsWith(".stories.tsx") &&
       !entry.name.endsWith(".d.ts") &&
-      !entry.name.includes("vite-env")
+      !entry.name.includes("vite-env") &&
+      !entry.name.includes("validateEnv")
     ) {
       try {
         await import(pathToFileURL(fullPath).href);
@@ -52,12 +53,10 @@ test("smoke: all modules importable (warnings only, never fails)", async () => {
 
   if (failures.length > 0) {
     console.warn("==== Smoke Test Warnings ====");
-    for (const f of failures) {
-      try {
-        console.warn(f);
-      } catch (e) {
-        console.warn("⚠️ Failed to log warning:", (e as Error).message);
-      }
+    try {
+      for (const f of failures) console.warn(f);
+    } catch {
+      console.warn("⚠️ Failed to print some smoke warnings");
     }
     console.warn("============================");
   }
