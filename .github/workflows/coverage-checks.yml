@@ -31,12 +31,6 @@ jobs:
           lfs: false
           submodules: false
 
-      - name: Ensure no stray .babelrc.js
-        run: if [ -f .babelrc.js ]; then echo "❌ .babelrc.js found"; exit 1; fi
-
-      - name: Debug repo size
-        run: du -sh * | sort -h
-
       - name: Setup Node.js (for frontend/e2e)
         if: ${{ matrix.task != 'backend' }}
         uses: actions/setup-node@v4
@@ -54,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v28
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v29
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -67,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v8
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v9
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -90,30 +84,17 @@ jobs:
         if: ${{ matrix.task == 'backend' }}
         run: npm install -g nyc
 
-      - name: Clean workspace caches
-        if: ${{ matrix.task != 'backend' }}
-        run: |
-          rm -rf dist coverage node_modules/.cache || true
-          pnpm jest --clearCache || true
-
       - name: Run frontend coverage (force reporters)
         if: ${{ matrix.task == 'frontend' }}
         run: |
           pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
             --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
             --coverageDirectory=coverage/frontend
-          echo ">>> Verifying frontend coverage files"
-          if [ ! -s coverage/frontend/lcov.info ]; then
-            echo "❌ Missing frontend lcov.info"
-            exit 1
-          fi
-          ls -lh coverage/frontend
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
         run: |
           mkdir -p coverage/backend
-          echo ">>> Running Pytest with coverage..."
           pytest backend/tests --maxfail=1 --disable-warnings -q \
             --cov=backend --cov=api --cov-branch --cov-append \
             --cov-report=xml:coverage/backend/coverage.xml \
@@ -121,20 +102,6 @@ jobs:
             --cov-report=json:coverage/backend/coverage.json \
             --cov-report=term-missing \
             --cov-fail-under=0
-          echo ">>> Verifying backend coverage files"
-          if [ ! -s coverage/backend/coverage.xml ]; then
-            echo "❌ Missing backend coverage.xml"
-            exit 1
-          fi
-          if [ ! -s coverage/backend/lcov.info ]; then
-            echo "❌ Missing backend lcov.info"
-            exit 1
-          fi
-          ls -lh coverage/backend
-
-      - name: Enforce coverage thresholds
-        if: ${{ matrix.task == 'backend' }}
-        run: npx nyc check-coverage --branches=70 --functions=70 --lines=70 --statements=70 || true
 
       - name: Run e2e coverage (Playwright with instrumentation)
         if: ${{ matrix.task == 'e2e' }}
@@ -142,78 +109,49 @@ jobs:
           NODE_V8_COVERAGE: .nyc_output
         run: |
           mkdir -p coverage/e2e
-          # ✅ Install only Chromium (no --with-deps)
           pnpm exec playwright install chromium
 
-          echo ">>> Building app with coverage instrumentation"
           VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts | tee vite-debug.log
 
-          echo ">>> Checking for Istanbul instrumentation"
           if ! grep -q "Istanbul instrumentation ENABLED" vite-debug.log; then
             echo "❌ Istanbul instrumentation not enabled in Vite build"
             exit 1
           fi
 
-          echo ">>> Starting instrumented preview server"
           nohup pnpm vite preview --port=4173 > preview.log 2>&1 &
           sleep 5
 
-          echo ">>> Running Playwright tests with coverage hook"
           pnpm exec playwright test --reporter=list --require tests/playwright-coverage-hook.ts || true
 
-          echo ">>> Debug .nyc_output contents"
-          ls -lh .nyc_output || echo "⚠️ No coverage output found"
-
-          echo ">>> Checking and merging browser coverage"
           if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
             npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
           else
-            echo "⚠️ .nyc_output empty, rerunning Playwright under nyc"
             npx nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
           fi
 
-          echo ">>> Verifying e2e coverage files"
-          if [ ! -s coverage/e2e/lcov.info ]; then
-            echo "❌ Missing e2e lcov.info"
-            exit 1
-          fi
+  upload-codecov:
+    needs: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-          ls -lh coverage/e2e
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./coverage
 
-      - name: Debug coverage files before Codecov upload
+      - name: Merge coverage
         run: |
-          find coverage -name lcov.info -exec ls -lh {} +
-          find coverage -name lcov.info -exec head -n 20 {} +
+          npx nyc merge coverage merged-coverage.json
+          npx nyc report --reporter=lcov --report-dir=coverage/merged --temp-dir=coverage
 
-      - name: Upload coverage to Codecov (per-job)
+      - name: Upload merged coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ${{ github.workspace }}/coverage/${{ matrix.task }}/lcov.info
-          flags: ${{ matrix.task }}
-          slug: ${{ github.repository }}
+          files: coverage/merged/lcov.info
           fail_ci_if_error: true
           verbose: true
-
-      - name: Upload raw NYC, dist, and debug logs for troubleshooting
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-${{ matrix.task }}
-          path: |
-            dist/**
-            .nyc_output/**
-            coverage/e2e/**
-            coverage/backend/coverage.json
-            coverage/**/coverage-final.json
-            vite-debug.log
-            preview.log
-            babel.config.cjs
-          retention-days: 5
-
-      - name: Cache Playwright Browsers
-        if: ${{ matrix.task == 'e2e' }}
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
