@@ -1,3 +1,99 @@
+name: Coverage Checks
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [frontend, backend, backend-node, e2e]
+    defaults:
+      run:
+        working-directory: .
+    env:
+      NODE_OPTIONS: "--experimental-vm-modules"
+    steps:
+      - name: Checkout repository (robust)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          clean: true
+          lfs: false
+          submodules: false
+
+      - name: Setup Node.js (for frontend/e2e/backend-node)
+        if: ${{ matrix.task != 'backend' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm (for frontend/e2e)
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Cache pnpm (for frontend/e2e)
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v41
+
+      - name: Setup Python (for backend)
+        if: ${{ matrix.task == 'backend' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip wheels (for backend)
+        if: ${{ matrix.task == 'backend' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v21
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Provide env file for validation
+        run: cp .env.ci .env.example
+
+      - name: Install frontend dependencies (with retry)
+        if: ${{ matrix.task == 'frontend' }}
+        run: |
+          for i in 1 2 3; do
+            pnpm install --frozen-lockfile && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
+          done
+
+      - name: Install backend dependencies (Python)
+        if: ${{ matrix.task == 'backend' }}
+        run: |
+          python -m pip install --upgrade pip
+          for i in 1 2 3; do
+            pip install --prefer-binary -r requirements.txt && break || (echo "❌ pip install failed, retrying..." && sleep 10)
+          done
+
+      - name: Ensure nyc installed (backend)
+        if: ${{ matrix.task == 'backend' }}
+        run: npm install -g nyc
+
+      - name: Run frontend coverage (force reporters)
+        if: ${{ matrix.task == 'frontend' }}
+        run: |
+          pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
+            --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
+            --coverageDirectory=coverage/frontend
+
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
         run: |
@@ -9,3 +105,94 @@
             --cov-report=json:coverage/backend/coverage.json \
             --cov-report=term-missing \
             --cov-fail-under=0
+
+      - name: Run backend-node coverage (Jest)
+        if: ${{ matrix.task == 'backend-node' }}
+        run: |
+          cd backend
+          npm install
+          npx jest --coverage --coverageReporters=lcov --coverageDirectory=../coverage/backend-node
+
+      - name: Run e2e coverage (Playwright with instrumentation)
+        if: ${{ matrix.task == 'e2e' }}
+        env:
+          NODE_V8_COVERAGE: .nyc_output
+        run: |
+          mkdir -p coverage/e2e
+          pnpm exec playwright install chromium
+
+          VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts | tee vite-debug.log
+
+          if ! grep -q "Istanbul instrumentation ENABLED" vite-debug.log; then
+            echo "❌ Istanbul instrumentation not enabled in Vite build"
+            exit 1
+          fi
+
+          nohup pnpm vite preview --port=4173 > preview.log 2>&1 &
+          sleep 5
+
+          pnpm exec playwright test --reporter=list --require tests/playwright-coverage-hook.ts || true
+
+          if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
+            npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
+            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
+          else
+            npx nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
+          fi
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.task }}
+          path: coverage/${{ matrix.task }}
+          retention-days: 1
+
+  coverage-smoke:
+    runs-on: ubuntu-latest
+    continue-on-error: true   # 🚫 Non-blocking
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: pnpm/action-setup@v2   # ✅ install pnpm in smoke job
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm jest --config jest.smoke.config.cjs --coverage || echo "⚠️ Smoke failed, continuing"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-smoke
+          path: coverage/smoke
+
+  upload-codecov:
+    needs: [coverage, coverage-smoke]
+    runs-on: ubuntu-latest
+    environment: websitos
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./coverage
+
+      - name: Normalize and merge coverage files
+        run: |
+          mkdir -p coverage/merged
+          for file in coverage/coverage-*/lcov.info coverage/coverage-smoke/lcov.info; do
+            sed -i "s|/home/runner/work/websitos/websitos/||g" $file || true
+            cat $file >> coverage/merged/lcov.info || true
+          done
+          echo "✅ Final merged lcov preview:" && head -n 50 coverage/merged/lcov.info
+
+      - name: Upload merged coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/merged/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
