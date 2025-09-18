@@ -91,21 +91,24 @@ jobs:
       - name: Run frontend coverage (force reporters)
         if: ${{ matrix.task == 'frontend' }}
         run: |
+          mkdir -p logs
           pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
             --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
-            --coverageDirectory=coverage/frontend
+            --coverageDirectory=coverage/frontend 2>&1 | tee logs/frontend.log
+          echo $? > logs/exit-code.txt
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
         run: |
-          mkdir -p coverage/backend
+          mkdir -p coverage/backend logs
           pytest backend/tests --maxfail=1 --disable-warnings -q \
             --cov=./backend --cov-branch --cov-append \
             --cov-report=xml:coverage/backend/coverage.xml \
             --cov-report=lcov:coverage/backend/lcov.info \
             --cov-report=json:coverage/backend/coverage.json \
             --cov-report=term-missing \
-            --cov-fail-under=0
+            --cov-fail-under=0 2>&1 | tee logs/backend.log
+          echo $? > logs/exit-code.txt
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
@@ -113,31 +116,24 @@ jobs:
           cd backend
           npm install --legacy-peer-deps
           npx jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
-            --coverageReporters=lcov 2>&1 | tee jest.log
-
-      - name: Upload Jest logs
-        if: ${{ matrix.task == 'backend-node' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: jest-backend-node-logs
-          path: backend/jest.log
-          retention-days: 7
+            --coverageReporters=lcov 2>&1 | tee ../logs/backend-node.log
+          echo $? > ../logs/exit-code.txt
 
       - name: Run e2e coverage (Playwright with instrumentation)
         if: ${{ matrix.task == 'e2e' }}
         run: |
+          mkdir -p coverage/e2e logs
           pnpm install --frozen-lockfile
-          mkdir -p coverage/e2e
           pnpm exec playwright install chromium
 
-          VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts | tee vite-debug.log
+          VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts | tee logs/vite-debug.log
 
-          if ! grep -q "Istanbul instrumentation ENABLED" vite-debug.log; then
+          if ! grep -q "Istanbul instrumentation ENABLED" logs/vite-debug.log; then
             echo "❌ Istanbul instrumentation not enabled in Vite build"
             exit 1
           fi
 
-          nohup pnpm vite preview --port=4173 > preview.log 2>&1 &
+          nohup pnpm vite preview --port=4173 > logs/preview.log 2>&1 &
           sleep 5
 
           pnpm exec playwright test --reporter=list --require tests/playwright-coverage-hook.ts || true
@@ -156,6 +152,46 @@ jobs:
           path: coverage/${{ matrix.task }}
           retention-days: 1
 
+      - name: Upload full logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.task }}
+          path: logs
+
+      - name: Extract errors
+        if: failure()
+        run: |
+          grep -A 5 -B 5 -iE "error|fail|warn|exception" logs/${{ matrix.task }}*.log > logs/errors.log || echo "No errors found." > logs/errors.log
+
+      - name: Build debug report
+        if: failure()
+        run: |
+          echo "## 🚨 Coverage Debug Report – ${{ matrix.task }}" > logs/debug-report.md
+          echo "" >> logs/debug-report.md
+          head -n 100 logs/errors.log >> logs/debug-report.md
+          echo "" >> logs/debug-report.md
+          echo "### ❌ Exit Code" >> logs/debug-report.md
+          cat logs/exit-code.txt >> logs/debug-report.md || echo "Unknown" >> logs/debug-report.md
+          echo "" >> logs/debug-report.md
+          if [ -f coverage/${{ matrix.task }}/coverage-summary.json ]; then
+            echo "### 📊 Coverage Summary" >> logs/debug-report.md
+            cat coverage/${{ matrix.task }}/coverage-summary.json | jq '.total' >> logs/debug-report.md
+          fi
+          echo "" >> logs/debug-report.md
+          echo "### ⚙️ Environment" >> logs/debug-report.md
+          echo "- Branch: $GITHUB_REF_NAME" >> logs/debug-report.md
+          echo "- Commit: $GITHUB_SHA" >> logs/debug-report.md
+          echo "- Node: $(node -v)" >> logs/debug-report.md
+          echo "- Runner: $RUNNER_OS" >> logs/debug-report.md
+
+      - name: Post debug report as PR comment
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: coverage-${{ matrix.task }}-debug
+          path: logs/debug-report.md
+
   coverage-smoke:
     runs-on: ubuntu-latest
     continue-on-error: true   # 🚫 Non-blocking
@@ -166,15 +202,34 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-      - uses: pnpm/action-setup@v2   # ✅ install pnpm in smoke job
+      - uses: pnpm/action-setup@v2
         with:
           version: 10
       - run: pnpm install --frozen-lockfile
-      - run: pnpm jest --config jest.smoke.config.cjs --coverage || echo "⚠️ Smoke failed, continuing"
+      - run: pnpm jest --config jest.smoke.config.cjs --coverage 2>&1 | tee logs/smoke.log || echo "⚠️ Smoke failed, continuing"
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-smoke
           path: coverage/smoke
+      - name: Upload smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-smoke
+          path: logs
+      - name: Build smoke debug report
+        if: failure()
+        run: |
+          echo "## 🚨 Coverage Debug Report – smoke" > logs/debug-report.md
+          echo "" >> logs/debug-report.md
+          grep -A 5 -B 5 -iE "error|fail|warn|exception" logs/smoke.log > logs/errors.log || echo "No errors found." > logs/errors.log
+          head -n 100 logs/errors.log >> logs/debug-report.md
+      - name: Post smoke debug report as PR comment
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: coverage-smoke-debug
+          path: logs/debug-report.md
 
   upload-codecov:
     needs: [coverage, coverage-smoke]
