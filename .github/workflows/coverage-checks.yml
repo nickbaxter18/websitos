@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v31
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v32
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v11
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v12
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -156,6 +156,11 @@ jobs:
         run: |
           npx nyc merge coverage merged-coverage.json
           npx nyc report --reporter=lcov --report-dir=coverage/merged --temp-dir=coverage
+
+      - name: Debug merged coverage file
+        run: |
+          ls -lh coverage/merged || true
+          head -n 50 coverage/merged/lcov.info || true
 
       - name: Upload merged coverage to Codecov
         uses: codecov/codecov-action@v3
