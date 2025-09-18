@@ -1,10 +1,12 @@
-module.exports = function () {
+module.exports = function (api) {
+  api.cache(true); // ✅ enable caching for Jest/Babel
+
   return {
     presets: [
       ["@babel/preset-env", { targets: { node: "current" } }],
       "@babel/preset-react",
       "@babel/preset-typescript"
     ],
-    plugins: [] // ✅ no Istanbul here, instrumentation handled by vite-plugin-istanbul
+    plugins: [] // instrumentation handled by vite-plugin-istanbul
   };
 };
