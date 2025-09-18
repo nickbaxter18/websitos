@@ -1,9 +1,11 @@
 # Ignore environment files
 .env
-.env.*
+.env.local
+.env.*.local
 
-# But allow CI example env
+# But allow CI/example envs
 !.env.ci
+!*.env.example
 
 # Node modules
 node_modules/
