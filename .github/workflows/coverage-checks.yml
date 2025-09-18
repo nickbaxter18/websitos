@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v34
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v35
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v14
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v15
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -155,13 +155,10 @@ jobs:
       - name: Normalize and merge coverage files
         run: |
           mkdir -p coverage/merged
-          for file in coverage/*/lcov.info; do
+          for file in coverage/**/lcov.info; do
             sed -i "s|/home/runner/work/websitos/websitos/||g" $file || true
+            cat $file >> coverage/merged/lcov.info || true
           done
-          cp coverage/backend/lcov.info coverage/merged/backend.lcov || true
-          cp coverage/frontend/lcov.info coverage/merged/frontend.lcov || true
-          cp coverage/e2e/lcov.info coverage/merged/e2e.lcov || true
-          cat coverage/merged/*.lcov > coverage/merged/lcov.info
           echo "✅ Final merged lcov preview:" && head -n 50 coverage/merged/lcov.info
 
       - name: Upload merged coverage to Codecov
