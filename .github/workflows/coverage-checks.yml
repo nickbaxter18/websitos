@@ -113,6 +113,7 @@ jobs:
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
+          mkdir -p logs
           cd backend
           npm install --legacy-peer-deps
           npx jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
@@ -167,6 +168,7 @@ jobs:
       - name: Build debug report
         if: failure()
         run: |
+          mkdir -p logs
           echo "## 🚨 Coverage Debug Report – ${{ matrix.task }}" > logs/debug-report.md
           echo "" >> logs/debug-report.md
           head -n 100 logs/errors.log >> logs/debug-report.md
@@ -206,7 +208,9 @@ jobs:
         with:
           version: 10
       - run: pnpm install --frozen-lockfile
-      - run: pnpm jest --config jest.smoke.config.cjs --coverage 2>&1 | tee logs/smoke.log || echo "⚠️ Smoke failed, continuing"
+      - run: |
+          mkdir -p logs
+          pnpm jest --config jest.smoke.config.cjs --coverage 2>&1 | tee logs/smoke.log || echo "⚠️ Smoke failed, continuing"
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-smoke
@@ -220,6 +224,7 @@ jobs:
       - name: Build smoke debug report
         if: failure()
         run: |
+          mkdir -p logs
           echo "## 🚨 Coverage Debug Report – smoke" > logs/debug-report.md
           echo "" >> logs/debug-report.md
           grep -A 5 -B 5 -iE "error|fail|warn|exception" logs/smoke.log > logs/errors.log || echo "No errors found." > logs/errors.log
