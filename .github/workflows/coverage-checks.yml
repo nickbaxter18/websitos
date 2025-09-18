@@ -38,14 +38,14 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Setup pnpm (for frontend/e2e)
-        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
+      - name: Setup pnpm (for frontend/e2e/backend-node)
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
         uses: pnpm/action-setup@v2
         with:
           version: 10
 
-      - name: Cache pnpm (for frontend/e2e)
-        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' }}
+      - name: Cache pnpm (for frontend/e2e/backend-node)
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
@@ -115,8 +115,8 @@ jobs:
         run: |
           mkdir -p logs
           cd backend
-          npm install --legacy-peer-deps
-          npx jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
+          pnpm install --frozen-lockfile
+          pnpm exec jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
             --coverageReporters=lcov 2>&1 | tee ../logs/backend-node.log
           echo $? > ../logs/exit-code.txt
 
