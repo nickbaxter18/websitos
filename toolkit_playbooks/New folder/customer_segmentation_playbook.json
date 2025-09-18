@@ -1,0 +1,60 @@
+{
+  "global": {
+    "title": "U-Dig It AI Customer Segmentation Playbook",
+    "description": "Framework for segmenting customers (freelancers, SMBs, agencies, enterprise) and tailoring offers and messaging.",
+    "tone": "personalized, targeted, value-driven",
+    "guardrails": "Segmentation must respect privacy laws (GDPR, PIPEDA). Avoid using sensitive data without consent."
+  },
+  "segments": {
+    "freelancer": {
+      "profile": "Solo operators, early-stage creators, budget-conscious.",
+      "pain_points": [
+        "Limited time and resources",
+        "Need affordable quick wins",
+        "Not sure how to scale AI effectively"
+      ],
+      "offers": ["ai_quick_start_pack", "ai_spark_starter"],
+      "headline": "⚡ Quick Wins for Freelancers",
+      "cta": "Start Small, Save Time"
+    },
+    "smb": {
+      "profile": "Small teams (2–50 employees), focused on growth and productivity.",
+      "pain_points": ["Team inefficiency", "Need scalable workflows", "Competing priorities"],
+      "offers": ["ai_mastery_hub", "ai_pro_templates_vault"],
+      "headline": "📈 SMBs: Scale Smarter With AI",
+      "cta": "Join the AI Mastery Hub"
+    },
+    "agency": {
+      "profile": "Marketing/consulting agencies serving multiple clients.",
+      "pain_points": [
+        "Client deliverables scaling issues",
+        "Need white-label AI workflows",
+        "Pressure to deliver ROI fast"
+      ],
+      "offers": ["ai_master_vault", "ai_growth_accelerator"],
+      "headline": "🤝 Agencies: Deliver More, Faster",
+      "cta": "Unlock The Master Vault"
+    },
+    "enterprise": {
+      "profile": "Large organizations (50+ employees) with complex operations.",
+      "pain_points": [
+        "Process inefficiencies across teams",
+        "High costs of manual workflows",
+        "Need governance & compliance"
+      ],
+      "offers": ["ai_optimization_plan", "ai_business_transformation"],
+      "headline": "🏢 Enterprise AI Transformation",
+      "cta": "Request a Custom Plan"
+    }
+  },
+  "integration": {
+    "crm": "Tag leads and customers with segment_id in CRM (see crm_automation_playbook.json).",
+    "funnels": "Landing pages, emails, and ads pull segment-specific offers/headlines/CTAs.",
+    "reporting": "Segment performance tracked in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "personalization_engine_playbook.json",
+      "ai_copywriting_playbook.json",
+      "customer_journey_mapping.json"
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "global": {
+    "title": "U-Dig It AI Chatbot Playbook",
+    "description": "Framework for chatbot flows covering landing page assistance, lead capture, onboarding, support, and upsells.",
+    "tone": "friendly, helpful, conversational",
+    "guardrails": "Chatbot responses must remain clear, ethical, and direct users to human support when necessary."
+  },
+  "use_cases": {
+    "landing_page_assistant": {
+      "greeting": "👋 Hi there! Looking to learn more about {{PRODUCT_TITLE}}?",
+      "faq_prompts": [
+        "What does this product do?",
+        "How much does it cost?",
+        "Is there a refund policy?"
+      ],
+      "cta": "Ready to get started? 👉 [Buy Now]({{PRODUCT_PAYMENT_LINK}})"
+    },
+    "lead_capture": {
+      "greeting": "⚡ Want a free resource to kickstart your AI journey?",
+      "form": ["Name", "Email"],
+      "success_message": "🎉 Thanks! Check your inbox for your freebie.",
+      "integration": "Collected leads added to lead_capture_email_sequence.json"
+    },
+    "onboarding": {
+      "greeting": "🚀 Welcome to {{PRODUCT_TITLE}}! Want help getting started?",
+      "steps": [
+        "Download your templates/resources",
+        "Follow the Quick Start Guide",
+        "Join our community: {{COMMUNITY_LINK}}"
+      ],
+      "cta": "Need more help? Contact support at nickbaxter@udigit.ca"
+    },
+    "support": {
+      "greeting": "👋 How can I help you today?",
+      "faq_prompts": [
+        "Billing & subscription questions",
+        "Accessing my product",
+        "Technical issues"
+      ],
+      "escalation": "If unresolved, direct to nickbaxter@udigit.ca"
+    },
+    "upsells": {
+      "greeting": "🔥 Many {{PRODUCT_TITLE}} users also grab {{UPSELL_TITLE}}.",
+      "offer_details": "It helps you {{UPSELL_BENEFIT}} and works perfectly with {{PRODUCT_TITLE}}.",
+      "cta": "👉 [Upgrade Now]({{UPSELL_PAYMENT_LINK}})"
+    }
+  },
+  "integration": {
+    "platforms": ["Website chat widget", "Messenger", "WhatsApp", "Slack"],
+    "crm_sync": "All chatbot interactions logged in CRM (see crm_automation_playbook.json).",
+    "reporting": "Track engagement rate, lead conversion rate, and upsell acceptance in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "support_knowledge_base.json",
+      "customer_success_playbook.json",
+      "retention_email_sequence.json",
+      "growth_playbook.json"
+    ]
+  }
+}

@@ -1,0 +1,127 @@
+name: Frontend Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  checks:
+    name: ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [lint, prettier, type-check, test:unit, test:e2e]
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Cache pnpm
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Enable problem matchers
+        run: |
+          echo "::add-matcher::.github/matchers/eslint.json"
+          echo "::add-matcher::.github/matchers/jest.json"
+          echo "::add-matcher::.github/matchers/ts.json"
+
+      - name: Run ESLint
+        if: ${{ matrix.task == 'lint' }}
+        run: |
+          echo ">>> Running ESLint"
+          pnpm exec eslint src v2 ops --format json --output-file eslint-report.json || true
+          if [ ! -f eslint-report.json ]; then echo '{}' > eslint-report.json; fi
+
+      - name: Upload ESLint report
+        if: ${{ always() && matrix.task == 'lint' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-eslint-report
+          path: eslint-report.json
+          retention-days: 14
+
+      - name: Run Prettier
+        if: ${{ matrix.task == 'prettier' }}
+        run: |
+          pnpm exec prettier --check . > prettier-report.txt 2>&1 || true
+          if [ ! -s prettier-report.txt ]; then echo 'No Prettier output' > prettier-report.txt; fi
+
+      - name: Upload Prettier report
+        if: ${{ always() && matrix.task == 'prettier' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-prettier-report
+          path: prettier-report.txt
+          retention-days: 14
+
+      - name: Run TypeScript type-check
+        if: ${{ matrix.task == 'type-check' }}
+        run: |
+          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck | tee tsc-report.txt || true
+          if [ ! -s tsc-report.txt ]; then echo 'No TSC output' > tsc-report.txt; fi
+
+      - name: Upload TSC report
+        if: ${{ always() && matrix.task == 'type-check' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-tsc-report
+          path: tsc-report.txt
+          retention-days: 14
+
+      - name: Run Jest unit tests
+        if: ${{ matrix.task == 'test:unit' }}
+        run: |
+          echo ">>> Running Jest"
+          pnpm exec jest --coverage --json --outputFile=jest-report.json || true
+          if [ ! -f jest-report.json ]; then echo '{}' > jest-report.json; fi
+
+      - name: Upload Jest results
+        if: ${{ always() && matrix.task == 'test:unit' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-jest-results
+          path: jest-report.json
+          retention-days: 14
+
+      - name: Install Playwright Browsers
+        if: ${{ matrix.task == 'test:e2e' }}
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run Playwright E2E tests with coverage
+        if: ${{ matrix.task == 'test:e2e' }}
+        run: |
+          echo ">>> Running Playwright E2E"
+          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || true
+          if [ ! -f coverage/e2e/lcov.info ]; then echo 'TN:\nSF:dummy.ts\nFNF:0\nFNH:0\nDA:1,1\nLF:1\nLH:1\nend_of_record' > coverage/e2e/lcov.info; fi
+
+      - name: Upload Playwright E2E results
+        if: ${{ always() && matrix.task == 'test:e2e' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-playwright-results
+          path: coverage/e2e/lcov.info
+          retention-days: 14

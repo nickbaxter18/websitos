@@ -1,0 +1,14 @@
+old                                      new                                      ref
+414e915be03cb7931be0d11f26274382708dd232 c2056bbd9f62a3d8c3331888bd4ce4126447f58b refs/heads/dependabot/npm_and_yarn/better-sqlite3-12.2.0
+9c095dfade2ce72fea79a42c21a65da5da29dcf9 583ae506b028586dd6c5af197fabefb158f8e0f3 refs/heads/dependabot/npm_and_yarn/eslint-config-prettier-10.1.8
+a8fe8bdb07793b43d76da204ebfab7d0e973d549 cc77538431e284451a00ac7ecd117af8c47a41df refs/heads/dependabot/npm_and_yarn/eslint-plugin-react-hooks-5.2.0
+14c31cc8cecf314cbb0645aa5f6da0cc69249ebc 74eaeba4d1317f2c9dd449699b46e7dfc6d5b106 refs/heads/dependabot/npm_and_yarn/hookform/resolvers-5.2.1
+7255c828a2420c398895604ba7c171edca1ea587 0db32c0d1faedd5066b107cd17e52fa785a90792 refs/heads/dependabot/npm_and_yarn/vite-tsconfig-paths-5.1.4
+0ca35a0cf3dceb294a273a0ad7d51793c207f3b8 08c7f6d7e3ef9f6d588d04ca96aaaf981e9aca74 refs/heads/dependabot/pip/black-25.1.0
+f92dd416c780104c13875e6ab0f3e18f03d2ebf9 f43fef8a7f9cbb9fc25324bc2f62be7690fadaa7 refs/heads/dependabot/pip/fastapi-approx-eq-0.116.1
+8dc994064f90bf546ebcb357fb97a6c8cdf2a6c8 8be5e3c868df64a3ba369249db0b52a64768f65f refs/heads/dependabot/pip/grpcio-1.74.0
+e38f50210e0ff15e5ff40eba4d43ee6fa8f26b72 04dca3e906fd34160e5e6e43c9502ddb1489b43d refs/heads/dependabot/pip/pytest-8.4.2
+ae933b253b10e2fe81a1d72bdacdb0da0f55555f 2bde35c317100e0af97fbb362ac483af35fdb779 refs/heads/dependabot/pip/python-dotenv-1.1.1
+ddea91af681bb0f1ffe2be8f0cd2c9c0d5cc5c43 612b3448987eee9c4b1908956f024cf660e9d532 refs/heads/dependabot/pip/uvicorn-standard--approx-eq-0.35.0
+67604108bd38b30695774102f1ebe080e6e823ae 67604108bd38b30695774102f1ebe080e6e823ae refs/heads/gh-pages
+0aa84856f9897d66273790a558fd9990de338d21 d7d3314d099da99d812df36b6dffd5acbd44a5d7 refs/heads/main

@@ -1,0 +1,41 @@
+{
+  "global": {
+    "title": "We’d Love Your Feedback",
+    "intro": "We’re sorry to see you go. Your feedback helps us improve. Please take 30 seconds to tell us why you’re leaving.",
+    "thanks_message": "🙏 Thanks for your feedback — it helps us build a better U-Dig It AI experience."
+  },
+  "survey": {
+    "options": [
+      {
+        "id": "too_expensive",
+        "label": "💸 Too expensive for me right now",
+        "save_offer": "Consider switching to {{DOWNSELL_TITLE}} for just {{DOWNSELL_PRICE}}."
+      },
+      {
+        "id": "not_using",
+        "label": "⏱ I didn’t use it enough",
+        "save_offer": "Pause your plan and resume later — keep your spot without paying."
+      },
+      {
+        "id": "features_missing",
+        "label": "🛠 Missing features I need",
+        "save_offer": "Upgrade to {{UPSELL_TITLE}} which includes advanced features."
+      },
+      {
+        "id": "technical_issues",
+        "label": "⚙️ I had technical issues",
+        "save_offer": "Contact us at nickbaxter@udigit.ca and we’ll resolve it quickly."
+      },
+      {
+        "id": "other",
+        "label": "❓ Other",
+        "save_offer": "Tell us more — we’d love to help."
+      }
+    ]
+  },
+  "integration": {
+    "submission_endpoint": "/api/churn-survey-submit",
+    "method": "POST",
+    "fields": ["customer_id", "product_id", "reason_id", "additional_comments"]
+  }
+}

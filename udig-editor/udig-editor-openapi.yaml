@@ -1,0 +1,104 @@
+openapi: 3.0.0
+info:
+  title: U-DIG IT Editor API
+  version: 1.0.0
+servers:
+  - url: https://your-cloudflare-tunnel-url
+paths:
+  /list:
+    get:
+      summary: List files in a directory
+      parameters:
+        - name: dir
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Directory path relative to project root
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: Directory listing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dir:
+                    type: string
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        type:
+                          type: string
+                          enum: [file, dir]
+
+  /file:
+    get:
+      summary: Read a file
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Path of the file relative to project root
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: File content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  content:
+                    type: string
+
+    post:
+      summary: Write a file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - path
+                - content
+              properties:
+                path:
+                  type: string
+                  description: Path of the file relative to project root
+                content:
+                  type: string
+                  description: Content to write into the file
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  path:
+                    type: string
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key

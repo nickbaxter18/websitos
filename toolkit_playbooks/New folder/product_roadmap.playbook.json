@@ -1,0 +1,61 @@
+{
+  "global": {
+    "title": "U-Dig It AI Product Roadmap Playbook",
+    "description": "Framework for generating transparent roadmap pages, feature timelines, and update communications.",
+    "tone": "forward-looking, transparent, inspiring",
+    "guardrails": "Timelines must be realistic. Always clarify that roadmap items are subject to change."
+  },
+  "roadmap_structure": {
+    "current_quarter": {
+      "headline": "🚀 What We’re Working On Now",
+      "items": [
+        "New AI Template Packs",
+        "Improved onboarding flows (see customer_success_playbook.json)",
+        "Enhanced ROI calculators"
+      ]
+    },
+    "next_quarter": {
+      "headline": "📅 Coming Next Quarter",
+      "items": [
+        "Community-driven template co-creation",
+        "Deeper CRM integrations (see crm_automation_playbook.json)",
+        "Expanded localization (see multi_language_localization.json)"
+      ]
+    },
+    "future": {
+      "headline": "🌟 On the Horizon",
+      "items": [
+        "Advanced analytics dashboard with predictive insights",
+        "AI-powered funnel optimization engine",
+        "Enterprise bundle with dedicated support"
+      ]
+    }
+  },
+  "formats": {
+    "public_page": {
+      "headline": "📈 U-Dig It AI Roadmap",
+      "body": "Here’s a transparent look at what we’ve built, what’s coming soon, and our long-term vision.",
+      "placement": "website/roadmap"
+    },
+    "investor_slide": {
+      "headline": "📊 Strategic Roadmap",
+      "body": "Quarterly product priorities with alignment to growth strategy.",
+      "placement": "board_investor_report_playbook.json"
+    },
+    "customer_email": {
+      "subject": "✨ New Features Coming Your Way",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "We’re excited to share what’s on the U-Dig It AI roadmap:",
+        "- {{CURRENT_FEATURE}} launching soon",
+        "- {{NEXT_FEATURE}} planned for next quarter",
+        "Stay tuned for more updates!"
+      ]
+    }
+  },
+  "integration": {
+    "reporting": "Progress updates tracked in reporting_dashboard_spec.json",
+    "community": "Roadmap discussions hosted in community_engagement_playbook.json channels",
+    "esg_alignment": "Roadmap must align with ethical AI policies (see ai_ethics_policy.json) and sustainability goals (see sustainability_esg_playbook.json)."
+  }
+}

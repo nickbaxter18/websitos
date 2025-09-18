@@ -1,0 +1,66 @@
+{
+  "global": {
+    "from_name": "U-Dig It AI",
+    "from_email": "nickbaxter@udigit.ca",
+    "support_email": "nickbaxter@udigit.ca",
+    "tone": "helpful, value-first, educational with soft CTA",
+    "cta_style": "clear, encouraging, low-friction"
+  },
+  "sequence": {
+    "day_0": {
+      "subject": "🎁 Here’s Your Free AI Resource!",
+      "body": [
+        "Hi {{PROSPECT_NAME}},",
+        "Thanks for checking out U-Dig It AI. Your free resource is ready:",
+        "👉 Download it here: {{FREEBIE_LINK}}",
+        "Quick tip: try it today — most people get a win within 20 minutes.",
+        "Over the next few days, I’ll share strategies to make AI work harder for you."
+      ]
+    },
+    "day_1": {
+      "subject": "⚡ How to Get a Quick Win With AI",
+      "body": [
+        "Hi {{PROSPECT_NAME}},",
+        "AI isn’t just hype — it’s practical. Here’s a quick way to save 30 minutes today:",
+        "1. Use this template: {{MICRO_TEMPLATE_LINK}}",
+        "2. Apply it to your daily workflow",
+        "3. Track your time saved",
+        "Want more? Our {{ENTRY_PRODUCT}} helps you stack multiple quick wins fast."
+      ]
+    },
+    "day_3": {
+      "subject": "📈 Case Study: How AI Sparked Growth",
+      "body": [
+        "Hi {{PROSPECT_NAME}},",
+        "One of our members used {{ENTRY_PRODUCT}} to:",
+        "- Save 10 hours in their first week",
+        "- Increase client output by 2x",
+        "- Build confidence to scale their AI use",
+        "👉 You can try it today for just {{ENTRY_PRODUCT_PRICE}}: {{ENTRY_PRODUCT_LINK}}"
+      ]
+    },
+    "day_5": {
+      "subject": "🤔 Still Thinking About AI?",
+      "body": [
+        "Hi {{PROSPECT_NAME}},",
+        "It’s normal to be curious but cautious. Here’s what we guarantee:",
+        "- 30-Day Money Back Guarantee",
+        "- Clear cancel anytime (no hidden traps)",
+        "- Real people support at nickbaxter@udigit.ca",
+        "👉 Try {{ENTRY_PRODUCT}} today risk-free: {{ENTRY_PRODUCT_LINK}}"
+      ]
+    },
+    "day_7": {
+      "subject": "🚀 Ready to Build Your AI Stack?",
+      "body": [
+        "Hi {{PROSPECT_NAME}},",
+        "You’ve seen what AI can do in small wins.",
+        "Now let’s take it further:",
+        "- Start with {{ENTRY_PRODUCT}}",
+        "- Upgrade into {{UPSELL_PRODUCT}}",
+        "- Build into {{FULL_STACK_PACKAGE}}",
+        "👉 Begin your journey here: {{ENTRY_PRODUCT_LINK}}"
+      ]
+    }
+  }
+}

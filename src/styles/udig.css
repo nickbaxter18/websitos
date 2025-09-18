@@ -1,0 +1,308 @@
+/* ===== U-Dig It Rentals — Full Styling ===== */
+
+.udig-home {
+  --bg: #000;
+  --panel: #000;
+  --ink: #e1bc56;
+  --muted: #c9c9c9;
+  --line: #6b6b6b;
+  --brand: #e1bc56;
+  --brand-ink: #fff1b0;
+  --cta: #a90f0f;
+  --cta-ink: #fff;
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --btn-h: 48px;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+  background: linear-gradient(180deg, #000 0%, #6b6b6b 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .udig-home {
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.udig-home * {
+  box-sizing: border-box;
+}
+.udig-home .container {
+  max-width: min(1180px, 94vw);
+  margin: 0 auto;
+}
+
+/* Typography */
+.udig-home .kicker {
+  font:
+    700 12px/1.1 ui-sans-serif,
+    system-ui;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-ink);
+}
+.udig-home h1 {
+  font:
+    800 clamp(28px, 4.5vw, 56px) / 1.05 ui-sans-serif,
+    system-ui;
+  color: var(--ink);
+  margin: 0;
+}
+.udig-home h2 {
+  font:
+    800 clamp(20px, 3vw, 34px) / 1.15 ui-sans-serif,
+    system-ui;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.udig-home p {
+  color: var(--ink);
+  margin: 10px 0;
+}
+
+/* Buttons */
+.udig-home .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: var(--btn-h);
+  min-height: var(--btn-h);
+  padding: 0 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1;
+  white-space: nowrap;
+  min-width: clamp(200px, 50%, 280px);
+}
+.udig-home .btn.primary {
+  background-image: linear-gradient(180deg, #a90f0f 0%, #8c0c0c 100%);
+  color: var(--cta-ink);
+  border: 1px solid #7f0b0b;
+  box-shadow: 0 8px 16px rgba(169, 15, 15, 0.25);
+}
+.udig-home .btn.call {
+  background: transparent;
+  border: 2px solid #e1bc56;
+  color: #e1bc56;
+}
+.udig-home .btn.call:hover {
+  background: #e1bc56;
+  color: #000;
+}
+.udig-home .btn.ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* Hero */
+.udig-home .hero {
+  position: relative;
+  padding: 48px 0;
+  background: linear-gradient(160deg, #706a6a 0%, #000 70%);
+}
+.udig-home .hero .grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+@media (min-width: 980px) {
+  .udig-home .hero .grid {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+/* Trustbar */
+.udig-home .trustbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.udig-home .trustbar .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Hero card */
+.udig-home .hero-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  background-image:
+    radial-gradient(160% 120% at 50% 0%, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, #f4f6f8 0%, #d9dee4 48%, #c2c9d2 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0 1px, rgba(0, 0, 0, 0.06) 1px 2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  color: #111827;
+}
+
+/* Mini-quote */
+.udig-home .mini-quote {
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  padding: 18px;
+  background: transparent;
+}
+.udig-home .mini-quote .row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+@media (min-width: 720px) {
+  .udig-home .mini-quote .row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Benefits */
+.udig-home .cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 720px) {
+  .udig-home .cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.udig-home .card {
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  padding: 18px;
+  background-image:
+    radial-gradient(160% 120% at 50% 0%, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, #f4f6f8 0%, #d9dee4 48%, #c2c9d2 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0 1px, rgba(0, 0, 0, 0.06) 1px 2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  color: #111827;
+}
+
+/* Pricing */
+.udig-home .pricing .tiers {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 980px) {
+  .udig-home .pricing .tiers {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.udig-home .tier {
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* Gallery */
+.udig-home .gallery .ba-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (min-width: 780px) {
+  .udig-home .gallery .ba-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.udig-home .ba {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #3a3a3a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+  background: #111827;
+}
+.udig-home .ba img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.udig-home .ba .ba-slider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  margin: 0 auto;
+  width: min(60%, 280px);
+}
+
+/* CTA Band */
+.udig-home .cta-band {
+  background: linear-gradient(120deg, #e1bc56 30%, #000 80%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 820px) {
+  .udig-home .cta-band {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+/* FAQ */
+#faq .cards {
+  align-items: stretch;
+}
+#faq .card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sticky CTA */
+.udig-home .sticky-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: -120px;
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    bottom 0.25s ease;
+  background: rgba(0, 0, 0, 0.86);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 10px;
+  z-index: 9999;
+}
+.udig-home .sticky-cta.is-visible {
+  bottom: 0;
+  opacity: 1;
+  transform: translateY(0);
+}

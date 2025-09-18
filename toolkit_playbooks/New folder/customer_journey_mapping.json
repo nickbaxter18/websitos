@@ -1,0 +1,76 @@
+{
+  "global": {
+    "title": "U-Dig It AI Customer Journey Mapping",
+    "description": "Framework for mapping awareness → consideration → purchase → retention → advocacy stages with tailored assets and campaigns.",
+    "tone": "customer-centric, trust-driven, lifecycle-aware",
+    "guardrails": "Assets must match stage intent — no hard selling at awareness, no over-educating at purchase."
+  },
+  "stages": {
+    "awareness": {
+      "goals": ["Educate prospects on AI opportunities", "Build trust through authority content"],
+      "assets": [
+        "SEO blog posts (see content_marketing_playbook.json)",
+        "Social snippets (educational tips, trends)",
+        "Video explainers (see video_marketing_playbook.json)"
+      ],
+      "metrics": ["impressions", "engagement_rate", "content_shares"]
+    },
+    "consideration": {
+      "goals": ["Show product benefits", "Differentiate from competitors"],
+      "assets": [
+        "Comparison pages (see competitor_comparison_playbook.json)",
+        "ROI calculators (see roi_calculator_template.json)",
+        "Webinars & demos (see webinar_campaign_playbook.json)"
+      ],
+      "metrics": ["time_on_page", "click_through_rate", "demo_signups"]
+    },
+    "purchase": {
+      "goals": ["Simplify decision-making", "Close sales confidently"],
+      "assets": [
+        "Offer summary pages",
+        "Trust elements (refund, secure checkout)",
+        "Scarcity & urgency tactics (see growth_playbook.json)"
+      ],
+      "metrics": ["conversion_rate", "average_order_value", "checkout_completions"]
+    },
+    "retention": {
+      "goals": ["Deliver success fast", "Reduce churn"],
+      "assets": [
+        "Onboarding checklists (see customer_success_playbook.json)",
+        "Proactive support articles (see support_knowledge_base.json)",
+        "Retention email flows (see retention_email_sequence.json)",
+        "Loyalty rewards (see loyalty_rewards_playbook.json)"
+      ],
+      "metrics": ["retention_rate", "churn_rate", "nps_score"]
+    },
+    "advocacy": {
+      "goals": ["Turn customers into promoters", "Amplify word-of-mouth growth"],
+      "assets": [
+        "Referral campaigns (see referral_email_sequence.json)",
+        "Ambassador programs (see customer_advocacy_playbook.json)",
+        "UGC contests (see user_generated_content_playbook.json)",
+        "Influencer & affiliate collabs (see influencer_marketing_playbook.json, affiliate_program_playbook.json)"
+      ],
+      "metrics": ["referrals_sent", "ugc_submissions", "advocacy_roi"]
+    }
+  },
+  "integration": {
+    "crm_tracking": "Each customer tagged with current journey stage in CRM (see crm_automation_playbook.json).",
+    "reporting": "Stage progression tracked in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "content_marketing_playbook.json",
+      "video_marketing_playbook.json",
+      "competitor_comparison_playbook.json",
+      "roi_calculator_template.json",
+      "webinar_campaign_playbook.json",
+      "customer_success_playbook.json",
+      "support_knowledge_base.json",
+      "retention_email_sequence.json",
+      "loyalty_rewards_playbook.json",
+      "customer_advocacy_playbook.json",
+      "user_generated_content_playbook.json",
+      "influencer_marketing_playbook.json",
+      "affiliate_program_playbook.json"
+    ]
+  }
+}

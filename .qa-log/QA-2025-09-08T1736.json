@@ -1,0 +1,9 @@
+﻿{
+  "summary": { "status": "pass" },
+  "syntax": { "status": "pass", "notes": [] },
+  "tests": { "coverage": 0, "status": "pass", "notes": ["Conversational run"] },
+  "perf": { "bundleKB": 0, "budgetKB": 200, "status": "pass" },
+  "access": { "contrastMin": 4.8, "budget": 4.5, "status": "pass" },
+  "seo": { "status": "pass", "notes": [] },
+  "governance": { "licenseOk": true, "status": "pass" }
+}

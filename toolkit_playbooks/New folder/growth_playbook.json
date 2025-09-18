@@ -1,0 +1,84 @@
+{
+  "global": {
+    "title": "U-Dig It AI Growth Playbook",
+    "description": "Reusable growth tactics for funnels, pages, and emails to boost conversions, retention, and referrals.",
+    "tone": "ethical, trust-driven, value-first",
+    "guardrails": "Never use dark patterns. Always provide clear cancel paths and accurate information."
+  },
+  "tactics": {
+    "scarcity": [
+      {
+        "id": "limited_spots",
+        "headline": "⚡ Only {{SPOTS_LEFT}} spots available this month!",
+        "placement": "landing_page.hero, offer_summary.above_cta"
+      },
+      {
+        "id": "limited_time",
+        "headline": "⏳ Offer ends in {{DAYS_LEFT}} days!",
+        "placement": "offer_summary.trust, email.cta_section"
+      }
+    ],
+    "urgency": [
+      {
+        "id": "early_bird",
+        "headline": "🔥 Early bird pricing ends soon!",
+        "placement": "landing_page.hero, email.day_1"
+      },
+      {
+        "id": "today_only",
+        "headline": "🚀 Act today and unlock {{BONUS_REWARD}}",
+        "placement": "thank_you.upsells, retention_email.day_7"
+      }
+    ],
+    "social_proof": [
+      {
+        "id": "testimonial_quote",
+        "format": "\"{{CUSTOMER_NAME}} saved {{HOURS_SAVED}} hours in their first week!\"",
+        "placement": "landing_page.proof, thank_you.section"
+      },
+      {
+        "id": "customer_count",
+        "format": "Join {{CUSTOMER_COUNT}}+ customers already using U-Dig It AI",
+        "placement": "landing_page.hero, email.footer"
+      }
+    ],
+    "referral": [
+      {
+        "id": "share_reward",
+        "headline": "🎁 Give {{REFERRAL_DISCOUNT}}, Get {{REFERRAL_REWARD}}",
+        "placement": "thank_you.section, referral_email.day_0"
+      },
+      {
+        "id": "leaderboard",
+        "headline": "🏆 Top referrers are winning {{BONUS_REWARD}}",
+        "placement": "referral_email.day_7, reporting_dashboard"
+      }
+    ],
+    "engagement": [
+      {
+        "id": "exit_intent",
+        "headline": "👋 Wait! Don’t leave empty-handed.",
+        "body": "Grab our free {{FREEBIE}} before you go.",
+        "placement": "landing_page.exit_popup"
+      },
+      {
+        "id": "quiz",
+        "headline": "📊 Find your perfect AI product",
+        "body": "Take our 2-minute quiz and see your match.",
+        "placement": "landing_page.hero, lead_capture_email.day_1"
+      }
+    ],
+    "trust": [
+      {
+        "id": "money_back",
+        "headline": "✅ 30-Day Money Back Guarantee",
+        "placement": "offer_summary.trust, cancel_page.save_offers"
+      },
+      {
+        "id": "secure_checkout",
+        "headline": "🔒 Secure Stripe Checkout",
+        "placement": "offer_summary.trust, footer"
+      }
+    ]
+  }
+}

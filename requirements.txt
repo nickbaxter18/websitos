@@ -1,0 +1,59 @@
+# ---- Core web framework
+fastapi~=0.115.5
+uvicorn[standard]~=0.32.0
+
+# ---- Env & config
+python-dotenv==1.0.1
+pyyaml==6.0.2
+
+# ---- Data / scientific (wheel for cp311 manylinux)
+numpy==1.26.4
+
+# ---- Async & HTTP
+httpx==0.28.1
+websockets==12.0
+watchfiles==1.0.3
+
+# ---- gRPC (pin to wheel-friendly versions)
+grpcio==1.62.2
+# grpcio-tools is OMITTED to avoid compiling; add only if you actually need protoc at runtime
+
+# ---- Protobuf
+protobuf==4.25.3
+
+# ---- Vector DB client
+qdrant-client==1.9.1
+
+# ---- OpenAI SDK (patched to avoid proxies bug)
+openai>=1.42.0
+
+# ---- Utilities
+tqdm==4.66.5
+portalocker==2.10.1
+
+# ---- PDF parsing / rendering (wheel available for cp311 manylinux)
+pymupdf==1.24.10   # provides 'fitz'
+
+# ---- Form parsing (FastAPI file uploads)
+python-multipart==0.0.9
+
+# ---- Database drivers
+pyodbc==4.0.39   # ⚠️ Incompatible with Python 3.12, upgrade to >=5.0.0 if moving off 3.11
+sqlalchemy~=2.0.31
+psycopg2-binary==2.9.9   # PostgreSQL driver (for CI/CD and local dev)
+
+# ---- Testing
+pytest==8.3.3
+pytest-cov==5.0.0
+pytest-json-report==1.5.0
+pytest-github-actions-annotate-failures==0.2.0
+
+# ---- Code formatting (dev tools)
+black==24.3.0
+
+# ---- Typing stubs (to fix mypy issues)
+types-requests
+types-psycopg2
+types-PyYAML
+types-protobuf
+types-sqlalchemy

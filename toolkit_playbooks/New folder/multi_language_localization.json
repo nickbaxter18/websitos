@@ -1,0 +1,53 @@
+{
+  "global": {
+    "title": "U-Dig It AI Multi-Language Localization",
+    "description": "Framework for auto-translating and localizing funnels, emails, and campaigns across languages and regions.",
+    "tone": "brand-consistent, culturally aware, respectful",
+    "guardrails": "Translations must preserve brand tone, adapt idioms culturally, and remain compliant with local laws."
+  },
+  "supported_languages": [
+    { "code": "en", "label": "English (Default)" },
+    { "code": "fr", "label": "French (Canada)" },
+    { "code": "es", "label": "Spanish (Latin America)" },
+    { "code": "de", "label": "German (EU)" },
+    { "code": "pt", "label": "Portuguese (Brazil)" }
+  ],
+  "translation_rules": {
+    "brand_terms": [
+      { "term": "U-Dig It AI", "rule": "Never translate brand name" },
+      { "term": "AI Mastery Hub", "rule": "Keep product names in English unless specified" }
+    ],
+    "currency_adaptation": {
+      "CAD": ["en", "fr"],
+      "USD": ["es"],
+      "EUR": ["de"],
+      "BRL": ["pt"]
+    },
+    "date_format": {
+      "en": "MM/DD/YYYY",
+      "fr": "DD/MM/YYYY",
+      "es": "DD/MM/YYYY",
+      "de": "DD.MM.YYYY",
+      "pt": "DD/MM/YYYY"
+    },
+    "tone_guidelines": {
+      "en": "Friendly but professional",
+      "fr": "Polite and trustworthy",
+      "es": "Warm, inclusive, motivational",
+      "de": "Direct, reliable, clear",
+      "pt": "Friendly, energetic, encouraging"
+    }
+  },
+  "placement": {
+    "funnels": ["landing_page", "offer_summary", "thank_you", "cancel_page"],
+    "emails": ["post_purchase", "retention", "lead_capture", "referral"],
+    "ads": ["google_search", "meta_ads", "linkedin_ads"],
+    "community": ["welcome_posts", "announcements"]
+  },
+  "integration": {
+    "toggle": "Users can select language from site header/footer",
+    "auto_detect": "Default language auto-detected via browser or geo-IP",
+    "crm_storage": "Store customer language preference for personalized campaigns",
+    "reporting": "Segment conversions and churn by language in reporting_dashboard_spec.json"
+  }
+}

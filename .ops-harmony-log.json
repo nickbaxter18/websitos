@@ -1,0 +1,18 @@
+{
+  "editor": {
+    "files": ["Dockerfile"],
+    "modes": ["insert"]
+  },
+  "qa": {
+    "status": "fail"
+  },
+  "sec": {
+    "status": "safe"
+  },
+  "dev": {
+    "build": "skipped",
+    "deploy": "skipped"
+  },
+  "decision": "blocked",
+  "reason": "QA fail."
+}

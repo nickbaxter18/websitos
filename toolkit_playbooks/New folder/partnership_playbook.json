@@ -1,0 +1,83 @@
+{
+  "global": {
+    "title": "U-Dig It AI Partnership Playbook",
+    "description": "Strategies for building co-marketing, affiliate, and SaaS integration partnerships.",
+    "tone": "collaborative, win-win, growth-oriented",
+    "guardrails": "Partnerships must be transparent, ethical, and mutually beneficial."
+  },
+  "affiliate_programs": {
+    "default": {
+      "headline": "💰 Become a U-Dig It AI Affiliate",
+      "body": [
+        "Earn recurring commissions by promoting U-Dig It AI products.",
+        "👉 Sign up here: {{AFFILIATE_SIGNUP_LINK}}",
+        "Benefits:",
+        "- Competitive commission structure",
+        "- Ready-to-use promo assets",
+        "- Monthly payouts via Stripe"
+      ],
+      "placement": "footer.links, referral_email.day_14"
+    },
+    "reward_tiers": [
+      {
+        "id": "bronze",
+        "threshold": 5,
+        "reward": "5% bonus commission"
+      },
+      {
+        "id": "silver",
+        "threshold": 20,
+        "reward": "10% bonus commission + feature in newsletter"
+      },
+      {
+        "id": "gold",
+        "threshold": 50,
+        "reward": "15% bonus + co-branded campaign support"
+      }
+    ]
+  },
+  "co_marketing": {
+    "webinars": {
+      "headline": "🎤 Co-Host an AI Webinar",
+      "body": "Collaborate with industry partners to deliver value-packed webinars, driving leads for both sides.",
+      "placement": "blog, community_channel.announcements"
+    },
+    "case_studies": {
+      "headline": "📑 Joint Case Studies",
+      "body": "Publish co-branded case studies showing how your tools + U-Dig It AI deliver results together.",
+      "placement": "landing_page.proof, blog.feature"
+    },
+    "guest_posts": {
+      "headline": "✍️ Guest Posting Opportunities",
+      "body": "Invite partners to publish on your blog, exchange backlinks, and share audiences.",
+      "placement": "blog.feature"
+    }
+  },
+  "saas_integrations": {
+    "api_hooks": [
+      {
+        "platform": "Zapier",
+        "headline": "⚡ Automate with Zapier",
+        "body": "Connect U-Dig It AI to 5000+ apps using Zapier integrations.",
+        "placement": "landing_page.features"
+      },
+      {
+        "platform": "HubSpot",
+        "headline": "📈 Sync With HubSpot",
+        "body": "Auto-sync leads, contacts, and usage data with HubSpot CRM.",
+        "placement": "offer_summary.features"
+      },
+      {
+        "platform": "Slack",
+        "headline": "💬 Slack Notifications",
+        "body": "Send AI updates and workflows directly into Slack channels.",
+        "placement": "community_channel.integration"
+      }
+    ]
+  },
+  "integration": {
+    "tracking": "All partner campaigns must include UTM tags for attribution.",
+    "payouts": "Affiliate payouts handled via Stripe Connect monthly.",
+    "legal": "Partnership agreements must include co-branding, data-sharing, and refund liability clauses."
+  }
+}

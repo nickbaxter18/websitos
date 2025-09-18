@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "status": "block"
+  },
+  "secrets": {
+    "found": [],
+    "status": "safe"
+  },
+  "deps": {
+    "highOrCritical": [
+      "MODERATE esbuild — esbuild enables any website to send any requests to the development server and read the response (fix available)",
+      "HIGH lodash.template — Command Injection in lodash (fix available)",
+      "HIGH shadcn-ui — lodash.template (fix available)",
+      "MODERATE vite — esbuild (fix available)",
+      "MODERATE vite-node — vite (fix available)",
+      "MODERATE vitest — vite; vite-node (fix available)"
+    ],
+    "status": "block"
+  },
+  "configs": {
+    "issues": [],
+    "status": "safe"
+  },
+  "runtime": {
+    "https": true,
+    "headers": {
+      "csp": true,
+      "hsts": true
+    },
+    "status": "safe"
+  }
+}

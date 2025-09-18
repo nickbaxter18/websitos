@@ -1,0 +1,15 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://udigit.ca/schemas/events.v1.json",
+  "type": "object",
+  "required": ["type", "ts"],
+  "properties": {
+    "type": { "type": "string" },
+    "uid": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "consent": { "type": "string", "enum": ["accepted", "declined", "unknown"] },
+    "payload": { "type": "object", "additionalProperties": true },
+    "ts": { "type": "number" }
+  },
+  "additionalProperties": false
+}

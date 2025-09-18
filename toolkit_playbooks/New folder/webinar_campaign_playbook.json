@@ -1,0 +1,83 @@
+{
+  "global": {
+    "title": "U-Dig It AI Webinar Campaign Playbook",
+    "description": "Frameworks for creating live and evergreen webinar funnels, including registration pages, reminder emails, and replay offers.",
+    "tone": "educational, authority-building, persuasive",
+    "guardrails": "Webinar content must deliver real value before making an offer. Avoid overhyping or misleading claims."
+  },
+  "funnel": {
+    "registration_page": {
+      "headline": "🎥 Free Webinar: {{WEBINAR_TITLE}}",
+      "subheadline": "Learn how to {{PAIN_POINT_SOLVED}} in just 45 minutes.",
+      "form_fields": ["Name", "Email"],
+      "cta": "Reserve My Spot",
+      "trust_elements": ["✅ Limited seats available", "🔒 Secure registration"]
+    },
+    "confirmation_page": {
+      "headline": "✅ You’re Registered for {{WEBINAR_TITLE}}",
+      "body": "Check your email for details and calendar invite. Add this event to your calendar so you don’t miss it.",
+      "cta": "Add to Calendar"
+    },
+    "reminder_emails": {
+      "day_before": {
+        "subject": "⏰ Tomorrow: Don’t Miss {{WEBINAR_TITLE}}",
+        "body": [
+          "Hi {{CUSTOMER_NAME}},",
+          "Your free webinar, {{WEBINAR_TITLE}}, is happening tomorrow.",
+          "Here’s your join link: {{WEBINAR_LINK}}",
+          "See you there!"
+        ]
+      },
+      "hour_before": {
+        "subject": "🚀 Starting Soon: {{WEBINAR_TITLE}}",
+        "body": [
+          "Hi {{CUSTOMER_NAME}},",
+          "We’re going live in 1 hour!",
+          "Join here: {{WEBINAR_LINK}}",
+          "Get ready to discover how {{PAIN_POINT_SOLVED}}."
+        ]
+      },
+      "starting_now": {
+        "subject": "🎥 We’re Live: Join {{WEBINAR_TITLE}} Now",
+        "body": [
+          "It’s happening now — click here to join: {{WEBINAR_LINK}}",
+          "Hurry, seats are filling fast!"
+        ]
+      }
+    },
+    "live_offer_slide": {
+      "headline": "🚀 Special Webinar Offer",
+      "body": "For attendees only: Get {{PRODUCT_TITLE}} today with {{DISCOUNT}} or bonus {{BONUS_ITEM}}.",
+      "cta": "Claim This Offer",
+      "placement": "during_webinar, thank_you.page"
+    },
+    "replay_page": {
+      "headline": "📺 Replay: {{WEBINAR_TITLE}}",
+      "body": "Couldn’t make it live? Watch the replay below. Offer valid until {{OFFER_EXPIRY_DATE}}.",
+      "cta": "Watch Replay + Claim Offer"
+    }
+  },
+  "campaigns": {
+    "evergreen": [
+      {
+        "id": "ai_productivity_webinar",
+        "title": "How to Save 10 Hours/Week With AI",
+        "target_product": "ai_quick_start_pack",
+        "offer": "Exclusive bonus template pack"
+      }
+    ],
+    "seasonal": [
+      {
+        "id": "black_friday_webinar",
+        "title": "Black Friday AI Workshop",
+        "target_product": "ai_master_vault",
+        "offer": "{{DISCOUNT_PERCENT}}% off + bonus training"
+      }
+    ]
+  },
+  "integration": {
+    "platforms": ["Zoom", "WebinarJam", "Demio", "YouTube Live"],
+    "utm_tracking": "All webinar links must include utm_source=webinar&utm_campaign={{CAMPAIGN_ID}}",
+    "automation_rules": "Replay page auto-expires {{OFFER_EXPIRY_DATE}} to drive urgency."
+  }
+}

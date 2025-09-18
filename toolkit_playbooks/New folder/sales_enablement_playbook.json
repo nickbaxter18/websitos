@@ -1,0 +1,72 @@
+{
+  "global": {
+    "title": "U-Dig It AI Sales Enablement Playbook",
+    "description": "Frameworks for sales scripts, objection-handling, and outreach templates to support SDRs and closers.",
+    "tone": "consultative, confident, value-first",
+    "guardrails": "All sales communication must remain ethical, truthful, and customer-focused. No high-pressure or misleading tactics."
+  },
+  "sales_scripts": {
+    "discovery_call": {
+      "structure": [
+        "Intro: Thank prospect for their time.",
+        "Rapport: Ask about role, goals, challenges.",
+        "Problem Explore: What’s their #1 bottleneck today?",
+        "Solution Frame: Introduce {{PRODUCT_TITLE}} as a fit.",
+        "CTA: Suggest demo, trial, or purchase link."
+      ],
+      "duration": "15–20 minutes"
+    },
+    "demo_call": {
+      "structure": [
+        "Warm intro + confirm agenda.",
+        "Show 2–3 workflows or templates.",
+        "Highlight ROI calculator (see roi_calculator_template.json).",
+        "Share customer success story.",
+        "CTA: Direct link to {{PRODUCT_PAYMENT_LINK}}."
+      ],
+      "duration": "20–30 minutes"
+    }
+  },
+  "objection_handling": {
+    "too_expensive": {
+      "acknowledge": "I hear you — budgets are always important.",
+      "pivot": "Many customers start with {{DOWNSELL_TITLE}} at {{DOWNSELL_PRICE}}.",
+      "close": "Would you like to secure that option instead?"
+    },
+    "not_sure_it_will_work": {
+      "acknowledge": "That’s fair — it’s smart to be cautious.",
+      "pivot": "We offer a 30-day money back guarantee.",
+      "close": "So there’s zero risk in trying it today."
+    },
+    "too_busy": {
+      "acknowledge": "I understand — time is valuable.",
+      "pivot": "That’s exactly why {{PRODUCT_TITLE}} exists: to save hours weekly.",
+      "close": "Would a quick-start guide help you take the first step?"
+    }
+  },
+  "outreach_templates": {
+    "email": {
+      "subject": "Quick question about your AI workflow?",
+      "body": [
+        "Hi {{PROSPECT_NAME}},",
+        "I noticed you’re exploring AI tools — curious, are you currently using templates or building from scratch?",
+        "Our {{PRODUCT_TITLE}} helps save {{HOURS_SAVED}} hours a week for businesses like yours.",
+        "👉 Here’s a link to learn more: {{PRODUCT_PAYMENT_LINK}}",
+        "Best,",
+        "Nick at U-Dig It AI"
+      ]
+    },
+    "linkedin": {
+      "connection_message": "Hi {{PROSPECT_NAME}}, I help SMBs and agencies save time with AI workflows. Would love to connect.",
+      "follow_up_message": "Thanks for connecting! If streamlining workflows is on your radar, {{PRODUCT_TITLE}} might help. Happy to share a quick resource."
+    },
+    "phone": {
+      "opening_line": "Hi {{PROSPECT_NAME}}, this is Nick from U-Dig It AI. I’ll be brief — are you open to hearing how other {{INDUSTRY}} teams are saving 10+ hours a week with AI?"
+    }
+  },
+  "integration": {
+    "crm_sync": "All sales scripts and objections must be tied to CRM stages (see crm_automation_playbook.json).",
+    "feedback_loop": "Sales objections logged feed into customer_feedback_playbook.json to refine messaging.",
+    "playbook_updates": "Top-performing scripts should be promoted to defaults in reporting_dashboard_spec.json."
+  }
+}

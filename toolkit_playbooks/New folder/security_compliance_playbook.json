@@ -1,0 +1,59 @@
+{
+  "global": {
+    "title": "U-Dig It AI Security & Compliance Playbook",
+    "description": "Framework for generating data security, encryption, uptime SLA, and compliance policy content.",
+    "tone": "trust-first, transparent, professional",
+    "guardrails": "All claims must be factual, verifiable, and aligned with actual security practices."
+  },
+  "security": {
+    "data_protection": {
+      "headline": "🔒 Your Data, Secure By Design",
+      "points": [
+        "All sensitive data encrypted at rest (AES-256).",
+        "All traffic encrypted in transit (TLS 1.3).",
+        "Regular penetration testing and security audits."
+      ]
+    },
+    "access_control": {
+      "headline": "👤 Access Control & Monitoring",
+      "points": [
+        "Role-based access permissions.",
+        "Admin actions logged and reviewed weekly.",
+        "Two-factor authentication enforced for internal systems."
+      ]
+    },
+    "incident_response": {
+      "headline": "⚠️ Incident Response",
+      "points": [
+        "24/7 monitoring for security anomalies.",
+        "Critical incidents responded to within 1 hour.",
+        "Full root cause analysis provided for major issues."
+      ]
+    }
+  },
+  "compliance": {
+    "standards": [
+      "GDPR (General Data Protection Regulation)",
+      "PIPEDA (Personal Information Protection and Electronic Documents Act)",
+      "CCPA (California Consumer Privacy Act)"
+    ],
+    "audits": {
+      "frequency": "Annual independent audit",
+      "scope": "Data privacy, storage security, compliance reporting"
+    }
+  },
+  "uptime_sla": {
+    "commitment": "99.9% uptime guarantee",
+    "monitoring": "All services monitored 24/7 with real-time dashboards.",
+    "credits": "Service credits issued for downtime beyond SLA commitments."
+  },
+  "integration": {
+    "placement": [
+      "footer.links.security",
+      "dedicated_compliance_page",
+      "investor_reports (see board_investor_report_playbook.json)",
+      "esg_reports (see sustainability_esg_playbook.json)"
+    ],
+    "reporting": "All compliance status and uptime reports feed into reporting_dashboard_spec.json"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "global": {
+    "title": "U-Dig It AI Board & Investor Report Playbook",
+    "description": "Framework for generating quarterly board/investor reports with financial metrics, funnel performance, and strategic initiatives.",
+    "tone": "formal, concise, data-driven",
+    "guardrails": "Reports must remain factual, transparent, and tie metrics to strategy. Avoid vanity metrics."
+  },
+  "report_structure": {
+    "cover_page": {
+      "title": "U-Dig It AI — Quarterly Investor Report",
+      "subtitle": "Quarter ending {{QUARTER_END_DATE}}",
+      "sections": [
+        "executive_summary",
+        "financials",
+        "funnel_metrics",
+        "strategic_initiatives",
+        "risks_opportunities",
+        "appendix"
+      ]
+    },
+    "executive_summary": {
+      "content": [
+        "Overall revenue growth vs last quarter",
+        "Key product launches or wins",
+        "High-level outlook for next quarter"
+      ]
+    },
+    "financials": {
+      "metrics": [
+        "ARR (Annual Recurring Revenue)",
+        "MRR (Monthly Recurring Revenue)",
+        "Gross revenue",
+        "Operating expenses",
+        "Net profit/loss"
+      ],
+      "data_source": ["Stripe", "accounting_system"]
+    },
+    "funnel_metrics": {
+      "metrics": [
+        "CAC (Customer Acquisition Cost)",
+        "LTV (Customer Lifetime Value)",
+        "Churn rate",
+        "Conversion rates by funnel",
+        "Upsell acceptance rates"
+      ],
+      "data_source": ["reporting_dashboard_spec.json", "crm_automation_playbook.json"]
+    },
+    "strategic_initiatives": {
+      "content": [
+        "Partnerships signed (see partnership_playbook.json)",
+        "Community growth (see community_engagement_playbook.json)",
+        "New product launches or features",
+        "Marketing campaigns (content, video, paid ads)"
+      ]
+    },
+    "risks_opportunities": {
+      "content": [
+        "Key risks: high churn, ad fatigue, regulatory changes",
+        "Key opportunities: seasonal campaigns, pricing experiments, upsell performance"
+      ]
+    },
+    "appendix": {
+      "content": [
+        "Detailed financial tables",
+        "Customer feedback highlights (see customer_feedback_playbook.json)",
+        "Test results from funnel_testing_playbook.json"
+      ]
+    }
+  },
+  "frequency": "quarterly",
+  "integration": {
+    "reporting_hook": "All metrics pulled from reporting_dashboard_spec.json + connected data sources.",
+    "distribution": {
+      "pdf_export": "Quarterly report exported as branded PDF",
+      "email": "Delivered to leadership + investor mailing list",
+      "slack": "#executive-updates"
+    }
+  }
+}

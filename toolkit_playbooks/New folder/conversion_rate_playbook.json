@@ -1,0 +1,81 @@
+{
+  "global": {
+    "title": "U-Dig It AI Conversion Rate Optimization (CRO) Playbook",
+    "description": "Framework for CRO strategies, A/B test ideas, and funnel tweaks to improve conversion rates.",
+    "tone": "analytical, data-driven, iterative",
+    "guardrails": "Changes must be tested before deployment. Avoid unverified claims of improvement."
+  },
+  "cro_strategies": {
+    "landing_pages": [
+      {
+        "id": "headline_test",
+        "description": "Test benefit-driven vs. pain-point-driven headlines.",
+        "metrics": ["conversion_rate", "bounce_rate"],
+        "dependencies": ["ai_copywriting_playbook.json", "funnel_testing_playbook.json"]
+      },
+      {
+        "id": "cta_color",
+        "description": "Test gold vs. green CTA buttons.",
+        "metrics": ["click_through_rate"]
+      },
+      {
+        "id": "social_proof_placement",
+        "description": "Move testimonials above vs. below CTA.",
+        "metrics": ["conversion_rate"]
+      }
+    ],
+    "checkout": [
+      {
+        "id": "trust_badges",
+        "description": "Add secure checkout + refund guarantee near Stripe button.",
+        "metrics": ["checkout_completion_rate"],
+        "dependencies": ["security_compliance_playbook.json", "legal_boilerplate.json"]
+      },
+      {
+        "id": "order_bump_copy",
+        "description": "Test urgency-based vs. bonus-based bump copy.",
+        "metrics": ["order_bump_acceptance_rate"]
+      }
+    ],
+    "emails": [
+      {
+        "id": "subject_line",
+        "description": "Test short curiosity-driven vs. longer benefit-driven subject lines.",
+        "metrics": ["open_rate", "click_rate"]
+      },
+      {
+        "id": "cta_link_style",
+        "description": "Test button vs. hyperlink CTAs in email body.",
+        "metrics": ["click_rate"]
+      }
+    ],
+    "ads": [
+      {
+        "id": "creative_format",
+        "description": "Compare video ads vs. static images.",
+        "metrics": ["ctr", "cpc", "roas"]
+      },
+      {
+        "id": "copy_style",
+        "description": "Test emotional vs. rational ad copy.",
+        "metrics": ["ctr", "conversion_rate"]
+      }
+    ]
+  },
+  "best_practices": {
+    "sample_size": "Minimum 500 visitors per variant before decision.",
+    "confidence": "Aim for 95% statistical confidence.",
+    "duration": "Run tests for at least 7 days to cover weekday/weekend variations.",
+    "one_change_rule": "Only test one major element per A/B test."
+  },
+  "integration": {
+    "reporting": "All CRO test results logged in reporting_dashboard_spec.json.",
+    "crm": "Tag leads/customers by variant for lifecycle analysis (see crm_automation_playbook.json).",
+    "cross_playbook_hooks": [
+      "ai_copywriting_playbook.json",
+      "funnel_testing_playbook.json",
+      "growth_playbook.json",
+      "paid_ads_playbook.json"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+# Ignore local build output so it doesn’t overwrite container build
+/dist
+
+# Ignore dependencies installed on host
+/node_modules
+
+# Ignore virtual environments
+/venv
+
+# Ignore Python cache
+__pycache__
+*.pyc
+
+# Ignore logs
+*.log
+
+# Ignore editor/project files
+.harmony-log
+.harmony-log.json
+.ops-harmony-log.json
+.qa-log
+.sec-log
+.nexus-log.json
+.devops-log
+.editor-diff-log.json
+
+# Ignore Git + CI/CD junk
+.git
+.github
+.gitignore
+.gitmessage
+
+# Ignore coverage & test outputs
+coverage
+pytest_cache
+test-results

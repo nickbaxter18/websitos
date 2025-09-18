@@ -1,0 +1,71 @@
+{
+  "global": {
+    "title": "U-Dig It AI ROI Calculator Template",
+    "description": "Reusable ROI calculator templates for landing pages, offer summaries, and sales funnels.",
+    "tone": "practical, benefit-driven, customer-centric",
+    "guardrails": "Always use conservative, realistic estimates. Never promise specific earnings."
+  },
+  "calculator_types": {
+    "time_saved": {
+      "headline": "⏱ Calculate Your Time Saved With {{PRODUCT_TITLE}}",
+      "inputs": [
+        {
+          "id": "hours_spent",
+          "label": "Hours spent weekly on tasks",
+          "type": "number",
+          "default": 10
+        },
+        { "id": "hourly_rate", "label": "Your hourly rate (CAD)", "type": "number", "default": 50 }
+      ],
+      "formula": "(hours_spent * hourly_rate * 4) * 0.5",
+      "output_label": "Estimated Monthly Savings",
+      "placement": "landing_page.features, offer_summary.trust"
+    },
+    "revenue_boost": {
+      "headline": "📈 See How AI Boosts Your Revenue",
+      "inputs": [
+        { "id": "clients", "label": "Monthly clients served", "type": "number", "default": 20 },
+        {
+          "id": "increase_percent",
+          "label": "Expected productivity increase (%)",
+          "type": "number",
+          "default": 20
+        },
+        {
+          "id": "revenue_per_client",
+          "label": "Revenue per client (CAD)",
+          "type": "number",
+          "default": 500
+        }
+      ],
+      "formula": "(clients * revenue_per_client) * (increase_percent / 100)",
+      "output_label": "Estimated Monthly Revenue Growth",
+      "placement": "landing_page.hero, thank_you.upsells"
+    },
+    "cost_reduction": {
+      "headline": "💸 Estimate Your Cost Reductions",
+      "inputs": [
+        {
+          "id": "current_costs",
+          "label": "Current monthly costs (CAD)",
+          "type": "number",
+          "default": 2000
+        },
+        {
+          "id": "reduction_percent",
+          "label": "AI-driven cost reduction (%)",
+          "type": "number",
+          "default": 15
+        }
+      ],
+      "formula": "current_costs * (reduction_percent / 100)",
+      "output_label": "Estimated Monthly Savings",
+      "placement": "offer_summary.features, cancel_page.save_offers"
+    }
+  },
+  "integration": {
+    "cta_logic": "After displaying results, always show CTA to relevant product (from product_registry.json).",
+    "data_capture": "Capture input/output data to CRM for lead scoring and follow-up.",
+    "visualization": "Use progress bars, currency formatting, and simple charts for impact display."
+  }
+}

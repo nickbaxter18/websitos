@@ -1,0 +1,68 @@
+{
+  "global": {
+    "from_name": "U-Dig It AI",
+    "from_email": "nickbaxter@udigit.ca",
+    "support_email": "nickbaxter@udigit.ca",
+    "tone": "empathetic, supportive, win-back focused",
+    "cta_style": "clear, trust-building, non-pushy"
+  },
+  "sequence": {
+    "cancel_day_0": {
+      "subject": "💔 You’ve Cancelled {{PRODUCT_TITLE}} — A Quick Note",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "We noticed you’ve cancelled {{PRODUCT_TITLE}}.",
+        "We totally understand — priorities change.",
+        "Before you go, we’d love to hear your feedback: {{FEEDBACK_LINK}}",
+        "👉 If it was about price, here’s a lighter option: {{DOWNSELL_OFFER}}"
+      ]
+    },
+    "cancel_day_1": {
+      "subject": "⚡ Keep AI Working For You — At a Lower Price",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Many customers who cancel {{PRODUCT_TITLE}} switch to {{DOWNSELL_TITLE}} instead.",
+        "It keeps you connected to AI workflows — without the bigger commitment.",
+        "👉 Switch now: {{DOWNSELL_LINK}}"
+      ]
+    },
+    "cancel_day_3": {
+      "subject": "⏸ Prefer to Pause Instead of Cancel?",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "What if you could pause {{PRODUCT_TITLE}} and come back later?",
+        "We’ll hold your spot and your data — no need to fully cancel.",
+        "👉 Pause your plan here: {{PAUSE_LINK}}"
+      ]
+    },
+    "cancel_day_7": {
+      "subject": "🚀 Ready to Jump Back In?",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "We’d love to welcome you back. As a returning customer, here’s an exclusive bonus:",
+        "- 🎁 Extra templates / add-on pack",
+        "- 💡 A free onboarding call",
+        "👉 Rejoin today: {{REJOIN_LINK}}"
+      ]
+    },
+    "inactive_day_14": {
+      "subject": "👋 Haven’t Seen You Around {{PRODUCT_TITLE}}",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Looks like you haven’t logged into {{PRODUCT_TITLE}} for a while.",
+        "We don’t want you missing out on value — so here’s a quick guide to re-start.",
+        "👉 Revisit your access: {{LOGIN_LINK}}",
+        "Need help? Reply anytime to nickbaxter@udigit.ca."
+      ]
+    },
+    "inactive_day_30": {
+      "subject": "📈 Don’t Let AI Pass You By",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "AI adoption is accelerating fast. If you pause too long, you risk falling behind.",
+        "To make it easy, we’re giving you {{INCENTIVE_OFFER}} if you return today.",
+        "👉 Claim your return bonus: {{REJOIN_LINK}}"
+      ]
+    }
+  }
+}

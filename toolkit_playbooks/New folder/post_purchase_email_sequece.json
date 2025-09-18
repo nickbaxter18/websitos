@@ -1,0 +1,72 @@
+{
+  "global": {
+    "from_name": "U-Dig It AI",
+    "from_email": "nickbaxter@udigit.ca",
+    "support_email": "nickbaxter@udigit.ca",
+    "tone": "friendly, professional, value-first",
+    "cta_style": "bold, clear, urgency-driven"
+  },
+  "sequence": {
+    "day_0": {
+      "subject": "🎉 Welcome to {{PRODUCT_TITLE}} — You're In!",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Thanks for joining U-Dig It AI and grabbing {{PRODUCT_TITLE}}!",
+        "Here’s what happens next:",
+        "- ✅ Your order is confirmed via Stripe",
+        "- 📧 Access instructions are on their way",
+        "- 💡 Pro tip: start small, get a quick win today",
+        "If you have questions, reply to this email anytime — we respond within 24h on weekdays.",
+        "👉 Ready for more? {{UPSELL_OFFER}}"
+      ]
+    },
+    "day_1": {
+      "subject": "⚡ Quick Start: Get the Most From {{PRODUCT_TITLE}}",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Let’s make sure you get instant value from your {{PRODUCT_TITLE}} purchase.",
+        "Here’s your Quick Start checklist:",
+        "1. Log in and download your templates/resources",
+        "2. Implement your first workflow today",
+        "3. Track time saved — most users see results in under 30 minutes",
+        "👉 Want to accelerate results? Upgrade now: {{UPSELL_OFFER}}"
+      ]
+    },
+    "day_3": {
+      "subject": "🔥 Power Tip: Multiply Your Results",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "By now, you’ve had a few days to test {{PRODUCT_TITLE}}.",
+        "Here’s how you can 2x your results:",
+        "- Use it in multiple workflows",
+        "- Share it with your team",
+        "- Stack it with {{CROSS_SELL_OFFER}}",
+        "👉 Claim your next step here: {{CROSS_SELL_LINK}}"
+      ]
+    },
+    "day_7": {
+      "subject": "⭐ Next-Level AI: Your Upgrade Awaits",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Most U-Dig It AI customers expand into {{UPSELL_TITLE}} within the first week.",
+        "Why? Because it unlocks:",
+        "- 🚀 Advanced templates",
+        "- 📈 Better ROI per task",
+        "- 🔒 Lifetime access (no recurring costs on this tier)",
+        "👉 Upgrade today: {{UPSELL_LINK}}"
+      ]
+    },
+    "day_14": {
+      "subject": "🚀 Let’s Build Your AI Growth Stack",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "You’ve seen what {{PRODUCT_TITLE}} can do.",
+        "Now it’s time to build your full AI growth stack:",
+        "- Keep {{PRODUCT_TITLE}}",
+        "- Add {{UPSELL_TITLE}}",
+        "- Join {{COMMUNITY_INVITE}}",
+        "👉 Take action now and secure your growth path."
+      ]
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "global": {
+    "title": "U-Dig It AI Knowledge Graph Spec",
+    "description": "Defines structured interlinking of products, blogs, FAQs, and reports into a knowledge graph for SEO and navigation.",
+    "tone": "structured, semantic, accessible",
+    "guardrails": "All links must remain relevant, accurate, and avoid keyword stuffing."
+  },
+  "entities": {
+    "products": {
+      "source": "product_registry.json",
+      "relations": [
+        { "type": "upsell_to", "target": "upsell_downsell_matrix.json" },
+        { "type": "cross_sell_to", "target": "cross_sell_map.json" },
+        { "type": "explained_by", "target": "content_marketing_playbook.json" },
+        { "type": "supported_by", "target": "support_knowledge_base.json" },
+        { "type": "featured_in", "target": "customer_advocacy_playbook.json" }
+      ]
+    },
+    "blogs": {
+      "source": "content_marketing_playbook.json",
+      "relations": [
+        { "type": "links_to", "target": "products" },
+        { "type": "expands_on", "target": "faqs" },
+        { "type": "clustered_with", "target": "seasonal_campaigns_playbook.json" }
+      ]
+    },
+    "faqs": {
+      "source": "support_knowledge_base.json",
+      "relations": [
+        { "type": "answers", "target": "products" },
+        { "type": "linked_from", "target": "churn_survey_template.json" },
+        { "type": "expands", "target": "content_marketing_playbook.json" }
+      ]
+    },
+    "reports": {
+      "source": [
+        "reporting_dashboard_spec.json",
+        "executive_summary_generator.json",
+        "board_investor_report_playbook.json",
+        "sustainability_esg_playbook.json"
+      ],
+      "relations": [
+        { "type": "summarizes", "target": "products" },
+        { "type": "informs", "target": "product_roadmap_playbook.json" },
+        { "type": "aligns_with", "target": "ai_ethics_policy.json" }
+      ]
+    }
+  },
+  "integration": {
+    "schema_markup": "All pages include JSON-LD schema for products, FAQs, and articles.",
+    "internal_linking": "Each page links to 2–3 related entities for SEO clustering.",
+    "reporting": "Track internal link clicks and SEO lift in reporting_dashboard_spec.json."
+  }
+}

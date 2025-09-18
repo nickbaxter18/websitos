@@ -1,0 +1,58 @@
+{
+  "global": {
+    "title": "U-Dig It AI Loyalty Rewards Playbook",
+    "description": "Frameworks for loyalty, points, and rewards programs that drive repeat purchases and retention.",
+    "tone": "appreciative, motivating, customer-first",
+    "guardrails": "Rewards must be clearly explained and deliver real value. No misleading terms."
+  },
+  "rewards_models": {
+    "points_system": {
+      "headline": "⭐ Earn Points With Every Purchase",
+      "rules": [
+        "1 point for every $1 CAD spent",
+        "100 points = $10 off future purchases",
+        "Points never expire"
+      ],
+      "placement": "thank_you.page, retention_email.day_7, community_channel.announcements"
+    },
+    "tiered_loyalty": {
+      "headline": "🏆 Unlock Exclusive Loyalty Tiers",
+      "tiers": [
+        {
+          "id": "bronze",
+          "threshold": 100,
+          "reward": "5% discount on all purchases"
+        },
+        {
+          "id": "silver",
+          "threshold": 500,
+          "reward": "10% discount + early access to new templates"
+        },
+        {
+          "id": "gold",
+          "threshold": 1000,
+          "reward": "15% discount + exclusive bonus packs + VIP support"
+        }
+      ],
+      "placement": "footer.links, referral_email.day_30"
+    },
+    "purchase_streaks": {
+      "headline": "🔥 Stay Consistent, Get Rewarded",
+      "rules": [
+        "Buy 3 consecutive months of {{PRODUCT_TITLE}} → Get 1 month free",
+        "Keep your streak alive to unlock ongoing bonuses"
+      ],
+      "placement": "retention_email.day_14, customer_success.milestone"
+    }
+  },
+  "referral_synergy": {
+    "headline": "🎁 Combine Referrals With Rewards",
+    "body": "Every referral also earns loyalty points. Share {{REFERRAL_LINK}} and watch your rewards grow.",
+    "placement": "referral_email.day_7, community_channel.spotlight"
+  },
+  "integration": {
+    "tracking": "Loyalty balances tracked in CRM or Stripe Customer Metadata.",
+    "payouts": "Rewards auto-applied as coupons or bonus products.",
+    "visibility": "Show loyalty balance in customer portal and post-purchase emails."
+  }
+}

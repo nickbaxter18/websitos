@@ -1,0 +1,15 @@
+frontend:
+  - src/**
+  - v2/**
+
+backend:
+  - backend/**
+  - api.py
+
+e2e:
+  - tests/e2e/**
+
+ci:
+  - .github/workflows/**
+  - .husky/**
+  - pnpm-lock.yaml

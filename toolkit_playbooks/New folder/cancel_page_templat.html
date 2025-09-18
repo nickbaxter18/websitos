@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cancel {{PRODUCT_TITLE}} | U-Dig It AI</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        margin: 0;
+        background: #f5f5f5;
+        color: #0f0f10;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 3rem 1rem;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+      p {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+      .card {
+        background: #ffffff;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+      .cta-btn {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 1rem 2rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .cta-btn.red {
+        background: #a90f0f;
+        color: #ffffff;
+      }
+      .cta-btn.red:hover {
+        background: #8c0c0c;
+      }
+      .cta-btn.gold {
+        background: #e1bc56;
+        color: #000000;
+      }
+      .cta-btn.gold:hover {
+        background: #c8a94a;
+      }
+      .cta-btn.gray {
+        background: #c0c0c0;
+        color: #0f0f10;
+      }
+      .cta-btn.gray:hover {
+        background: #5a5a5a;
+        color: #ffffff;
+      }
+      .save-offers h2 {
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    {{HEADER}}
+
+    <div class="container">
+      <!-- Cancel Confirmation -->
+      <div class="card">
+        <h1>Cancel {{PRODUCT_TITLE}}</h1>
+        <p>We’re sorry to see you go. You can cancel your subscription immediately below.</p>
+        <a href="{{STRIPE_CUSTOMER_PORTAL_LINK}}" class="cta-btn red">Confirm Cancellation</a>
+      </div>
+
+      <!-- Save Offers -->
+      <div class="card save-offers">
+        <h2>Before You Go…</h2>
+        <p>
+          Many members choose to downgrade instead of leaving completely. Here are some options to
+          keep AI working for you:
+        </p>
+        <div>
+          <h3>⭐ Switch to {{SAVE_OFFER_ONE_TITLE}}</h3>
+          <p>{{SAVE_OFFER_ONE_SUBHEADING}}</p>
+          <a href="{{SAVE_OFFER_ONE_PAYMENT_LINK}}" class="cta-btn gold">Switch & Save</a>
+        </div>
+        <div style="margin-top: 2rem">
+          <h3>🔥 Try {{SAVE_OFFER_TWO_TITLE}}</h3>
+          <p>{{SAVE_OFFER_TWO_SUBHEADING}}</p>
+          <a href="{{SAVE_OFFER_TWO_PAYMENT_LINK}}" class="cta-btn gray">Keep Access</a>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="card">
+        <h2>Need Help?</h2>
+        <p>If you have questions or need assistance, reach out to our support team.</p>
+        <p>Email: <a href="mailto:nickbaxter@udigit.ca">nickbaxter@udigit.ca</a></p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    {{FOOTER}}
+  </body>
+</html>

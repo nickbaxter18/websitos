@@ -1,0 +1,53 @@
+{
+  "global": {
+    "title": "U-Dig It AI Competitor Comparison Playbook",
+    "description": "Frameworks for competitor comparison pages and funnel sections that highlight U-Dig It AI’s advantages.",
+    "tone": "confident, transparent, benefit-driven",
+    "guardrails": "Always be factual and respectful. Avoid disparaging competitors; focus on differentiation."
+  },
+  "comparison_page": {
+    "headline": "Why Choose {{PRODUCT_TITLE}} Over Alternatives?",
+    "subheadline": "See how U-Dig It AI stacks up against the competition.",
+    "table_structure": {
+      "columns": ["Feature", "U-Dig It AI", "Competitor A", "Competitor B"],
+      "features": [
+        "Pricing",
+        "Refund Guarantee",
+        "Template Depth",
+        "Ease of Use",
+        "Community Support",
+        "Integrations",
+        "Customer Success Resources"
+      ]
+    },
+    "cta": {
+      "headline": "🚀 Ready to Switch?",
+      "body": "Join {{CUSTOMER_COUNT}}+ businesses who chose U-Dig It AI for faster workflows and better ROI.",
+      "button": "Get Started With {{PRODUCT_TITLE}} → {{PRODUCT_PAYMENT_LINK}}"
+    }
+  },
+  "funnel_section": {
+    "headline": "How We Compare",
+    "body": [
+      "Unlike other platforms, U-Dig It AI combines:",
+      "- Affordable pricing with flexible options",
+      "- 30-day money back guarantee",
+      "- Active support and community",
+      "- Templates and tools built for real businesses"
+    ],
+    "cta": "Choose {{PRODUCT_TITLE}} Today → {{PRODUCT_PAYMENT_LINK}}"
+  },
+  "integration": {
+    "placement": [
+      "dedicated_comparison_page",
+      "landing_page.features",
+      "offer_summary.trust",
+      "retargeting_email"
+    ],
+    "seo": {
+      "title_format": "{{PRODUCT_TITLE}} vs. Competitor — Which Is Better?",
+      "meta_description": "Compare {{PRODUCT_TITLE}} with competitors and see why {{COMPANY_NAME}} is the trusted choice for AI-driven productivity."
+    },
+    "internal_links": "Comparison pages must link back to at least 2 product landing pages."
+  }
+}

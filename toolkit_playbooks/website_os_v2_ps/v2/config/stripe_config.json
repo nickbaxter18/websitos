@@ -1,0 +1,29 @@
+﻿{
+  "mode": "live",
+  "tenants": {
+    "default": {
+      "test": {
+        "sk": "sk_test_XXXXXXXXXXXXXXXXXXXXXXXX",
+        "whsec": "whsec_PASTE_FROM_LISTEN_OUTPUT"
+      },
+      "live": {
+        "sk": "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",
+        "whsec": "whsec_LIVE_FROM_DASHBOARD"
+      }
+    }
+  },
+  "products": {
+    "default": {
+      "offer": "price_1S2NYgFYCEvui16JLrIbGw9N",
+      "ai_optimization_plan_90_days": "price_1S2bOPFYCEvui16J37yTZouJ",
+      "ai_business_transformation_package": "price_1S2bEcFYCEvui16JRmdZG36X",
+      "ai_pro_templates_vault": "price_1S2agOFYCEvui16JyqSoPpBi",
+      "ai_master_vault": "price_1S2acpFYCEvui16JnbH7haSf",
+      "ai_mastery_hub": "price_1S2aRRFYCEvui16Js4vBGGvs",
+      "ai_quick_start_pack": "price_1S2aMfFYCEvui16JNSdzMdow",
+      "ai_growth_accelerator_bundle": "price_1S2NefFYCEvui16J11lZr4CD",
+      "quick_win_add_on": "price_1S2NbGFYCEvui16Jxrr529a3",
+      "ai_spark_starter_kit": "price_1S2NYgFYCEvui16JLrIbGw9N"
+    }
+  }
+}

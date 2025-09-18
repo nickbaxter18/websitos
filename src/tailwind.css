@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Optional Covenant Styling Extensions --- */
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Aurora background utility */
+.aurora-bg {
+  background: linear-gradient(135deg, #4f46e5, #9333ea, #ec4899, #f59e0b);
+  background-size: 400% 400%;
+  animation: aurora 20s ease infinite;
+}
+
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Button styles */
+.btn-primary {
+  @apply rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white shadow-md hover:bg-indigo-700;
+}
+
+.btn-gold {
+  @apply rounded-lg bg-amber-400 px-6 py-3 font-semibold text-black shadow-md hover:bg-amber-500;
+}

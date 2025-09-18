@@ -1,0 +1,93 @@
+{
+  "global": {
+    "title": "U-Dig It AI Customer Success Playbook",
+    "description": "Framework for onboarding, FAQs, proactive support, and milestone-driven success flows.",
+    "tone": "helpful, proactive, trust-first",
+    "guardrails": "Always empower the customer. Never overpromise outcomes."
+  },
+  "onboarding": {
+    "welcome_guide": {
+      "headline": "👋 Welcome to {{PRODUCT_TITLE}}",
+      "steps": [
+        "Step 1: Access your purchase via the link in your confirmation email.",
+        "Step 2: Download your starter templates/resources.",
+        "Step 3: Complete your first workflow in under 30 minutes.",
+        "Step 4: Join the U-Dig It AI Community: {{COMMUNITY_LINK}}"
+      ],
+      "placement": "thank_you.page, post_purchase_email.day_0"
+    },
+    "checklist": {
+      "headline": "✅ Your 7-Day Success Checklist",
+      "tasks": [
+        "Day 1: Implement one quick win workflow.",
+        "Day 3: Explore upsell {{UPSELL_TITLE}} to expand capabilities.",
+        "Day 5: Share your progress in the community.",
+        "Day 7: Review time saved and plan next steps."
+      ],
+      "placement": "post_purchase_email.day_1, retention_email.day_7"
+    }
+  },
+  "faqs": {
+    "general": [
+      {
+        "q": "How do I access my purchase?",
+        "a": "All products are delivered via email immediately after checkout. Check your inbox for a confirmation and access link."
+      },
+      {
+        "q": "Do you offer refunds?",
+        "a": "Yes, we offer a 30-day money back guarantee. Contact support at nickbaxter@udigit.ca."
+      },
+      {
+        "q": "What if I have technical issues?",
+        "a": "Reach out to support anytime at nickbaxter@udigit.ca — we aim to respond within 24h Mon–Fri."
+      }
+    ],
+    "product_specific": {
+      "ai_mastery_hub": [
+        {
+          "q": "What does the Hub include?",
+          "a": "Weekly templates, expert trainings, and community access."
+        },
+        {
+          "q": "Can I cancel anytime?",
+          "a": "Yes, your subscription is managed via Stripe and can be cancelled instantly through your customer portal."
+        }
+      ]
+    }
+  },
+  "proactive_support": {
+    "trigger_emails": [
+      {
+        "id": "low_engagement",
+        "subject": "👀 Need Help Getting Started?",
+        "body": "We noticed you haven’t logged in yet. Here’s a quick guide to your first success: {{ONBOARDING_LINK}}"
+      },
+      {
+        "id": "success_milestone",
+        "subject": "🎉 Congrats on Your First AI Win!",
+        "body": "You’ve just completed your first workflow with {{PRODUCT_TITLE}}. Ready to scale up? 👉 Try {{UPSELL_LINK}}"
+      }
+    ],
+    "support_sla": "24h weekday response time, 48h weekends/holidays."
+  },
+  "success_milestones": {
+    "milestones": [
+      {
+        "id": "first_login",
+        "headline": "🚀 First Login Complete",
+        "message": "Great start! Now try your first workflow."
+      },
+      {
+        "id": "first_workflow",
+        "headline": "🎉 First Workflow Success",
+        "message": "Amazing! You’ve saved your first hour with AI."
+      },
+      {
+        "id": "week_one",
+        "headline": "📈 One Week In",
+        "message": "Time to measure results — track hours saved and ROI."
+      }
+    ],
+    "placement": "in_product_popups, post_purchase_email, community_channel"
+  }
+}

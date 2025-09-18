@@ -1,0 +1,38 @@
+{
+  "ai_quick_start_pack": {
+    "order_bump": "ai_growth_accelerator",
+    "upsell": "ai_mastery_hub",
+    "secondary_upsell": "ai_pro_templates_vault"
+  },
+  "quick_win_addon": {
+    "order_bump": "ai_growth_accelerator",
+    "upsell": "ai_mastery_hub",
+    "secondary_upsell": "ai_master_vault"
+  },
+  "ai_spark_starter": {
+    "upsell": "ai_growth_accelerator",
+    "secondary_upsell": "ai_mastery_hub"
+  },
+  "ai_growth_accelerator": {
+    "downsell_1": "ai_spark_starter",
+    "downsell_2": "quick_win_addon"
+  },
+  "ai_pro_templates_vault": {
+    "upsell": "ai_master_vault",
+    "cross_sell": "ai_mastery_hub"
+  },
+  "ai_master_vault": {
+    "upsell": "ai_business_transformation",
+    "cross_sell": "ai_mastery_hub"
+  },
+  "ai_mastery_hub": {
+    "upsell": "ai_pro_templates_vault",
+    "secondary_upsell": "ai_master_vault"
+  },
+  "ai_optimization_plan": {
+    "upsell": "ai_business_transformation"
+  },
+  "ai_business_transformation": {
+    "downsell": "ai_optimization_plan"
+  }
+}

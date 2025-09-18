@@ -1,0 +1,75 @@
+{
+  "global": {
+    "title": "U-Dig It AI Sustainability & ESG Playbook",
+    "description": "Framework for ESG (Environmental, Social, Governance) reporting and sustainability best practices.",
+    "tone": "transparent, responsible, forward-looking",
+    "guardrails": "Reports must be factual, auditable, and align with relevant ESG and ethical AI standards."
+  },
+  "pillars": {
+    "environmental": {
+      "metrics": [
+        "Estimated carbon footprint of hosting (kWh, CO2e)",
+        "% renewable energy used in infrastructure",
+        "Data efficiency: average compute per user session",
+        "Green initiatives: offset purchases, recycling programs"
+      ],
+      "reporting_frequency": "annual",
+      "integration": "Hosting provider APIs, carbon offset reports"
+    },
+    "social": {
+      "metrics": [
+        "Community engagement (active members, events hosted)",
+        "Customer satisfaction (NPS from customer_feedback_playbook.json)",
+        "Accessibility compliance (WCAG 2.2 AA)",
+        "Diversity in partnerships and content contributors"
+      ],
+      "reporting_frequency": "semi-annual",
+      "integration": "community_engagement_playbook.json, customer_feedback_playbook.json"
+    },
+    "governance": {
+      "metrics": [
+        "Data privacy compliance (PIPEDA, GDPR)",
+        "AI ethics guardrails (bias checks, transparency logs)",
+        "Refunds processed vs. disputes",
+        "Board oversight: number of governance meetings held"
+      ],
+      "reporting_frequency": "quarterly",
+      "integration": "legal_boilerplate.json, crm_automation_playbook.json"
+    }
+  },
+  "report_structure": {
+    "cover_page": {
+      "title": "U-Dig It AI ESG & Sustainability Report",
+      "subtitle": "For Period Ending {{REPORT_DATE}}"
+    },
+    "executive_summary": {
+      "content": [
+        "Overall ESG progress highlights",
+        "Environmental footprint updates",
+        "Social/community initiatives",
+        "Governance and compliance status"
+      ]
+    },
+    "kpis": {
+      "environmental": "CO2e reduced YoY, % renewable energy adoption",
+      "social": "NPS, accessibility compliance score, community growth",
+      "governance": "Privacy compliance, AI ethics logs, refund ratio"
+    },
+    "recommendations": {
+      "content": [
+        "Initiatives to reduce carbon impact further",
+        "Plans to expand community inclusion",
+        "Governance improvements for AI transparency"
+      ]
+    }
+  },
+  "integration": {
+    "data_sources": ["Hosting provider API", "CRM", "Stripe", "Community platform"],
+    "reporting_hook": "Outputs feed into reporting_dashboard_spec.json and board_investor_report_playbook.json",
+    "distribution": {
+      "pdf_export": "Generate branded ESG PDF annually",
+      "public_page": "Optional publication on website",
+      "investor_distribution": "Send with quarterly board reports"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+﻿[
+  {
+    "issue": "Missing",
+    "header": "X-Frame-Options",
+    "fix": "Add X-Frame-Options to FastAPI middleware or reverse proxy config",
+    "severity": "medium"
+  },
+  {
+    "issue": "Missing",
+    "header": "X-Content-Type-Options",
+    "fix": "Add X-Content-Type-Options to FastAPI middleware or reverse proxy config",
+    "severity": "medium"
+  },
+  {
+    "issue": "Missing",
+    "header": "Content-Security-Policy",
+    "fix": "Add Content-Security-Policy to FastAPI middleware or reverse proxy config",
+    "severity": "high"
+  },
+  {
+    "issue": "Missing",
+    "header": "Strict-Transport-Security",
+    "fix": "Add Strict-Transport-Security to FastAPI middleware or reverse proxy config",
+    "severity": "high"
+  }
+]

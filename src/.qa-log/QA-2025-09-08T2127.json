@@ -1,0 +1,48 @@
+{
+  "summary": {
+    "status": "fail"
+  },
+  "syntax": {
+    "status": "fail",
+    "notes": [
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/App.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/components/About.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/components/Footer.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/components/Home.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/components/Layout.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/components/Navbar.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/components/ui/button.tsx:3:20 - Cannot find module '@/lib/utils' or its corresponding type declarations.",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/components/ui/card.tsx:2:20 - Cannot find module '@/lib/utils' or its corresponding type declarations.",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/main.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/main.tsx:2:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react-dom/client\"' has no default export.",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/pages/About.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/pages/Contact.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/pages/Home.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/pages/Privacy.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag",
+      "C:/Users/Nick/Downloads/WEBSITEOS/src/pages/Terms.tsx:1:8 - Module '\"C:/Users/Nick/Downloads/WEBSITEOS/node_modules/@types/react/index\"' can only be default-imported using the 'esModuleInterop' flag"
+    ]
+  },
+  "tests": {
+    "coverage": 0,
+    "status": "pass",
+    "notes": ["(not wired)"]
+  },
+  "perf": {
+    "bundleKB": 0,
+    "budgetKB": 200,
+    "status": "pass"
+  },
+  "access": {
+    "contrastMin": 4.8,
+    "budget": 4.5,
+    "status": "pass"
+  },
+  "seo": {
+    "status": "pass",
+    "notes": []
+  },
+  "governance": {
+    "licenseOk": true,
+    "status": "pass"
+  }
+}

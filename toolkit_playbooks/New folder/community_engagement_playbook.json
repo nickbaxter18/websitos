@@ -1,0 +1,63 @@
+{
+  "global": {
+    "title": "U-Dig It AI Community Engagement Playbook",
+    "description": "Strategies to invite customers into community spaces and build advocacy.",
+    "tone": "welcoming, inclusive, growth-minded",
+    "guardrails": "Always encourage authentic interaction. Never force participation."
+  },
+  "onboarding": {
+    "welcome_invite": {
+      "headline": "🎉 Join Our AI Builders Community",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Your purchase of {{PRODUCT_TITLE}} includes access to our exclusive AI community.",
+        "👉 Join here: {{COMMUNITY_LINK}}",
+        "Inside, you’ll find:",
+        "- Expert Q&A sessions",
+        "- Shared success stories",
+        "- Bonus templates & resources"
+      ],
+      "placement": "thank_you.page, post_purchase_email.day_0"
+    },
+    "icebreaker_prompt": {
+      "headline": "👋 Introduce Yourself",
+      "body": "Share who you are, what you’re building, and what you hope to achieve with AI.",
+      "placement": "community_channel.welcome"
+    }
+  },
+  "engagement": {
+    "weekly_prompt": [
+      {
+        "id": "share_win",
+        "headline": "🔥 Weekly Win Wednesday",
+        "body": "Post your biggest AI win this week — big or small. Inspire others!"
+      },
+      {
+        "id": "ask_expert",
+        "headline": "❓ Expert AMA Friday",
+        "body": "Our team will answer your AI questions live in the community."
+      }
+    ],
+    "peer_collab": {
+      "headline": "🤝 Collaboration Corner",
+      "body": "Find accountability partners, share projects, and co-create workflows.",
+      "placement": "community_channel.collab"
+    }
+  },
+  "advocacy": {
+    "referral_boost": {
+      "headline": "🎁 Invite a Friend, Earn Rewards",
+      "body": "Share your referral link in the community. Help others and earn {{REFERRAL_REWARD}}.",
+      "placement": "referral_email.day_7, community_channel.announcements"
+    },
+    "spotlight": {
+      "headline": "🌟 Member Spotlight",
+      "body": "We’ll feature top contributors in our blog and newsletters.",
+      "placement": "blog.feature, community_channel.spotlight"
+    }
+  },
+  "integration": {
+    "platforms": ["Slack", "Discord", "Circle.so", "Forum"],
+    "moderation_guidelines": "Respectful, inclusive, no spam or self-promotion outside designated areas."
+  }
+}

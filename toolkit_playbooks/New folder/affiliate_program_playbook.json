@@ -1,0 +1,92 @@
+{
+  "global": {
+    "title": "U-Dig It AI Affiliate Program Playbook",
+    "description": "Framework for structuring a scalable affiliate program with tiers, payouts, portals, and promo assets.",
+    "tone": "professional, rewarding, partnership-driven",
+    "guardrails": "Program must comply with regional affiliate marketing laws (FTC, ASA, GDPR) and ensure transparent tracking."
+  },
+  "program_structure": {
+    "default_commission": "20% recurring on referred sales",
+    "payout_method": "Stripe Connect monthly",
+    "cookie_duration": "30 days",
+    "approval_process": "Manual review of new affiliate applications"
+  },
+  "tiers": [
+    {
+      "id": "starter",
+      "requirements": "0–10 sales",
+      "commission": "20%",
+      "benefits": ["Access to affiliate portal", "Promo assets library"]
+    },
+    {
+      "id": "pro",
+      "requirements": "11–50 sales",
+      "commission": "25%",
+      "benefits": ["Priority support", "Co-branded assets", "Leaderboard visibility"]
+    },
+    {
+      "id": "elite",
+      "requirements": "50+ sales",
+      "commission": "30%",
+      "benefits": [
+        "Dedicated account manager",
+        "Early access to product launches",
+        "Exclusive bonus rewards"
+      ]
+    }
+  ],
+  "affiliate_portal": {
+    "headline": "💼 Affiliate Partner Portal",
+    "features": [
+      "Unique referral links with UTM tracking",
+      "Real-time sales dashboard",
+      "Payout tracking and invoices",
+      "Downloadable promo assets"
+    ],
+    "placement": "website.com/affiliates"
+  },
+  "promo_assets": {
+    "types": [
+      {
+        "id": "banners",
+        "formats": ["728x90", "300x250", "160x600"],
+        "usage": "Website placements, blogs"
+      },
+      {
+        "id": "social_graphics",
+        "formats": ["1080x1080", "1080x1920"],
+        "usage": "Instagram, LinkedIn, Facebook"
+      },
+      {
+        "id": "email_swipes",
+        "formats": ["Subject lines", "Body copy", "CTAs"],
+        "usage": "Affiliate newsletters"
+      }
+    ]
+  },
+  "rewards": {
+    "milestones": [
+      {
+        "id": "first_sale",
+        "reward": "Welcome bonus of $50"
+      },
+      {
+        "id": "10_sales",
+        "reward": "Exclusive template pack"
+      },
+      {
+        "id": "50_sales",
+        "reward": "VIP mastermind invite"
+      }
+    ]
+  },
+  "integration": {
+    "tracking": "Referral performance integrated with reporting_dashboard_spec.json",
+    "crm": "Affiliate partners tracked as contacts with tags (starter, pro, elite)",
+    "cross_playbook_hooks": [
+      "influencer_marketing_playbook.json",
+      "partnership_playbook.json",
+      "referral_email_sequence.json"
+    ]
+  }
+}

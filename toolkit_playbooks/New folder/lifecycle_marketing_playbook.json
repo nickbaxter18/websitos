@@ -1,0 +1,81 @@
+{
+  "global": {
+    "title": "U-Dig It AI Lifecycle Marketing Playbook",
+    "description": "Framework for advanced lifecycle email and nurture campaigns spanning lead → prospect → customer → renewal.",
+    "tone": "relationship-driven, consistent, value-first",
+    "guardrails": "Campaigns must deliver value before asking for conversion. Respect user preferences and unsubscribe rules."
+  },
+  "stages": {
+    "cold_lead": {
+      "goals": ["Build awareness", "Introduce AI education", "Encourage first micro-conversion"],
+      "assets": [
+        "Lead magnets (see lead_capture_email_sequence.json)",
+        "Educational blogs (see content_marketing_playbook.json)",
+        "Social explainers"
+      ],
+      "emails": [
+        { "subject": "👋 Welcome! Here’s a Free AI Starter Resource", "trigger": "signup" },
+        { "subject": "⚡ 3 Ways AI Can Save You Hours Weekly", "trigger": "day_3" }
+      ]
+    },
+    "warm_prospect": {
+      "goals": ["Nurture interest", "Showcase ROI", "Differentiate from competitors"],
+      "assets": [
+        "Comparison pages (see competitor_comparison_playbook.json)",
+        "ROI calculators (see roi_calculator_template.json)",
+        "Webinar invites (see webinar_campaign_playbook.json)"
+      ],
+      "emails": [
+        { "subject": "📊 How {{PRODUCT_TITLE}} Compares to Others", "trigger": "day_5" },
+        { "subject": "🚀 See AI ROI in Minutes With This Calculator", "trigger": "day_7" }
+      ]
+    },
+    "new_customer": {
+      "goals": ["Deliver quick wins", "Onboard smoothly", "Prevent early churn"],
+      "assets": [
+        "Onboarding checklists (see customer_success_playbook.json)",
+        "Tutorials (see support_knowledge_base.json)",
+        "Quick start video guides (see video_marketing_playbook.json)"
+      ],
+      "emails": [
+        { "subject": "🎉 Welcome to {{PRODUCT_TITLE}} — Start Here", "trigger": "purchase_day_0" },
+        { "subject": "✅ Your 7-Day Quick Start Guide", "trigger": "purchase_day_1" }
+      ]
+    },
+    "active_customer": {
+      "goals": ["Drive engagement", "Encourage upsells", "Boost loyalty"],
+      "assets": [
+        "Upsell offers (see cross_sell_map.json)",
+        "Community invites (see community_engagement_playbook.json)",
+        "Referral rewards (see referral_email_sequence.json)"
+      ],
+      "emails": [
+        { "subject": "🔥 Unlock More Power With {{UPSELL_TITLE}}", "trigger": "purchase_day_7" },
+        { "subject": "🌟 Earn Rewards for Sharing U-Dig It AI", "trigger": "purchase_day_14" }
+      ]
+    },
+    "renewal_long_term": {
+      "goals": ["Secure renewals", "Celebrate milestones", "Promote advocacy"],
+      "assets": [
+        "Loyalty rewards (see loyalty_rewards_playbook.json)",
+        "Ambassador programs (see customer_advocacy_playbook.json)",
+        "Case study features (see user_generated_content_playbook.json)"
+      ],
+      "emails": [
+        { "subject": "🎂 Happy 1-Year Anniversary With {{PRODUCT_TITLE}}!", "trigger": "year_1" },
+        { "subject": "🏆 Join Our Ambassador Program", "trigger": "year_1_plus" }
+      ]
+    }
+  },
+  "integration": {
+    "crm": "All lifecycle stages tracked in crm_automation_playbook.json",
+    "reporting": "Stage performance logged in reporting_dashboard_spec.json",
+    "cross_playbook_hooks": [
+      "customer_segmentation_playbook.json",
+      "ai_copywriting_playbook.json",
+      "customer_success_playbook.json",
+      "loyalty_rewards_playbook.json",
+      "customer_advocacy_playbook.json"
+    ]
+  }
+}

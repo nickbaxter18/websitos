@@ -1,0 +1,21 @@
+﻿<section class="lead-card">
+  <h2>Get the free AI Quick Wins checklist</h2>
+  <form id="leadForm" method="POST" action="/api/leads" novalidate>
+    <input
+      type="email"
+      name="email"
+      required
+      placeholder="you@company.com"
+      autocomplete="email"
+      inputmode="email"
+    />
+    <input type="text" name="company" placeholder="Company (optional)" />
+    <input type="text" name="website" style="display: none" tabindex="-1" aria-hidden="true" />
+    <label
+      ><input type="checkbox" name="consent" required /> I agree to receive emails per the
+      <a href="/privacypolicy/">Privacy Policy</a>.</label
+    >
+    <button type="submit" class="btn-primary" data-cta="lead_submit">Get the checklist</button>
+    <div id="leadStatus" role="status" aria-live="polite"></div>
+  </form>
+</section>

@@ -1,0 +1,103 @@
+{
+  "global": {
+    "title": "U-Dig It AI Paid Ads Playbook",
+    "description": "Frameworks for generating paid ad copy, creatives, and targeting strategies for Google, Meta, and LinkedIn campaigns.",
+    "tone": "direct, benefit-driven, action-oriented",
+    "guardrails": "Ads must be truthful, avoid exaggerated claims, and comply with ad platform policies."
+  },
+  "platforms": {
+    "google_search": {
+      "headline_templates": [
+        "Save Time With {{PRODUCT_TITLE}}",
+        "AI Templates That Boost Productivity",
+        "Get Started With {{ENTRY_PRODUCT}} Today"
+      ],
+      "description_templates": [
+        "Unlock AI workflows with {{PRODUCT_TITLE}}. Save hours every week. Try it today risk-free.",
+        "Start small with {{ENTRY_PRODUCT}} and scale your AI stack as you grow.",
+        "Join {{CUSTOMER_COUNT}}+ businesses using U-Dig It AI."
+      ],
+      "cta": "Learn More",
+      "targeting": {
+        "keywords": [
+          "AI productivity tools",
+          "AI templates",
+          "AI for business",
+          "AI workflow automation"
+        ]
+      }
+    },
+    "meta_ads": {
+      "primary_text_templates": [
+        "⚡ Save 10 hours a week with {{PRODUCT_TITLE}}.",
+        "🚀 Start with {{ENTRY_PRODUCT}} and scale up your AI workflows.",
+        "🔥 Special offer: {{DISCOUNT_PERCENT}}% off {{PRODUCT_TITLE}} — limited time."
+      ],
+      "headline_templates": [
+        "AI That Works For You",
+        "Start With Quick Wins",
+        "Build Your AI Growth Stack"
+      ],
+      "description_templates": [
+        "Secure checkout · 30-day guarantee",
+        "Trusted by {{CUSTOMER_COUNT}}+ AI adopters"
+      ],
+      "cta": "Get Started",
+      "targeting": {
+        "audiences": ["SMBs", "Freelancers", "Agencies"],
+        "interests": ["AI tools", "Productivity", "Automation", "Startups"],
+        "placements": ["Facebook Feed", "Instagram Reels", "Stories"]
+      }
+    },
+    "linkedin_ads": {
+      "primary_text_templates": [
+        "📈 SMBs are scaling faster with {{PRODUCT_TITLE}}.",
+        "🤝 Agencies use {{PRODUCT_TITLE}} to deliver 2x client output.",
+        "⚡ Professionals save 10+ hours/week with {{ENTRY_PRODUCT}}."
+      ],
+      "headline_templates": [
+        "Boost Productivity With AI",
+        "Your AI Growth Accelerator",
+        "Trusted By {{CUSTOMER_COUNT}}+ Businesses"
+      ],
+      "cta": "Request Demo",
+      "targeting": {
+        "job_titles": ["Founder", "CEO", "Marketing Manager", "Operations Lead"],
+        "industries": ["Technology", "Consulting", "Marketing", "E-commerce"],
+        "company_size": ["2-10", "11-50", "51-200"]
+      }
+    }
+  },
+  "campaigns": {
+    "evergreen": [
+      {
+        "id": "quick_wins",
+        "platform": "meta_ads",
+        "headline": "Start With Quick Wins",
+        "target_product": "ai_quick_start_pack"
+      },
+      {
+        "id": "growth_stack",
+        "platform": "linkedin_ads",
+        "headline": "Build Your AI Growth Stack",
+        "target_product": "ai_mastery_hub"
+      }
+    ],
+    "seasonal": [
+      {
+        "id": "black_friday_ads",
+        "platform": "google_search",
+        "headline": "Black Friday AI Deals",
+        "target_product": "ai_master_vault"
+      }
+    ]
+  },
+  "integration": {
+    "utm_tracking": "All ad links must include utm_source={{PLATFORM}}&utm_campaign={{CAMPAIGN_ID}}",
+    "creative_rules": "Each ad must include a product benefit, social proof, and clear CTA.",
+    "budgeting": {
+      "default_daily_budget": "50 CAD",
+      "scaling_rule": "Increase spend 20% if ROAS > 2.0 for 3 consecutive days"
+    }
+  }
+}

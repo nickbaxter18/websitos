@@ -1,0 +1,149 @@
+name: Render Deploy with Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Websitos
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      BASE_URL: https://websitos2.onrender.com
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache pip wheels
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies (backend)
+        run: |
+          echo ">>> Installing backend dependencies"
+          python -m pip install --upgrade pip
+          pip install --prefer-binary -r requirements.txt || { echo "::error::pip install failed"; exit 1; }
+          pip install pytest pytest-github-actions-annotate-failures
+
+      - name: Enable problem matchers
+        continue-on-error: true
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/generic-errors.json"
+
+      - name: Check Render Deploy Hook Secret
+        run: |
+          echo ">>> Checking Render deploy hook secret"
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK is missing"
+            exit 1
+          fi
+
+      - name: Trigger Render Deploy via Webhook
+        run: |
+          echo ">>> Triggering Render deploy"
+          if ! curl -m 30 -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"; then
+            echo "::error::Failed to trigger Render deploy"
+            exit 1
+          fi
+          echo "✅ Render deploy webhook triggered"
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: deploy
+    continue-on-error: false
+    env:
+      BASE_URL: https://websitos2.onrender.com
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enable problem matchers
+        continue-on-error: true
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/generic-errors.json"
+
+      - name: Define endpoint check function
+        run: |
+          cat > check_endpoint.sh <<'EOF'
+          #!/bin/bash
+          URL=$1
+          NAME=$2
+          EXPECTED=$3
+          MAX_RETRIES=5
+          DELAY=5
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo ">>> Checking $NAME at $URL (attempt $i/$MAX_RETRIES)..."
+            RESPONSE=$(curl -s --fail --connect-timeout 10 --max-time 30 -w "HTTPSTATUS:%{http_code}" -o response.txt "$URL" || true)
+            BODY=$(cat response.txt)
+            STATUS=$(echo $RESPONSE | sed -e 's/.*HTTPSTATUS://')
+
+            if [ "$STATUS" -eq 200 ]; then
+              if [ -n "$EXPECTED" ] && ! echo "$BODY" | grep -q "$EXPECTED"; then
+                echo "⚠️ $NAME response did not contain expected content: $EXPECTED"
+                echo "Response body (truncated):"
+                echo "$BODY" | head -n 20
+                echo "::error file=smoke/$NAME.sh,line=1::$NAME content mismatch"
+                exit 1
+              fi
+              echo "✅ $NAME OK"
+              echo "$BODY" | head -n 20
+              break
+            else
+              echo "⚠️ $NAME failed with status $STATUS"
+              echo "Response body (truncated):"
+              echo "$BODY" | head -n 20
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "Retrying in $DELAY seconds..."
+                sleep $DELAY
+                DELAY=$((DELAY*2))
+              else
+                echo "::error file=smoke/$NAME.sh,line=1::$NAME check failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
+          EOF
+          chmod +x check_endpoint.sh
+
+      - name: Check API Health
+        run: ./check_endpoint.sh $BASE_URL/api/health "API Health" '"ok": true'
+
+      - name: Check Extended Status
+        run: ./check_endpoint.sh $BASE_URL/api/status "API Extended Status" '"ok": true'
+
+      - name: Check Root Health
+        run: ./check_endpoint.sh $BASE_URL/health "Root Health" '"ok": true'
+
+      - name: Check Frontend Homepage
+        run: ./check_endpoint.sh $BASE_URL/ "Frontend Homepage" '<!DOCTYPE html>'
+
+      - name: Upload Smoke Test Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-logs
+          path: |
+            response.txt
+            *.log
+          retention-days: 14

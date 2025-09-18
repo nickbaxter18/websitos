@@ -1,0 +1,90 @@
+{
+  "global": {
+    "title": "U-Dig It AI Content Marketing Playbook",
+    "description": "Frameworks for blog posts, SEO articles, social content, and newsletters that drive traffic into funnels.",
+    "tone": "educational, approachable, authority-building",
+    "guardrails": "All content must be truthful, ethical, and aligned with U-Dig It AI’s brand voice."
+  },
+  "content_types": {
+    "blog_posts": {
+      "structure": [
+        "Headline: SEO-optimized with main keyword",
+        "Intro: Pain point + promise",
+        "Section 1: Educate on the problem",
+        "Section 2: Present AI solution",
+        "Section 3: Case study or proof",
+        "CTA: Lead into {{ENTRY_PRODUCT_LINK}}"
+      ],
+      "placement": "website.blog"
+    },
+    "seo_articles": {
+      "structure": [
+        "Headline: Long-tail keyword",
+        "Meta description: 155 chars, keyword-rich",
+        "H2 subtopics: include related terms",
+        "Internal links: to {{PRODUCT_PAGES}}",
+        "CTA: Encourage freebie download or low-ticket offer"
+      ],
+      "placement": "website.blog, search.index"
+    },
+    "social_snippets": {
+      "formats": [
+        {
+          "id": "twitter_thread",
+          "headline": "⚡ How AI Saves 10 Hours/Week",
+          "steps": ["Hook", "Problem", "Solution", "Case study", "CTA: {{ENTRY_PRODUCT_LINK}}"]
+        },
+        {
+          "id": "linkedin_post",
+          "headline": "📈 SMBs Are Scaling Faster With AI",
+          "steps": [
+            "Pain point",
+            "3 actionable tips",
+            "Invite to {{COMMUNITY_LINK}}",
+            "CTA: {{PRODUCT_LINK}}"
+          ]
+        }
+      ],
+      "placement": "twitter, linkedin, facebook"
+    },
+    "newsletters": {
+      "structure": [
+        "Subject: Insight + curiosity hook",
+        "Intro: Relatable AI problem",
+        "Body: Actionable advice (short)",
+        "Case study or stat",
+        "CTA: Encourage funnel entry (lead magnet or {{ENTRY_PRODUCT_LINK}})"
+      ],
+      "placement": "email.newsletter"
+    }
+  },
+  "campaigns": {
+    "evergreen": [
+      {
+        "id": "ai_productivity",
+        "headline": "5 Ways AI Saves You 10 Hours a Week",
+        "keywords": ["AI productivity tools", "AI workflow automation"],
+        "target_product": "ai_quick_start_pack"
+      },
+      {
+        "id": "ai_scaling",
+        "headline": "How SMBs Use AI to Scale Operations",
+        "keywords": ["AI for small business", "AI scaling strategies"],
+        "target_product": "ai_mastery_hub"
+      }
+    ],
+    "seasonal": [
+      {
+        "id": "black_friday_ai",
+        "headline": "Black Friday AI Deals: Templates, Tools, and More",
+        "keywords": ["Black Friday AI deals", "AI template discounts"],
+        "target_product": "ai_pro_templates_vault"
+      }
+    ]
+  },
+  "integration": {
+    "utm_tracking": "All content CTAs must include utm_source=content&utm_campaign={{CAMPAIGN_NAME}}",
+    "internal_linking": "All articles must link to at least 2 product pages.",
+    "repurposing_rules": "Every blog post becomes a newsletter, 3 tweets, and 1 LinkedIn post."
+  }
+}

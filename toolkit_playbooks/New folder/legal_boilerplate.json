@@ -1,0 +1,28 @@
+{
+  "terms": {
+    "title": "Terms & Conditions",
+    "content": "By using U-Dig It AI products and services, you agree to comply with all applicable laws and these Terms. All purchases are for personal or business use only and may not be resold without permission. U-Dig It AI reserves the right to modify or update these Terms at any time. Continued use of our services constitutes acceptance of changes."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "content": "We respect your privacy. U-Dig It AI collects only the information necessary to provide and improve our services. This may include email, billing details, and usage data. We do not sell or share personal information with third parties. Data is stored securely and may be processed in compliance with Canadian PIPEDA, GDPR, and other applicable privacy regulations."
+  },
+  "refund": {
+    "title": "Refund Policy",
+    "content": "We offer a 30-day money back guarantee on eligible purchases. If you are unsatisfied, contact support at nickbaxter@udigit.ca within 30 days of purchase. Refunds will be processed back to the original payment method. Subscription products (e.g., AI Mastery Hub) can be cancelled anytime and will not renew after the current billing period."
+  },
+  "disclaimer": {
+    "title": "Disclaimer",
+    "content": "The information, tools, and templates provided by U-Dig It AI are intended for educational and business use only. We make no guarantees of specific results, revenue, or outcomes. Individual success depends on many factors including implementation, market conditions, and customer behavior. U-Dig It AI is not responsible for any decisions or actions taken based on the use of our products or services."
+  },
+  "support": {
+    "email": "nickbaxter@udigit.ca",
+    "sla": "All support requests will be responded to within 24 hours on business days (Mon–Fri)."
+  },
+  "footer_links": {
+    "terms_url": "/termsandconditions/",
+    "privacy_url": "/privacypolicy/",
+    "refund_url": "/refundpolicy/",
+    "disclaimer_url": "/disclaimer/"
+  }
+}

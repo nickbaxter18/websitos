@@ -1,0 +1,51 @@
+{
+  "global": {
+    "title": "U-Dig It AI Customer Advocacy Playbook",
+    "description": "Frameworks for customer advocacy including ambassador programs, review drives, and co-marketing case studies.",
+    "tone": "appreciative, community-driven, empowering",
+    "guardrails": "Advocacy must be voluntary, transparent, and rewarding for customers."
+  },
+  "advocacy_programs": {
+    "ambassadors": {
+      "headline": "🌟 Become a U-Dig It AI Ambassador",
+      "benefits": [
+        "Early access to new products",
+        "Exclusive ambassador-only community channel",
+        "Commission or rewards for referrals",
+        "Spotlight features in newsletters/blog"
+      ],
+      "requirements": [
+        "Active user of {{PRODUCT_TITLE}}",
+        "Willing to share success stories",
+        "Engaged in community discussions"
+      ],
+      "placement": "community_channel.announcements, referral_email.day_30"
+    },
+    "review_drives": {
+      "headline": "⭐ Share Your Experience, Get Rewarded",
+      "body": "Leave a review of {{PRODUCT_TITLE}} and earn {{REWARD}}.",
+      "platforms": ["G2", "Trustpilot", "LinkedIn", "Website testimonials"],
+      "placement": "retention_email.day_14, customer_portal"
+    }
+  },
+  "case_studies": {
+    "structure": [
+      "Intro: Who is the customer?",
+      "Challenge: What problem were they facing?",
+      "Solution: How did U-Dig It AI help?",
+      "Results: Quantifiable benefits (hours saved, revenue boosted, churn reduced)",
+      "Quote: Direct testimonial"
+    ],
+    "formats": ["Written blog post", "PDF one-pager", "Video testimonial"],
+    "placement": "landing_page.proof, sales_enablement_playbook.json, content_marketing_playbook.json"
+  },
+  "integration": {
+    "crm_tracking": "Tag advocacy customers in CRM for follow-up campaigns.",
+    "reporting": "Advocacy results (reviews, referrals, case studies) tracked in reporting_dashboard_spec.json",
+    "cross_playbook_hooks": [
+      "referral_email_sequence.json",
+      "community_engagement_playbook.json",
+      "growth_playbook.json"
+    ]
+  }
+}

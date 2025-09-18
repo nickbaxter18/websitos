@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["src/validateEnv.ts", "src/vite-env.d.ts"]
+}

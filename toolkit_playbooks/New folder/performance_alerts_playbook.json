@@ -1,0 +1,66 @@
+{
+  "global": {
+    "title": "U-Dig It AI Performance Alerts Playbook",
+    "description": "Framework for automated alerts when funnel performance metrics drop or exceed thresholds.",
+    "tone": "urgent, clear, action-oriented",
+    "guardrails": "Alerts must include context and recommended actions. Avoid false alarms by requiring consistent data dips before firing."
+  },
+  "alert_channels": ["email", "slack", "dashboard_notification"],
+  "metrics_monitored": {
+    "conversion_rate": {
+      "threshold": "below 2%",
+      "alert_message": "⚠️ Conversion rate dropped below 2% for {{PRODUCT_TITLE}}.",
+      "recommendations": [
+        "Check landing page headline and CTA performance.",
+        "Run A/B test on offer summary page.",
+        "Review ad targeting for lead quality."
+      ]
+    },
+    "churn_rate": {
+      "threshold": "above 10%",
+      "alert_message": "⚠️ Churn rate exceeded 10% for {{PRODUCT_TITLE}}.",
+      "recommendations": [
+        "Review churn survey results.",
+        "Trigger retention_email_sequence.json.",
+        "Consider a downsell offer or pause option."
+      ]
+    },
+    "roas": {
+      "threshold": "below 1.5",
+      "alert_message": "⚠️ ROAS dropped below 1.5 on {{CAMPAIGN_NAME}}.",
+      "recommendations": [
+        "Check ad creative fatigue.",
+        "Reallocate budget to top-performing campaigns.",
+        "Review landing page load speed and CTA placement."
+      ]
+    },
+    "refund_rate": {
+      "threshold": "above 15%",
+      "alert_message": "⚠️ Refund rate exceeded 15% for {{PRODUCT_TITLE}}.",
+      "recommendations": [
+        "Check refund requests for common themes.",
+        "Review product onboarding experience.",
+        "Ensure refund guarantee is clear but not over-inviting abuse."
+      ]
+    },
+    "revenue_drop": {
+      "threshold": "20% drop vs. last 7-day average",
+      "alert_message": "⚠️ Revenue dropped 20% compared to last week.",
+      "recommendations": [
+        "Check seasonal trends.",
+        "Review ad campaign status.",
+        "Ensure Stripe links and checkout are functioning properly."
+      ]
+    }
+  },
+  "integration": {
+    "trigger_frequency": "hourly",
+    "data_sources": ["reporting_dashboard_spec.json", "Stripe", "GA4", "CRM"],
+    "alert_routing": {
+      "email": "nickbaxter@udigit.ca",
+      "slack": "#funnel-alerts",
+      "dashboard": "reporting_dashboard_spec.json"
+    },
+    "escalation_rules": "If same metric fails 3 consecutive checks, escalate to critical alert with immediate action required."
+  }
+}

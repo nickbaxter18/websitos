@@ -1,0 +1,70 @@
+{
+  "global": {
+    "title": "U-Dig It AI Video Marketing Playbook",
+    "description": "Frameworks for creating YouTube tutorials, TikTok/Reels, and promo videos that feed into funnels.",
+    "tone": "educational, engaging, story-driven",
+    "guardrails": "Keep videos concise, transparent, and value-first. Never exaggerate results."
+  },
+  "video_types": {
+    "youtube_tutorials": {
+      "structure": [
+        "Hook (pain point)",
+        "Intro (what they’ll learn)",
+        "Step-by-step walkthrough",
+        "Case study or result",
+        "CTA: link to {{PRODUCT_LINK}}"
+      ],
+      "length": "6–12 minutes",
+      "placement": "YouTube, blog.embeds"
+    },
+    "tiktok_reels": {
+      "structure": [
+        "Hook in first 3 seconds",
+        "Show quick win (before/after)",
+        "Punchy caption with stats",
+        "CTA: bio link → {{ENTRY_PRODUCT_LINK}}"
+      ],
+      "length": "15–45 seconds",
+      "placement": "TikTok, Instagram Reels, YouTube Shorts"
+    },
+    "promo_videos": {
+      "structure": [
+        "Problem intro",
+        "Show AI solution in action",
+        "Testimonial or proof",
+        "Strong CTA: {{PRODUCT_LINK}}"
+      ],
+      "length": "30–90 seconds",
+      "placement": "landing_page.hero, offer_summary.hero, ads"
+    }
+  },
+  "campaigns": {
+    "evergreen": [
+      {
+        "id": "time_saver",
+        "headline": "⏱ Save 10 Hours/Week With AI Templates",
+        "platform": "YouTube",
+        "target_product": "ai_pro_templates_vault"
+      },
+      {
+        "id": "starter_pack_demo",
+        "headline": "🚀 Quick Wins in 5 Minutes",
+        "platform": "TikTok",
+        "target_product": "ai_quick_start_pack"
+      }
+    ],
+    "seasonal": [
+      {
+        "id": "black_friday_spot",
+        "headline": "🖤 Black Friday AI Deals",
+        "platform": "YouTube Shorts",
+        "target_product": "ai_master_vault"
+      }
+    ]
+  },
+  "integration": {
+    "cta_rules": "All videos must end with a CTA linking to product funnel via UTM-tracked URL.",
+    "repurposing": "Each tutorial → cut into 3 short-form clips. Each promo → convert into ad creatives.",
+    "seo": "Video titles, descriptions, and tags must include funnel keywords."
+  }
+}

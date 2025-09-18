@@ -1,0 +1,85 @@
+{
+  "global": {
+    "title": "U-Dig It AI Personalization Engine Playbook",
+    "description": "Framework for generating dynamic funnels, CTAs, and content tailored to user persona, behavior, or source traffic.",
+    "tone": "adaptive, customer-centric, context-aware",
+    "guardrails": "Personalization must respect privacy, avoid creepiness, and always disclose data usage where required (GDPR, PIPEDA)."
+  },
+  "personalization_rules": {
+    "by_persona": {
+      "freelancer": {
+        "headline": "⚡ Save Hours Solo — AI That Works For You",
+        "cta": "Start With Spark Starter",
+        "offers": ["ai_spark_starter", "ai_quick_start_pack"]
+      },
+      "smb": {
+        "headline": "📈 Grow Your Team’s Productivity With AI",
+        "cta": "Get AI Mastery Hub",
+        "offers": ["ai_mastery_hub", "ai_pro_templates_vault"]
+      },
+      "agency": {
+        "headline": "🤝 Scale Client Output With AI Tools",
+        "cta": "Unlock The Master Vault",
+        "offers": ["ai_master_vault", "ai_business_transformation"]
+      }
+    },
+    "by_behavior": {
+      "new_visitor": {
+        "headline": "👋 First Time Here? Start With Quick Wins",
+        "cta": "Grab Quick Start Pack",
+        "offers": ["ai_quick_start_pack"]
+      },
+      "returning": {
+        "headline": "🚀 Welcome Back — Ready to Go Bigger?",
+        "cta": "Upgrade to Hub or Vault",
+        "offers": ["ai_mastery_hub", "ai_master_vault"]
+      },
+      "cart_abandon": {
+        "headline": "💡 Don’t Miss Out — Your AI Tools Are Waiting",
+        "cta": "Complete Your Checkout Now",
+        "offers": ["last_viewed_product"],
+        "trigger": "exit_intent"
+      }
+    },
+    "by_traffic_source": {
+      "google_ads": {
+        "headline": "⚡ AI Templates That Boost Productivity",
+        "cta": "Try Pro Templates Vault",
+        "offers": ["ai_pro_templates_vault"]
+      },
+      "linkedin": {
+        "headline": "📊 SMBs Are Scaling With AI",
+        "cta": "Join Mastery Hub",
+        "offers": ["ai_mastery_hub"]
+      },
+      "tiktok": {
+        "headline": "🔥 Quick AI Wins in Minutes",
+        "cta": "Start With Spark",
+        "offers": ["ai_spark_starter", "ai_quick_start_pack"]
+      }
+    }
+  },
+  "dynamic_elements": {
+    "cta_variants": [
+      "Get Instant Access",
+      "Start My Free Trial",
+      "Unlock AI Power Now",
+      "Join {{PRODUCT_TITLE}} Today"
+    ],
+    "content_blocks": [
+      "Testimonials: rotate based on persona",
+      "Case studies: select based on industry",
+      "ROI calculators: show by use case"
+    ],
+    "layouts": [
+      "Short-form landing page (mobile-first)",
+      "Long-form sales letter (education-heavy)",
+      "Comparison-focused (for competitor traffic)"
+    ]
+  },
+  "integration": {
+    "crm": "Store personalization attributes (persona, behavior, source) for each lead.",
+    "email": "Trigger dynamic email flows based on personalization rules.",
+    "reporting": "Log conversion impact of each personalization variant in reporting_dashboard_spec.json."
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "brand": {
+    "name": "U-Dig It AI",
+    "email": "nickbaxter@udigit.ca",
+    "ga4_measurement_id": "G-BF3NB7NFEL"
+  },
+  "palette": {
+    "primary_black": "#0F0F10",
+    "secondary_gray": "#5A5A5A",
+    "silver": "#C0C0C0",
+    "light_gray": "#F5F5F5",
+    "white": "#FFFFFF",
+    "gold_cta": "#E1BC56",
+    "gold_cta_hover": "#C8A94A",
+    "red_cta": "#A90F0F",
+    "red_cta_hover": "#8C0C0C"
+  },
+  "fonts": {
+    "primary": "Inter, sans-serif",
+    "fallback": "system-ui, Arial, Helvetica"
+  },
+  "buttons": {
+    "primary": {
+      "background": "#E1BC56",
+      "color": "#000000",
+      "hover": "#C8A94A"
+    },
+    "secondary": {
+      "background": "#C0C0C0",
+      "color": "#0F0F10",
+      "hover": "#5A5A5A"
+    },
+    "danger": {
+      "background": "#A90F0F",
+      "color": "#FFFFFF",
+      "hover": "#8C0C0C"
+    }
+  },
+  "layout": {
+    "max_width": "1200px",
+    "section_padding": "3rem 1rem",
+    "card_radius": "12px",
+    "shadow": "0 4px 12px rgba(0,0,0,0.08)"
+  }
+}

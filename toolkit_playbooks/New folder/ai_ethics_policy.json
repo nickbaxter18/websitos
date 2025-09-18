@@ -1,0 +1,49 @@
+{
+  "global": {
+    "title": "U-Dig It AI Ethics Policy",
+    "description": "Guidelines for embedding responsible AI practices into all funnels, product pages, and reports.",
+    "tone": "transparent, trustworthy, compliance-focused",
+    "guardrails": "All AI usage must comply with GDPR, PIPEDA, and global AI ethics standards. Avoid bias, manipulation, or false claims."
+  },
+  "principles": {
+    "fairness": {
+      "statement": "AI products must treat all users fairly, avoiding bias in templates, prompts, or recommendations.",
+      "implementation": ["Bias testing for new templates", "Review loops for fairness in workflows"]
+    },
+    "transparency": {
+      "statement": "Users must know when they are interacting with AI or AI-generated content.",
+      "implementation": [
+        "Disclosure banners on AI-driven features",
+        "Clear labeling in marketing content"
+      ]
+    },
+    "accountability": {
+      "statement": "U-Dig It AI is accountable for outputs and customer impact.",
+      "implementation": [
+        "Audit trails for template changes",
+        "Regular governance reviews (see sustainability_esg_playbook.json)"
+      ]
+    },
+    "privacy": {
+      "statement": "User data must always be handled securely and with consent.",
+      "implementation": [
+        "Data minimization principles",
+        "Secure storage of sensitive fields",
+        "Compliance with GDPR/PIPEDA"
+      ]
+    },
+    "safety": {
+      "statement": "AI should not produce harmful or misleading outputs.",
+      "implementation": [
+        "Filters for disallowed content",
+        "Human-in-the-loop escalation for flagged cases"
+      ]
+    }
+  },
+  "integration": {
+    "funnel": "Every funnel page must include a disclaimer of responsible AI use.",
+    "emails": "Footers must state: ‘U-Dig It AI follows ethical AI principles — transparency, fairness, accountability.’",
+    "reports": "Board/investor reports must include an ESG + ethics compliance section.",
+    "audits": "Quarterly audits tied into sustainability_esg_playbook.json governance metrics."
+  }
+}

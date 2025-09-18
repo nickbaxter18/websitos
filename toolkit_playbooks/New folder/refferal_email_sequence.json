@@ -1,0 +1,60 @@
+{
+  "global": {
+    "from_name": "U-Dig It AI",
+    "from_email": "nickbaxter@udigit.ca",
+    "support_email": "nickbaxter@udigit.ca",
+    "tone": "friendly, community-driven, appreciative",
+    "cta_style": "bold, rewarding, share-focused"
+  },
+  "sequence": {
+    "day_0": {
+      "subject": "🎉 You’re In — Share AI Wins With Friends!",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Thanks for joining {{PRODUCT_TITLE}} — we’re excited to see what you build!",
+        "Did you know? You can help your friends level up with AI too.",
+        "👉 Share your unique referral link: {{REFERRAL_LINK}}",
+        "Every referral gets them {{REFERRAL_DISCOUNT}}, and you’ll earn {{REFERRAL_REWARD}} as a thank-you."
+      ]
+    },
+    "day_3": {
+      "subject": "🤝 Friends Don’t Let Friends Miss Out on AI",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "You’ve seen the value of {{PRODUCT_TITLE}} already.",
+        "Now imagine if your colleagues, friends, or network also had access to the same AI workflows.",
+        "👉 Share your link: {{REFERRAL_LINK}}",
+        "You’ll give them {{REFERRAL_DISCOUNT}} off — and you’ll unlock {{REFERRAL_REWARD}} in return."
+      ]
+    },
+    "day_7": {
+      "subject": "🚀 Leaderboard Update — See How You Rank",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Our referral community is growing fast!",
+        "Check the leaderboard here: {{LEADERBOARD_LINK}}",
+        "Top referrers this week are earning extra bonuses like {{BONUS_REWARD}}.",
+        "👉 Keep sharing: {{REFERRAL_LINK}}"
+      ]
+    },
+    "day_14": {
+      "subject": "🎁 Double Rewards Week — Don’t Miss Out",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "For this week only, every referral earns you {{DOUBLE_REWARD}} instead of the usual reward.",
+        "That means helping a friend also doubles your bonus.",
+        "👉 Start sharing today: {{REFERRAL_LINK}}"
+      ]
+    },
+    "day_30": {
+      "subject": "🏆 Thanks for Building the U-Dig It AI Community",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "We couldn’t do this without our amazing members like you.",
+        "Your referrals help shape a stronger AI community.",
+        "👉 Share one more time today: {{REFERRAL_LINK}}",
+        "Every share matters, and we’ll continue to reward your loyalty."
+      ]
+    }
+  }
+}

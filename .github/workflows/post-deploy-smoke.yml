@@ -1,0 +1,68 @@
+name: Post-Deploy Smoke Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *' # run every hour as a safety net
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    continue-on-error: false
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enable problem matchers
+        continue-on-error: true
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/generic-errors.json"
+
+      - name: Run smoke tests with retries
+        run: |
+          set +e
+          MAX_RETRIES=3
+          DELAY=5
+
+          run_check() {
+            URL=$1
+            NAME=$2
+            FILE=$3
+
+            for i in $(seq 1 $MAX_RETRIES); do
+              echo ">>> Checking $NAME at $URL (attempt $i/$MAX_RETRIES)"
+              RESPONSE=$(curl -s -o response.txt -w "%{http_code}" "$URL")
+              STATUS=$?
+
+              if [ "$STATUS" -eq 0 ] && grep -q "200" <<< "$RESPONSE"; then
+                echo "✅ $NAME OK"
+                return 0
+              else
+                echo "⚠️ $NAME failed with status $RESPONSE"
+                if [ $i -lt $MAX_RETRIES ]; then
+                  echo "Retrying in $DELAY seconds..."
+                  sleep $DELAY
+                  DELAY=$((DELAY*2))
+                else
+                  echo "::error file=smoke/$FILE.sh,line=1::$NAME check failed after $MAX_RETRIES attempts (status $RESPONSE)"
+                  return 1
+                fi
+              fi
+            done
+          }
+
+          run_check https://websitos.onrender.com/api/health "API Health" api_health || exit 1
+          run_check https://websitos.onrender.com/api/status "API Extended Status" api_status || exit 1
+          run_check https://websitos.onrender.com/health "Root Health" root_health || exit 1
+          run_check https://websitos.onrender.com/ "Frontend Homepage" frontend_homepage || exit 1
+
+      - name: Upload Smoke Test Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-deploy-smoke-logs
+          path: response.txt
+          retention-days: 14

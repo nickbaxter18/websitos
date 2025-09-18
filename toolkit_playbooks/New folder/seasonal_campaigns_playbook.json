@@ -1,0 +1,50 @@
+{
+  "global": {
+    "title": "U-Dig It AI Seasonal Campaigns Playbook",
+    "description": "Frameworks for seasonal promotions, holiday offers, and Q4 urgency campaigns.",
+    "tone": "festive, compelling, value-first",
+    "guardrails": "Discounts and offers must remain truthful. Avoid fake scarcity."
+  },
+  "campaigns": {
+    "black_friday": {
+      "headline": "🖤 Black Friday Mega Deal",
+      "subheadline": "Save {{DISCOUNT_PERCENT}}% on {{PRODUCT_TITLE}} — this weekend only!",
+      "cta": "Unlock Deal Now",
+      "validity": "Friday to Monday",
+      "placement": "landing_page.hero, email.day_0, community_channel.announcements"
+    },
+    "cyber_monday": {
+      "headline": "💻 Cyber Monday Exclusive",
+      "subheadline": "One day only: get {{BONUS_ITEM}} free with {{PRODUCT_TITLE}}.",
+      "cta": "Claim Your Bonus",
+      "validity": "Monday only",
+      "placement": "offer_summary.hero, email.day_0"
+    },
+    "new_year": {
+      "headline": "🎉 New Year, New AI Stack",
+      "subheadline": "Kick off {{YEAR}} with {{DISCOUNT_PERCENT}}% off {{ENTRY_PRODUCT}}.",
+      "cta": "Start Strong",
+      "validity": "First week of January",
+      "placement": "landing_page.hero, lead_capture_email.day_1"
+    },
+    "valentines": {
+      "headline": "❤️ Double the Love, Double the Templates",
+      "subheadline": "Buy {{PRODUCT_TITLE}} today and gift a free license to a friend.",
+      "cta": "Share the Love",
+      "validity": "February 14",
+      "placement": "thank_you.page, referral_email.day_0"
+    },
+    "q4_push": {
+      "headline": "📈 End the Year Strong",
+      "subheadline": "Bundle {{PRODUCT_TITLE}} with {{UPSELL_TITLE}} and save {{DISCOUNT_PERCENT}}%.",
+      "cta": "Grab the Bundle",
+      "validity": "October–December",
+      "placement": "landing_page.hero, thank_you.upsells, retention_email.day_30"
+    }
+  },
+  "integration": {
+    "utm_tracking": "All seasonal campaign links must include utm_source=seasonal&utm_campaign={{CAMPAIGN_NAME}}",
+    "discount_logic": "Discounts pulled dynamically from product_registry or campaign settings.",
+    "bonus_logic": "Bonuses (extra templates, licenses, or services) linked from registry cross-sells."
+  }
+}

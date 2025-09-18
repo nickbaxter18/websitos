@@ -1,0 +1,14 @@
+# pack-refs with: peeled fully-peeled sorted 
+c2056bbd9f62a3d8c3331888bd4ce4126447f58b refs/heads/dependabot/npm_and_yarn/better-sqlite3-12.2.0
+583ae506b028586dd6c5af197fabefb158f8e0f3 refs/heads/dependabot/npm_and_yarn/eslint-config-prettier-10.1.8
+cc77538431e284451a00ac7ecd117af8c47a41df refs/heads/dependabot/npm_and_yarn/eslint-plugin-react-hooks-5.2.0
+74eaeba4d1317f2c9dd449699b46e7dfc6d5b106 refs/heads/dependabot/npm_and_yarn/hookform/resolvers-5.2.1
+0db32c0d1faedd5066b107cd17e52fa785a90792 refs/heads/dependabot/npm_and_yarn/vite-tsconfig-paths-5.1.4
+08c7f6d7e3ef9f6d588d04ca96aaaf981e9aca74 refs/heads/dependabot/pip/black-25.1.0
+f43fef8a7f9cbb9fc25324bc2f62be7690fadaa7 refs/heads/dependabot/pip/fastapi-approx-eq-0.116.1
+8be5e3c868df64a3ba369249db0b52a64768f65f refs/heads/dependabot/pip/grpcio-1.74.0
+04dca3e906fd34160e5e6e43c9502ddb1489b43d refs/heads/dependabot/pip/pytest-8.4.2
+2bde35c317100e0af97fbb362ac483af35fdb779 refs/heads/dependabot/pip/python-dotenv-1.1.1
+612b3448987eee9c4b1908956f024cf660e9d532 refs/heads/dependabot/pip/uvicorn-standard--approx-eq-0.35.0
+67604108bd38b30695774102f1ebe080e6e823ae refs/heads/gh-pages
+d7d3314d099da99d812df36b6dffd5acbd44a5d7 refs/heads/main

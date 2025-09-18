@@ -1,0 +1,81 @@
+name: Ops Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ops/**'
+      - 'toolkits/**'
+      - '.github/workflows/ops-pipeline.yml'
+  workflow_dispatch:
+
+jobs:
+  ops:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+
+      - name: Load default env file
+        run: cp .env.example .env
+
+      - name: Enable problem matchers
+        run: echo "::add-matcher::.github/matchers/error.json"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Cache pnpm
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          echo ">>> Installing dependencies"
+          pnpm install --frozen-lockfile || { echo "::error::pnpm install failed"; exit 1; }
+          python -m pip install --upgrade pip
+          pip install --prefer-binary -r requirements.txt || { echo "::error::pip install failed"; exit 1; }
+          pip install pytest pytest-github-actions-annotate-failures
+
+      - name: Run Ops Cycle
+        run: |
+          echo ">>> Starting Ops Cycle"
+          pnpm opscycle > ops-report.json || true
+          if [ ! -s ops-report.json ]; then echo '{}' > ops-report.json; fi
+
+      - name: Run Security Scan
+        run: |
+          echo ">>> Starting Security Scan"
+          pnpm secscan --json > secscan-report.json || true
+          if [ ! -s secscan-report.json ]; then echo '{}' > secscan-report.json; fi
+
+      - name: Upload Ops Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops-reports
+          path: |
+            ops-report.json
+            secscan-report.json
+          retention-days: 14

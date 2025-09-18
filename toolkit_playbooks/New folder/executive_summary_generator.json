@@ -1,0 +1,77 @@
+{
+  "global": {
+    "title": "U-Dig It AI Executive Summary Generator",
+    "description": "Framework for generating weekly/monthly executive summaries with KPIs, highlights, risks, and recommendations.",
+    "tone": "strategic, concise, actionable",
+    "guardrails": "Summaries must be data-driven, avoid fluff, and always include clear next actions."
+  },
+  "frequency": {
+    "weekly": {
+      "title": "Weekly Executive Summary",
+      "sections": ["overview", "kpis", "wins", "risks", "recommendations"]
+    },
+    "monthly": {
+      "title": "Monthly Executive Summary",
+      "sections": ["overview", "kpis", "trends", "risks", "opportunities", "recommendations"]
+    }
+  },
+  "sections": {
+    "overview": {
+      "content": [
+        "Total revenue vs. last period",
+        "Customer growth",
+        "Top funnel performance highlights"
+      ]
+    },
+    "kpis": {
+      "content": [
+        "Conversion rate",
+        "Average order value",
+        "Churn rate",
+        "ROAS",
+        "Referral growth"
+      ],
+      "data_source": "reporting_dashboard_spec.json"
+    },
+    "wins": {
+      "content": [
+        "Successful campaigns",
+        "Best performing upsell",
+        "Highest converting landing page"
+      ]
+    },
+    "trends": {
+      "content": [
+        "Month-over-month revenue change",
+        "Emerging customer segments",
+        "Top 3 content or ad themes"
+      ]
+    },
+    "risks": {
+      "content": [
+        "Conversion dips below target",
+        "Churn rate above threshold",
+        "Ad fatigue or rising CAC"
+      ]
+    },
+    "opportunities": {
+      "content": ["Cross-sell opportunities", "New seasonal campaigns", "Content gaps by keyword"]
+    },
+    "recommendations": {
+      "content": [
+        "Next A/B test to run",
+        "New pricing experiment to launch",
+        "Retention playbook triggers to apply",
+        "Community or referral incentives to double-down on"
+      ]
+    }
+  },
+  "integration": {
+    "reporting_hook": "Pull metrics from reporting_dashboard_spec.json",
+    "distribution": {
+      "email": "Send to leadership weekly and monthly",
+      "slack": "#executive-updates",
+      "pdf_export": "Auto-generate PDF for archiving"
+    }
+  }
+}

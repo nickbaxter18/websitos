@@ -1,0 +1,85 @@
+{
+  "global": {
+    "title": "U-Dig It AI Copywriting Playbook",
+    "description": "Framework for brand-consistent, SaaS-optimized copy including headlines, CTAs, and email templates.",
+    "tone": "clear, benefit-driven, authoritative but approachable",
+    "guardrails": "Copy must remain truthful, avoid hype, and align with AI ethics policy (see ai_ethics_policy.json)."
+  },
+  "headlines": {
+    "benefit_driven": [
+      "⚡ Save {{HOURS_SAVED}} Hours a Week With AI",
+      "📈 Grow Your Business Faster With {{PRODUCT_TITLE}}",
+      "🚀 Unlock AI-Powered Productivity Today"
+    ],
+    "problem_solution": [
+      "Struggling With [Pain Point]? Here’s the AI Fix",
+      "Stop Wasting Hours on [Task] — Automate It With AI",
+      "From Chaos to Clarity: AI Workflows That Just Work"
+    ],
+    "social_proof": [
+      "Trusted by {{CUSTOMER_COUNT}}+ Businesses",
+      "Join the Community of {{INDUSTRY}} Professionals Scaling With AI"
+    ]
+  },
+  "ctas": {
+    "direct": [
+      "👉 Get Instant Access",
+      "🚀 Start My AI Journey",
+      "🔥 Unlock {{PRODUCT_TITLE}} Now"
+    ],
+    "risk_reversal": [
+      "✅ Try It Risk-Free — 30 Day Guarantee",
+      "🔒 Secure My Spot, Cancel Anytime"
+    ],
+    "urgency": ["⚡ Claim This Limited-Time Offer", "⏳ Offer Ends Soon — Don’t Miss Out"]
+  },
+  "email_intros": {
+    "personal": [
+      "Hi {{CUSTOMER_NAME}}, quick question for you…",
+      "Hope your week’s going well! I wanted to share something useful."
+    ],
+    "pain_point": [
+      "Struggling with [Pain Point]? You’re not alone.",
+      "Most {{INDUSTRY}} leaders we talk to face the same issue: [Problem]."
+    ],
+    "authority": [
+      "We’ve helped {{CUSTOMER_COUNT}}+ businesses cut hours with AI.",
+      "Here’s what top {{INDUSTRY}} teams are doing with AI right now."
+    ]
+  },
+  "body_copy": {
+    "frameworks": {
+      "pas": {
+        "name": "Problem-Agitate-Solution",
+        "structure": [
+          "Problem: Identify the customer pain point.",
+          "Agitate: Show the cost of ignoring it.",
+          "Solution: Present {{PRODUCT_TITLE}} as the answer."
+        ]
+      },
+      "aida": {
+        "name": "Attention-Interest-Desire-Action",
+        "structure": [
+          "Attention: Hook with a strong headline.",
+          "Interest: Share a benefit or stat.",
+          "Desire: Paint the picture of success.",
+          "Action: CTA with urgency + trust element."
+        ]
+      },
+      "bab": {
+        "name": "Before-After-Bridge",
+        "structure": [
+          "Before: Current pain or inefficiency.",
+          "After: The ideal outcome with AI.",
+          "Bridge: How {{PRODUCT_TITLE}} gets you there."
+        ]
+      }
+    }
+  },
+  "integration": {
+    "funnels": "Landing pages, offer summaries, thank-you upsells",
+    "emails": "Post-purchase, retention, lead capture, referral",
+    "ads": "Google, Meta, LinkedIn ad copy (see paid_ads_playbook.json)",
+    "reporting": "Track headline/CTA performance in reporting_dashboard_spec.json"
+  }
+}

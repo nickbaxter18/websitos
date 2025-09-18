@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: websiteos
+    env: python
+    buildCommand: |
+      echo "==== START CLEAN BUILD ===="
+
+      # Force full clean build every time
+      rm -rf dist node_modules .vite .cache __pycache__ .venv || true
+
+      # Install Python dependencies (with Black for formatting)
+      pip install -r requirements.txt
+
+      # Install Node dependencies
+      npm install --legacy-peer-deps
+
+      echo "==== Running Vite build with debug ===="
+      npm run build -- --debug --verbose || { echo "❌ Vite build failed"; exit 1; }
+
+      echo "==== dist top-level (after build) ===="
+      ls -lh dist || true
+      echo "==== dist/assets (after build) ===="
+      ls -lh dist/assets || echo "⚠️ dist/assets missing after build"
+
+      echo "==== recursive dist tree (3 levels) ===="
+      find dist -maxdepth 3 -type f -print || true
+
+      echo "==== END CLEAN BUILD ===="
+
+      test -f dist/index.html || (echo "❌ dist/index.html missing" && exit 1)
+      test -s dist/index.html || (echo "❌ index.html exists but is empty" && exit 1)
+      if ! find dist -type f -name "*.js" | grep -q .; then
+        echo "❌ No JS bundle generated"; exit 1;
+      fi
+
+      echo "✅ Final dist structure:" && ls -R dist
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    cacheDirectories:
+      - ~/.cache/pip
+      - ~/.npm
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PYTHON_VERSION
+        value: 3.11

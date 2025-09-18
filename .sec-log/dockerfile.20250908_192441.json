@@ -1,0 +1,26 @@
+﻿[
+  {
+    "issue": "No USER specified",
+    "fix": "Add \u0027USER node\u0027 before CMD",
+    "severity": "high"
+  },
+  {
+    "autofix": "Inserted USER node"
+  },
+  {
+    "issue": "No HEALTHCHECK defined",
+    "fix": "Add HEALTHCHECK CMD curl -f http://localhost/ || exit 1",
+    "severity": "medium"
+  },
+  {
+    "autofix": "Added default HEALTHCHECK"
+  },
+  {
+    "issue": "npm install used",
+    "fix": "Use npm ci for reproducible builds",
+    "severity": "medium"
+  },
+  {
+    "autofix": "Replaced npm install with npm ci"
+  }
+]

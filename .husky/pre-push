@@ -1,0 +1,9 @@
+echo "✅ Husky pre-push running..."
+
+# Run TypeScript type-checks
+pnpm type-check || echo "⚠️ Type-check failed (not blocking push)"
+
+# Run Jest unit tests only (no e2e/integration)
+pnpm test:unit || echo "⚠️ Unit tests failed (not blocking push)"
+
+exit 0

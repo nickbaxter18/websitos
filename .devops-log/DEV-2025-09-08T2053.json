@@ -1,0 +1,17 @@
+{
+  "build": {
+    "status": "skipped",
+    "durationSec": 0
+  },
+  "container": {
+    "scan": "skipped",
+    "cves": []
+  },
+  "deploy": {
+    "status": "skipped",
+    "strategy": "standard"
+  },
+  "monitor": {
+    "health": "ok"
+  }
+}

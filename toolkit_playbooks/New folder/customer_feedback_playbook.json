@@ -1,0 +1,52 @@
+{
+  "global": {
+    "title": "U-Dig It AI Customer Feedback Playbook",
+    "description": "Frameworks for surveys, NPS, testimonial collection, and feature feedback to improve retention and build proof.",
+    "tone": "respectful, customer-first, improvement-focused",
+    "guardrails": "Feedback collection must be optional, concise, and never disruptive to product experience."
+  },
+  "survey_types": {
+    "nps_survey": {
+      "headline": "⭐ How Likely Are You to Recommend U-Dig It AI?",
+      "scale": "0-10",
+      "labels": ["0 = Not at all likely", "10 = Extremely likely"],
+      "follow_up": "What’s the main reason for your score?",
+      "placement": "post_purchase_email.day_14, customer_portal"
+    },
+    "feature_feedback": {
+      "headline": "💡 Help Us Improve",
+      "questions": [
+        "What’s the most valuable feature of {{PRODUCT_TITLE}}?",
+        "What’s one feature you wish we added?",
+        "How easy was it to get started (1-5)?"
+      ],
+      "placement": "thank_you.page, churn_survey"
+    },
+    "testimonial_request": {
+      "headline": "🎤 Share Your Success Story",
+      "body": "Tell us how {{PRODUCT_TITLE}} helped you. We may feature you in our community or blog!",
+      "placement": "retention_email.day_7, referral_email.day_14"
+    }
+  },
+  "automation": {
+    "trigger_rules": [
+      {
+        "event": "purchase_day_14",
+        "action": "send_nps_survey"
+      },
+      {
+        "event": "upsell_accept",
+        "action": "send_testimonial_request"
+      },
+      {
+        "event": "cancel",
+        "action": "send_feature_feedback"
+      }
+    ]
+  },
+  "integration": {
+    "crm_storage": "All feedback stored in CRM (tag: feedback, testimonial, nps)",
+    "dashboard_hook": "NPS and feedback data must be visualized in reporting_dashboard_spec.json",
+    "reuse_logic": "Positive testimonials feed into growth_playbook.json under social_proof."
+  }
+}

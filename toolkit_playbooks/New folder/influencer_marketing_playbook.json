@@ -1,0 +1,82 @@
+{
+  "global": {
+    "title": "U-Dig It AI Influencer Marketing Playbook",
+    "description": "Framework for influencer campaigns, outreach templates, and collaboration structures to promote funnels.",
+    "tone": "collaborative, professional, value-driven",
+    "guardrails": "All influencer relationships must be transparent and compliant with disclosure regulations (FTC, ASA, etc.)."
+  },
+  "campaigns": {
+    "product_launch": {
+      "headline": "🚀 Partner With Us on the Launch of {{PRODUCT_TITLE}}",
+      "deliverables": [
+        "1x YouTube walkthrough video",
+        "3x Instagram Reels/TikToks",
+        "1x LinkedIn or Twitter thread",
+        "CTA linking to {{PRODUCT_PAYMENT_LINK}} with tracking UTM"
+      ],
+      "incentives": [
+        "Affiliate commission via Stripe payouts",
+        "Free lifetime access to {{PRODUCT_TITLE}}",
+        "Spotlight feature in U-Dig It AI community/blog"
+      ],
+      "timeline": "2-week campaign during launch window"
+    },
+    "evergreen": {
+      "headline": "📈 Ongoing Collab Opportunity With U-Dig It AI",
+      "deliverables": [
+        "Monthly content mention of {{PRODUCT_TITLE}}",
+        "Quarterly case study feature",
+        "Community Q&A participation"
+      ],
+      "incentives": [
+        "Recurring commission",
+        "Tiered bonuses for top performers",
+        "Exclusive early access to new products"
+      ],
+      "timeline": "Continuous, reviewed quarterly"
+    }
+  },
+  "outreach_templates": {
+    "email": {
+      "subject": "Collaboration Opportunity: {{PRODUCT_TITLE}} + Your Audience",
+      "body": [
+        "Hi {{INFLUENCER_NAME}},",
+        "I’m Nick from U-Dig It AI. We help SMBs and agencies save time with AI workflows.",
+        "We’d love to explore a collaboration with you on {{PRODUCT_TITLE}}.",
+        "Our community of {{CUSTOMER_COUNT}}+ customers would be excited to hear from you.",
+        "👉 Here’s a link to learn more: {{PRODUCT_PAYMENT_LINK}}",
+        "Best,",
+        "Nick at U-Dig It AI"
+      ]
+    },
+    "linkedin": {
+      "connection_message": "Hi {{INFLUENCER_NAME}}, love your content on {{TOPIC}}. I work at U-Dig It AI and would love to discuss a potential collab.",
+      "follow_up_message": "Thanks for connecting! We’re launching {{PRODUCT_TITLE}} and think your audience would love it. Open to a quick chat?"
+    }
+  },
+  "collaboration_structures": {
+    "affiliate_model": {
+      "commission_rate": "20%",
+      "payout_method": "Stripe Connect monthly",
+      "tracking": "UTM + referral codes"
+    },
+    "flat_fee_model": {
+      "payment_structure": "Negotiated fee per campaign",
+      "usage_rights": "Content can be repurposed for ads and funnels (with agreement)"
+    },
+    "hybrid_model": {
+      "structure": "Lower flat fee + commission",
+      "benefits": "Aligns incentives, reduces upfront risk"
+    }
+  },
+  "integration": {
+    "crm_tracking": "Tag influencer leads and track conversions in CRM.",
+    "reporting": "Campaign performance (views, clicks, conversions) tracked in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "growth_playbook.json",
+      "referral_email_sequence.json",
+      "community_engagement_playbook.json",
+      "partnership_playbook.json"
+    ]
+  }
+}

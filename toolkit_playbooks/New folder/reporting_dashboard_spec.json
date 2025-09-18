@@ -1,0 +1,76 @@
+{
+  "global": {
+    "title": "U-Dig It AI Funnel Performance Dashboard",
+    "description": "Tracks conversions, upsells, retention, churn, and referral performance across all products.",
+    "update_frequency": "daily",
+    "data_sources": ["Stripe", "Google Analytics (G-BF3NB7NFEL)", "CRM", "churn_survey"]
+  },
+  "metrics": {
+    "conversions": {
+      "description": "Tracks purchases per product",
+      "fields": ["product_id", "product_title", "visits", "purchases", "conversion_rate"]
+    },
+    "upsells": {
+      "description": "Tracks upsell and cross-sell success",
+      "fields": [
+        "base_product_id",
+        "upsell_product_id",
+        "offers_shown",
+        "offers_accepted",
+        "upsell_rate"
+      ]
+    },
+    "retention": {
+      "description": "Tracks subscription retention and churn",
+      "fields": ["product_id", "subscribers", "active", "cancelled", "retention_rate", "churn_rate"]
+    },
+    "referrals": {
+      "description": "Tracks referral performance",
+      "fields": [
+        "referrer_id",
+        "referrals_sent",
+        "referrals_converted",
+        "referral_conversion_rate",
+        "rewards_earned"
+      ]
+    },
+    "churn_reasons": {
+      "description": "Aggregates churn survey data",
+      "fields": ["product_id", "reason_id", "reason_label", "count", "percent_of_total"]
+    },
+    "revenue": {
+      "description": "Tracks revenue by channel",
+      "fields": ["product_id", "total_revenue", "upsell_revenue", "recurring_revenue", "refunds"]
+    }
+  },
+  "views": {
+    "executive_summary": {
+      "description": "High-level KPIs for leadership",
+      "charts": ["total_revenue", "conversion_rate_trend", "retention_curve", "top_upsells"]
+    },
+    "marketing": {
+      "description": "Marketing and acquisition insights",
+      "charts": ["conversion_funnel", "utm_performance", "referral_growth", "campaign_roi"]
+    },
+    "product": {
+      "description": "Product-level insights for optimization",
+      "charts": [
+        "product_conversion_comparison",
+        "churn_reason_breakdown",
+        "upsell_acceptance_rates"
+      ]
+    },
+    "retention": {
+      "description": "Retention & churn management",
+      "charts": ["retention_curve", "pause_vs_cancel", "save_offer_success"]
+    }
+  },
+  "integration": {
+    "visualization_tools": ["Tableau", "Google Data Studio", "Metabase", "Looker"],
+    "export_formats": ["CSV", "JSON", "PDF"],
+    "api_endpoints": {
+      "fetch_data": "/api/reporting/fetch",
+      "export_data": "/api/reporting/export"
+    }
+  }
+}

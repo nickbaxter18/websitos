@@ -1,0 +1,13 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "git-ignore",
+      "pattern": [
+        {
+          "regexp": ".*The process '/usr/bin/git' failed with exit code 128.*",
+          "message": 0
+        }
+      ]
+    }
+  ]
+}

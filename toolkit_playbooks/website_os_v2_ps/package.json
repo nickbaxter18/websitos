@@ -1,0 +1,29 @@
+{
+  "name": "udigit-website-os-v2-min",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node v2/scripts/build.mjs",
+    "render": "node render.mjs",
+    "start": "npm run render && node build/server/index.cjs",
+    "rebuild": "npm run build && npm run render",
+    "dev": "nodemon --watch v2 --exec \"cmd /c \"\"npm run rebuild && node build/server/index.cjs\"\"\""
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^2.1.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2",
+    "stripe": "^12.18.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.0",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.3.3"
+  }
+}

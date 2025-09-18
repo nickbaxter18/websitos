@@ -1,0 +1,79 @@
+name: PR Summary
+
+on:
+  workflow_run:
+    workflows: ["Frontend Checks", "Backend Checks", "Coverage Checks", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests"]
+    types:
+      - completed
+
+jobs:
+  pr-summary:
+    runs-on: ubuntu-latest
+    if: always()
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Validate Reports
+        run: |
+          echo "### ✅ CI & Deploy Summary" > summary.md
+          echo "- Frontend, Backend, Coverage, and Deploy jobs completed" >> summary.md
+          echo "---" >> summary.md
+
+          echo "### 📊 Coverage Reports" >> summary.md
+          if [ -f artifacts/coverage-frontend/coverage-summary.json ]; then
+            echo "- ✅ Frontend coverage found" >> summary.md
+          else
+            echo "- ❌ Frontend coverage missing" >> summary.md
+            echo "::error::Frontend coverage report missing"
+          fi
+          if [ -f artifacts/coverage-backend/coverage.xml ]; then
+            echo "- ✅ Backend coverage found" >> summary.md
+          else
+            echo "- ❌ Backend coverage missing" >> summary.md
+            echo "::error::Backend coverage report missing"
+          fi
+
+          echo "---" >> summary.md
+          echo "### 🔎 Lint & Test Reports" >> summary.md
+
+          if [ -f artifacts/frontend-eslint/eslint-report.json ]; then
+            echo "- ✅ ESLint report found" >> summary.md
+          else
+            echo "- ❌ ESLint report missing" >> summary.md
+            echo "::error::Frontend ESLint report missing"
+          fi
+
+          if [ -f artifacts/frontend-jest/jest-report.json ]; then
+            echo "- ✅ Jest results found" >> summary.md
+          else
+            echo "- ❌ Jest results missing" >> summary.md
+            echo "::error::Frontend Jest results missing"
+          fi
+
+          if [ -f artifacts/backend-pytest/pytest-report.json ]; then
+            echo "- ✅ Pytest results found" >> summary.md
+          else
+            echo "- ❌ Pytest results missing" >> summary.md
+            echo "::error::Backend pytest results missing"
+          fi
+
+          if [ -f artifacts/backend-flake8/flake8-report.txt ]; then
+            echo "- ✅ Flake8 report found" >> summary.md
+          else
+            echo "- ❌ Flake8 report missing" >> summary.md
+            echo "::error::Backend Flake8 report missing"
+          fi
+
+      - name: Post PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: workflow-report
+          path: summary.md

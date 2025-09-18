@@ -1,0 +1,75 @@
+{
+  "global": {
+    "title": "U-Dig It AI Product Bundle Playbook",
+    "description": "Framework for generating product bundles, upsell paths, and discount logic to increase AOV and conversions.",
+    "tone": "value-focused, customer-first, upsell-smart",
+    "guardrails": "Bundles must provide real savings or added value. Never fake bundle discounts."
+  },
+  "bundle_types": {
+    "starter_bundles": [
+      {
+        "id": "spark_plus_quick_start",
+        "title": "🚀 AI Starter Pack",
+        "products": ["ai_spark_starter", "ai_quick_start_pack"],
+        "price": 12.99,
+        "savings": "Save 20%",
+        "headline": "Perfect for freelancers starting their AI journey."
+      }
+    ],
+    "growth_bundles": [
+      {
+        "id": "hub_plus_vault",
+        "title": "📈 AI Growth Stack",
+        "products": ["ai_mastery_hub", "ai_pro_templates_vault"],
+        "price": 109,
+        "savings": "Save 15%",
+        "headline": "Scale your workflows with Hub + Vault together."
+      }
+    ],
+    "premium_bundles": [
+      {
+        "id": "vault_plus_transformation",
+        "title": "🏆 AI Business Builder Bundle",
+        "products": ["ai_master_vault", "ai_business_transformation"],
+        "price": 2399,
+        "savings": "Save $250",
+        "headline": "For businesses ready to fully transform with AI."
+      }
+    ]
+  },
+  "upsell_paths": {
+    "spark_starter": {
+      "next_step": "ai_mastery_hub",
+      "bundle_offer": "spark_plus_quick_start"
+    },
+    "pro_templates_vault": {
+      "next_step": "ai_master_vault",
+      "bundle_offer": "hub_plus_vault"
+    },
+    "ai_master_vault": {
+      "next_step": "ai_business_transformation",
+      "bundle_offer": "vault_plus_transformation"
+    }
+  },
+  "discount_logic": {
+    "rules": [
+      { "condition": "buying_bundle", "discount_type": "percentage", "value": 15 },
+      { "condition": "first_time_customer", "discount_type": "flat", "value": 10 },
+      {
+        "condition": "seasonal_campaign",
+        "discount_type": "dynamic",
+        "value": "see seasonal_campaigns_playbook.json"
+      }
+    ]
+  },
+  "integration": {
+    "checkout": "Bundles redirect to pre-built Stripe checkout links with discounts applied.",
+    "crm": "Bundle purchases tagged in CRM for upsell tracking (see crm_automation_playbook.json).",
+    "reporting": "Bundle performance (AOV uplift, conversion rate) tracked in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "pricing_experiments_playbook.json",
+      "seasonal_campaigns_playbook.json",
+      "growth_playbook.json"
+    ]
+  }
+}

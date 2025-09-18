@@ -1,0 +1,57 @@
+{
+  "ai_optimization_plan": {
+    "title": "AI Optimization Plan — 90 Days",
+    "price": 1500,
+    "currency": "CAD",
+    "payment_link": "https://buy.stripe.com/14A9ATfua3xm0AWfgF1oI02"
+  },
+  "ai_business_transformation": {
+    "title": "AI Business Transformation Package",
+    "price": 2500,
+    "currency": "CAD",
+    "payment_link": "https://buy.stripe.com/8x228rdm24Bq4Rc1pP1oI03"
+  },
+  "ai_pro_templates_vault": {
+    "title": "AI Pro Templates Vault",
+    "price": 99,
+    "currency": "CAD",
+    "payment_link": "https://buy.stripe.com/00w00jdm24BqgzUb0p1oI05"
+  },
+  "ai_master_vault": {
+    "title": "AI Master Vault",
+    "price": 149,
+    "currency": "CAD",
+    "payment_link": "https://buy.stripe.com/fZu4gz5TAec00AW9Wl1oI06"
+  },
+  "ai_mastery_hub": {
+    "title": "AI Mastery Hub",
+    "price": 19,
+    "currency": "CAD",
+    "interval": "monthly",
+    "payment_link": "https://buy.stripe.com/9B67sL3Lsgk8dnI8Sh1oI07"
+  },
+  "ai_quick_start_pack": {
+    "title": "AI Quick Start Pack",
+    "price": 4.99,
+    "currency": "CAD",
+    "payment_link": "https://dashboard.stripe.com/payment-links/plink_1S2esDFYCEvui16Jd8m0OhIl"
+  },
+  "ai_growth_accelerator": {
+    "title": "AI Growth Accelerator Bundle",
+    "price": 29,
+    "currency": "CAD",
+    "payment_link": "https://buy.stripe.com/cNi7sLdm25Fu2J47Od1oI09"
+  },
+  "quick_win_addon": {
+    "title": "Quick Win Add-On",
+    "price": 4.99,
+    "currency": "CAD",
+    "payment_link": "https://buy.stripe.com/28E6oH81I0la2J4b0p1oI0a"
+  },
+  "ai_spark_starter": {
+    "title": "AI Spark Starter Kit",
+    "price": 9.99,
+    "currency": "CAD",
+    "payment_link": "https://buy.stripe.com/aFabJ1a9Qfg41F01pP1oI01"
+  }
+}

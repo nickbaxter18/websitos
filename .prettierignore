@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Build artifacts
+dist
+build
+.cache
+.vite
+
+# Python virtual environments
+venv
+.venv
+
+# TypeScript declaration files
+*.d.ts
+
+# Old docs / archive
+docs/meta/archive
+
+# Python site-packages (Windows / pip installs)
+Lib/
+Scripts/
+
+# Coverage, logs, cache
+coverage
+*.log
+*.cache
+.vscode
+.idea
+
+# Git & CI
+.git
+.gitignore
+.github
+
+# Config outputs
+*.tmp
+*.swp
+*.bak
+
+# Generated assets
+public/build

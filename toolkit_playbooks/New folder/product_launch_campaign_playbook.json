@@ -1,0 +1,120 @@
+{
+  "global": {
+    "title": "U-Dig It AI Product Launch Campaign Playbook",
+    "description": "Framework for generating complete launch campaigns (landing pages, emails, ads, community posts) for new products.",
+    "tone": "excited, authoritative, momentum-building",
+    "guardrails": "All launches must include value-first education, not just promotion. Avoid overpromising results."
+  },
+  "launch_assets": {
+    "landing_page": {
+      "headline": "🚀 Introducing {{PRODUCT_TITLE}}",
+      "subheadline": "The newest way to {{PRIMARY_BENEFIT}} with AI.",
+      "sections": [
+        "Hero CTA → {{PRODUCT_PAYMENT_LINK}}",
+        "Feature Highlights",
+        "ROI Calculator (see roi_calculator_template.json)",
+        "Comparison vs. Alternatives (see competitor_comparison_playbook.json)",
+        "FAQ (see support_knowledge_base.json)",
+        "Trust Signals (refund, secure checkout)"
+      ]
+    },
+    "emails": {
+      "day_0": {
+        "subject": "🎉 It’s Here: {{PRODUCT_TITLE}} Launch Day!",
+        "body": [
+          "Hi {{CUSTOMER_NAME}},",
+          "Big news — {{PRODUCT_TITLE}} is live!",
+          "Here’s what makes it powerful:",
+          "- {{FEATURE_1}}",
+          "- {{FEATURE_2}}",
+          "- {{FEATURE_3}}",
+          "👉 Get it today: {{PRODUCT_PAYMENT_LINK}}"
+        ]
+      },
+      "day_2": {
+        "subject": "⚡ See How {{PRODUCT_TITLE}} Works in Action",
+        "body": [
+          "Wondering how {{PRODUCT_TITLE}} can help you?",
+          "Here’s a quick walkthrough video: {{VIDEO_LINK}}",
+          "Customers are already saving time and boosting output.",
+          "👉 Try it here: {{PRODUCT_PAYMENT_LINK}}"
+        ]
+      },
+      "day_5": {
+        "subject": "⭐ Early Adopter Bonus Ending Soon",
+        "body": [
+          "Don’t miss your early adopter bonus for {{PRODUCT_TITLE}}:",
+          "- {{BONUS_1}}",
+          "- {{BONUS_2}}",
+          "Offer ends {{BONUS_EXPIRY}}.",
+          "👉 Secure your bonus now: {{PRODUCT_PAYMENT_LINK}}"
+        ]
+      }
+    },
+    "ads": {
+      "google_search": {
+        "headline": "New: {{PRODUCT_TITLE}}",
+        "description": "Boost productivity with {{PRODUCT_TITLE}}. Available now. 30-day guarantee.",
+        "cta": "Try It Today"
+      },
+      "meta_ads": {
+        "primary_text": "🔥 Just launched: {{PRODUCT_TITLE}}. Save time and scale faster with AI.",
+        "headline": "Introducing {{PRODUCT_TITLE}}",
+        "cta": "Shop Now"
+      },
+      "linkedin_ads": {
+        "primary_text": "📈 Announcing {{PRODUCT_TITLE}} — the newest way for SMBs to scale with AI.",
+        "headline": "Productivity Boost with {{PRODUCT_TITLE}}",
+        "cta": "Request Demo"
+      }
+    },
+    "community_posts": {
+      "announcement": {
+        "headline": "🎉 {{PRODUCT_TITLE}} is Here!",
+        "body": "We’re excited to announce the launch of {{PRODUCT_TITLE}}. Learn more here: {{PRODUCT_PAYMENT_LINK}}"
+      },
+      "follow_up": {
+        "headline": "⚡ Early Adopter Stories",
+        "body": "Members are already using {{PRODUCT_TITLE}} to achieve results: “{{CUSTOMER_QUOTE}}”. Try it here: {{PRODUCT_PAYMENT_LINK}}"
+      }
+    }
+  },
+  "campaign_phases": {
+    "pre_launch": {
+      "actions": [
+        "Announce waitlist on landing page",
+        "Tease features on social",
+        "Collect leads via {{LEAD_MAGNET_LINK}}"
+      ]
+    },
+    "launch": {
+      "actions": [
+        "Publish landing page",
+        "Send Day 0 email blast",
+        "Run paid ads (Google, Meta, LinkedIn)",
+        "Post announcement in community"
+      ]
+    },
+    "post_launch": {
+      "actions": [
+        "Share customer testimonials",
+        "Send follow-up email sequence",
+        "Highlight ROI calculators and case studies",
+        "Run retargeting ads for visitors who didn’t buy"
+      ]
+    }
+  },
+  "integration": {
+    "reporting": "Campaign metrics tracked in reporting_dashboard_spec.json",
+    "alignment": [
+      "Growth tactics from growth_playbook.json",
+      "Community support from community_engagement_playbook.json",
+      "Partnership boosts from partnership_playbook.json"
+    ],
+    "distribution": {
+      "email": "Launch emails to all leads + customers",
+      "slack": "#community-announcements",
+      "social": "Twitter, LinkedIn, Facebook, YouTube"
+    }
+  }
+}

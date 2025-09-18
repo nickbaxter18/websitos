@@ -1,0 +1,56 @@
+name: Lockfile Consistency Check
+
+on:
+  pull_request:
+
+jobs:
+  lockfile-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js (from .nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Cache pnpm
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Ensure no package-lock.json present
+        run: |
+          echo ">>> Checking for forbidden package-lock.json"
+          if [ -f package-lock.json ]; then
+            echo "::error file=package-lock.json::package-lock.json should not exist. Please delete it and use pnpm-lock.yaml."
+            exit 1
+          fi
+          echo "✅ No package-lock.json found"
+
+      - name: Install dependencies without updating lockfile
+        run: |
+          echo ">>> Installing dependencies with frozen lockfile"
+          pnpm install --frozen-lockfile --ignore-scripts || { echo "::error::pnpm install failed during lockfile check"; exit 1; }
+
+      - name: Check if pnpm-lock.yaml is in sync
+        run: |
+          echo ">>> Verifying pnpm-lock.yaml sync with package.json"
+          if ! git diff --exit-code pnpm-lock.yaml; then
+            echo "::error file=pnpm-lock.yaml::Lockfile is out of sync with package.json. Run 'pnpm install' locally and commit the changes."
+            exit 1
+          fi
+          echo "✅ pnpm-lock.yaml is up to date"

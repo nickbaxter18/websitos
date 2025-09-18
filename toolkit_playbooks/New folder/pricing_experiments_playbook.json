@@ -1,0 +1,62 @@
+{
+  "global": {
+    "title": "U-Dig It AI Pricing Experiments Playbook",
+    "description": "Frameworks for tiered pricing tests, discounts, and alternative pricing models to maximize revenue.",
+    "tone": "analytical, test-driven, customer-centric",
+    "guardrails": "All pricing tests must be time-boxed, clearly communicated, and ethically presented."
+  },
+  "experiment_types": {
+    "tiered_pricing": {
+      "description": "Test multiple tiers to capture different segments.",
+      "examples": [
+        "Starter ($9.99), Pro ($49), Enterprise ($199)",
+        "Templates Vault ($99), Master Vault ($149), Transformation Package ($2500)"
+      ],
+      "metrics": ["conversion_rate", "average_order_value", "customer_distribution"]
+    },
+    "discount_tests": {
+      "description": "Test % and $ off discounts, urgency, and bundles.",
+      "examples": [
+        "10% off vs 20% off",
+        "$20 off vs $50 off",
+        "Buy Vault, get Hub free for 1 month"
+      ],
+      "metrics": ["conversion_rate", "refund_rate", "ltv_impact"]
+    },
+    "usage_based": {
+      "description": "Experiment with usage-based or credit models.",
+      "examples": [
+        "Base subscription $19 + $0.10 per workflow",
+        "Monthly credit packs: 100 credits = $29, 500 credits = $99"
+      ],
+      "metrics": ["ltv", "customer_retention", "engagement_rate"]
+    },
+    "anchoring_tests": {
+      "description": "Use high-price anchors to increase perceived value of mid-tier offers.",
+      "examples": [
+        "Show $5000 package beside $149 Master Vault",
+        "Display Enterprise tier above Pro tier"
+      ],
+      "metrics": ["conversion_rate", "tier_selection_distribution"]
+    },
+    "freemium_trials": {
+      "description": "Test free or $1 trial periods for recurring products.",
+      "examples": [
+        "7-day free trial for AI Mastery Hub",
+        "$1 14-day trial for Growth Accelerator Bundle"
+      ],
+      "metrics": ["trial_conversion_rate", "churn_post_trial", "ltv"]
+    }
+  },
+  "best_practices": {
+    "sample_size": "Run tests until 95% confidence, minimum 200 conversions per variant.",
+    "test_duration": "At least 14 days for subscription models, 7 days for one-time offers.",
+    "disclosure": "Always disclose when discounts are temporary or experimental.",
+    "rollback_rule": "If refund_rate > 15% or churn_post_trial > 25%, revert pricing immediately."
+  },
+  "integration": {
+    "reporting_hook": "All pricing experiments must push results into reporting_dashboard_spec.json",
+    "automation_rules": "If variant outperforms control by 20%+, promote it to default.",
+    "crm_tracking": "Tag customers acquired under experimental pricing in CRM for lifecycle analysis."
+  }
+}

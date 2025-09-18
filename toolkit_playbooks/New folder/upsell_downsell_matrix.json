@@ -1,0 +1,66 @@
+{
+  "global": {
+    "title": "U-Dig It AI Upsell & Downsell Matrix",
+    "description": "Master map of all upgrade and downgrade flows across products to maximize LTV and minimize churn.",
+    "tone": "strategic, customer-first, revenue-optimized",
+    "guardrails": "Upsell/downsell flows must feel natural, not pushy. Always include clear cancel option."
+  },
+  "matrix": {
+    "ai_quick_start_pack": {
+      "upsell": ["ai_mastery_hub", "ai_pro_templates_vault"],
+      "downsell": [],
+      "cross_sell": ["quick_win_addon"]
+    },
+    "quick_win_addon": {
+      "upsell": ["ai_mastery_hub", "ai_master_vault"],
+      "downsell": [],
+      "cross_sell": ["ai_quick_start_pack"]
+    },
+    "ai_spark_starter": {
+      "upsell": ["ai_growth_accelerator", "ai_mastery_hub"],
+      "downsell": ["ai_quick_start_pack"],
+      "cross_sell": ["quick_win_addon"]
+    },
+    "ai_growth_accelerator": {
+      "upsell": ["ai_mastery_hub", "ai_master_vault"],
+      "downsell": ["ai_spark_starter", "quick_win_addon"],
+      "cross_sell": ["ai_pro_templates_vault"]
+    },
+    "ai_pro_templates_vault": {
+      "upsell": ["ai_master_vault"],
+      "downsell": ["ai_spark_starter"],
+      "cross_sell": ["ai_mastery_hub"]
+    },
+    "ai_master_vault": {
+      "upsell": ["ai_business_transformation"],
+      "downsell": ["ai_pro_templates_vault", "ai_growth_accelerator"],
+      "cross_sell": ["ai_mastery_hub"]
+    },
+    "ai_mastery_hub": {
+      "upsell": ["ai_pro_templates_vault", "ai_master_vault"],
+      "downsell": ["ai_spark_starter"],
+      "cross_sell": ["ai_growth_accelerator"]
+    },
+    "ai_optimization_plan": {
+      "upsell": ["ai_business_transformation"],
+      "downsell": ["ai_master_vault"],
+      "cross_sell": ["ai_mastery_hub"]
+    },
+    "ai_business_transformation": {
+      "upsell": [],
+      "downsell": ["ai_optimization_plan", "ai_master_vault"],
+      "cross_sell": ["ai_growth_accelerator"]
+    }
+  },
+  "integration": {
+    "funnels": "Offer summary, thank-you, cancel, and retention flows must reference this matrix.",
+    "crm": "Track movement between upsell/downsell paths in crm_automation_playbook.json.",
+    "reporting": "Measure upsell acceptance, downsell saves, and cross-sell success in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "cross_sell_map.json",
+      "growth_playbook.json",
+      "retention_email_sequence.json",
+      "pricing_experiments_playbook.json"
+    ]
+  }
+}

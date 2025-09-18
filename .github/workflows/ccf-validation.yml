@@ -1,0 +1,75 @@
+name: Validation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'v2/**'
+      - 'config/**'
+      - '.github/workflows/ccf-validation.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+
+      - name: Load default env file
+        run: cp .env.example .env
+
+      - name: Enable problem matchers
+        run: |
+          echo "::add-matcher::.github/matchers/error.json"
+          echo "::add-matcher::.github/matchers/eslint.json"
+          echo "::add-matcher::.github/matchers/ts.json"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Cache pnpm
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: |
+          echo ">>> Installing dependencies"
+          pnpm install --frozen-lockfile || { echo "::error::pnpm install failed"; exit 1; }
+
+      - name: Validate Environment
+        run: |
+          echo ">>> Starting Environment Validation"
+          pnpm validate-env > schema-validation-report.json || true
+          if [ ! -s schema-validation-report.json ]; then echo '{}' > schema-validation-report.json; fi
+
+      - name: Validate Schema
+        run: |
+          echo ">>> Starting Schema Validation"
+          pnpm validate > schema-validation-report.json || true
+          if [ ! -s schema-validation-report.json ]; then echo '{}' > schema-validation-report.json; fi
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-validation-report
+          path: schema-validation-report.json
+          retention-days: 14

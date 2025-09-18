@@ -1,0 +1,73 @@
+{
+  "global": {
+    "title": "U-Dig It AI Omni-Channel Playbook",
+    "description": "Framework for orchestrating coordinated campaigns across email, SMS, push, chat, and ads.",
+    "tone": "consistent, customer-first, channel-aware",
+    "guardrails": "Respect user communication preferences and opt-outs. Avoid over-messaging by capping total touches per week."
+  },
+  "channels": {
+    "email": {
+      "strengths": "Long-form storytelling, education, upsells.",
+      "ideal_use": ["welcome flows", "case studies", "launch announcements"],
+      "frequency_limit": "3x per week"
+    },
+    "sms": {
+      "strengths": "High open rate, urgency-driven reminders.",
+      "ideal_use": ["cart abandonment", "event reminders", "limited-time offers"],
+      "frequency_limit": "2x per week"
+    },
+    "push_notifications": {
+      "strengths": "Instant re-engagement via web/app.",
+      "ideal_use": ["product updates", "loyalty points alerts", "new blog drops"],
+      "frequency_limit": "1x per day"
+    },
+    "chat": {
+      "strengths": "Conversational engagement, FAQ handling, lead capture.",
+      "ideal_use": ["onboarding", "support", "upsell nudges"],
+      "frequency_limit": "contextual only"
+    },
+    "ads": {
+      "strengths": "Retargeting and cold acquisition.",
+      "ideal_use": ["retargeting cart abandoners", "seasonal promotions", "lookalike audiences"],
+      "frequency_limit": "budget-driven, capped at 5 impressions/day/user"
+    }
+  },
+  "campaign_frameworks": {
+    "product_launch": {
+      "flow": [
+        "Email: announcement + value story",
+        "Push: product live alert",
+        "SMS: 24h reminder for offer expiry",
+        "Chat: guide visitors to buy",
+        "Ads: retarget visitors who viewed but didn’t purchase"
+      ]
+    },
+    "cart_abandonment": {
+      "flow": [
+        "Email: abandoned cart reminder (hour 1)",
+        "SMS: urgency reminder (hour 24)",
+        "Push: bonus offer (hour 48)",
+        "Ads: retarget until purchase"
+      ]
+    },
+    "webinar_promotion": {
+      "flow": [
+        "Email: invite + registration link",
+        "SMS: 1h reminder before event",
+        "Push: replay available alert",
+        "Chat: answer FAQs about joining",
+        "Ads: retarget registrants who didn’t attend"
+      ]
+    }
+  },
+  "integration": {
+    "crm": "All omni-channel interactions logged in CRM (see crm_automation_playbook.json).",
+    "reporting": "Track engagement, opt-outs, and conversions by channel in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "lifecycle_marketing_playbook.json",
+      "personalization_engine_playbook.json",
+      "paid_ads_playbook.json",
+      "chatbot_playbook.json"
+    ]
+  }
+}

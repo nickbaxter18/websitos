@@ -1,0 +1,20 @@
+# Use Node.js LTS as base
+FROM node:18
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json tsconfig.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY v2 ./v2
+COPY tests ./tests
+COPY docs ./docs
+COPY spec ./spec
+
+# Run tests by default
+CMD ["npm", "test"]

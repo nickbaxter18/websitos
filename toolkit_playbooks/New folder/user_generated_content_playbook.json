@@ -1,0 +1,45 @@
+{
+  "global": {
+    "title": "U-Dig It AI User Generated Content (UGC) Playbook",
+    "description": "Framework for campaigns that encourage customers to share AI use cases, workflows, and wins as content.",
+    "tone": "community-driven, empowering, celebratory",
+    "guardrails": "UGC must be voluntary, clearly credited, and used only with permission."
+  },
+  "ugc_campaigns": {
+    "ugc_contests": {
+      "headline": "🏆 Share Your AI Workflow & Win!",
+      "body": "Show us how you use {{PRODUCT_TITLE}}. Winners featured in our community + bonuses like {{REWARD}}.",
+      "placement": "community_channel.announcements, referral_email.day_14"
+    },
+    "ugc_prompts": {
+      "weekly_theme": [
+        {
+          "id": "workflow_wednesday",
+          "headline": "⚡ Workflow Wednesday",
+          "body": "Post your favorite {{PRODUCT_TITLE}} workflow and how it saved you time this week."
+        },
+        {
+          "id": "success_story_friday",
+          "headline": "📈 Success Story Friday",
+          "body": "Share your biggest AI win of the week — big or small."
+        }
+      ],
+      "placement": "community_channel.weekly_prompts"
+    },
+    "ugc_showcase": {
+      "headline": "🌟 Member Showcase",
+      "body": "We’ll highlight top workflows and stories in our blog, newsletters, and social channels (with your permission).",
+      "formats": ["blog.feature", "pdf.one_pager", "video.clip"],
+      "placement": "blog, content_marketing_playbook.json, video_marketing_playbook.json"
+    }
+  },
+  "integration": {
+    "crm_tracking": "Tag users who contribute UGC for loyalty rewards (see loyalty_rewards_playbook.json).",
+    "reporting": "UGC engagement metrics (submissions, shares, repurposed assets) tracked in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "community_engagement_playbook.json",
+      "customer_advocacy_playbook.json",
+      "growth_playbook.json"
+    ]
+  }
+}

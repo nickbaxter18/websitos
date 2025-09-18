@@ -1,0 +1,53 @@
+{
+  "global": {
+    "title": "U-Dig It AI Funnel Testing Playbook",
+    "description": "Frameworks for A/B tests, multivariate tests, and canary launches across funnels, pages, and ads.",
+    "tone": "data-driven, iterative, ROI-focused",
+    "guardrails": "All tests must run with clear KPIs and sufficient sample size before drawing conclusions."
+  },
+  "test_types": {
+    "ab_test": {
+      "description": "Compare two variations (A vs B) to measure impact of one change.",
+      "examples": [
+        "Landing page headline: 'Save 10 Hours/Week' vs 'Boost Productivity With AI'",
+        "CTA button color: Gold vs Green"
+      ],
+      "metrics": ["conversion_rate", "bounce_rate", "click_through_rate"]
+    },
+    "multivariate_test": {
+      "description": "Test multiple variables at once (e.g., headline + CTA + testimonial placement).",
+      "examples": [
+        "3 headline variations x 2 CTA buttons = 6 versions",
+        "Testimonials above vs below CTA with different proof styles"
+      ],
+      "metrics": ["conversion_rate", "average_order_value", "time_on_page"]
+    },
+    "canary_launch": {
+      "description": "Roll out a new funnel variant to a small % of traffic before scaling.",
+      "examples": [
+        "10% of visitors see new Growth Accelerator offer",
+        "Beta-testing AI Mastery Hub upsell flow with early adopters"
+      ],
+      "metrics": ["conversion_rate", "refund_rate", "customer_feedback"]
+    }
+  },
+  "kpis": {
+    "conversion_rate": "Percentage of visitors who complete the funnel action.",
+    "bounce_rate": "Percentage of visitors who leave without engaging.",
+    "click_through_rate": "Percentage who click CTA vs total views.",
+    "average_order_value": "Revenue / number of orders.",
+    "refund_rate": "Refunds / total purchases.",
+    "customer_feedback": "Qualitative survey results tied to funnel variations."
+  },
+  "best_practices": {
+    "sample_size": "Run tests until 95% confidence is reached, minimum 500 visitors per variant.",
+    "test_duration": "At least 7 days to account for weekday/weekend differences.",
+    "one_variable_rule": "For A/B, test one element at a time to isolate impact.",
+    "documentation": "All tests logged in reporting dashboard (see File 17)."
+  },
+  "integration": {
+    "analytics_tools": ["Google Analytics 4", "Google Optimize (or equivalent)", "Metabase"],
+    "reporting_hook": "All test results must be exported to reporting_dashboard_spec.json",
+    "automation_rules": "If Variant B > Variant A by 20%+, promote B to default after test concludes."
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "global": {
+    "title": "U-Dig It AI Social Proof Engine Playbook",
+    "description": "Framework for dynamically pulling, rotating, and displaying reviews, testimonials, and trust signals across funnels.",
+    "tone": "authentic, credibility-first, trust-building",
+    "guardrails": "Only use verified testimonials and reviews. No fake or misleading proof."
+  },
+  "proof_types": {
+    "testimonials": {
+      "sources": ["customer_feedback_playbook.json", "user_generated_content_playbook.json"],
+      "formats": [
+        "Short quotes (1–2 lines)",
+        "Long-form case study excerpts",
+        "Video testimonials"
+      ],
+      "placement": ["landing_page.proof", "offer_summary.trust", "thank_you.page", "ads.copy"]
+    },
+    "review_badges": {
+      "sources": ["Trustpilot", "G2", "Google Reviews"],
+      "formats": ["Star ratings (4.7/5 avg.)", "Verified purchase badges"],
+      "placement": ["checkout.trust", "landing_page.hero", "footer"]
+    },
+    "customer_counts": {
+      "headline": "🌍 Trusted by {{CUSTOMER_COUNT}}+ businesses",
+      "placement": ["landing_page.hero", "email.footer", "ads.headline"]
+    },
+    "case_studies": {
+      "structure": [
+        "Who the customer is",
+        "Challenge they faced",
+        "Solution with {{PRODUCT_TITLE}}",
+        "Results achieved"
+      ],
+      "formats": ["PDF one-pager", "Blog feature", "Community post"],
+      "placement": ["content_marketing_playbook.json", "sales_enablement_playbook.json"]
+    }
+  },
+  "rotation_rules": {
+    "frequency": "rotate testimonials weekly",
+    "logic": [
+      "New visitors → show general testimonials",
+      "Returning users → show case studies",
+      "High-ticket pages → show enterprise success stories"
+    ]
+  },
+  "integration": {
+    "crm_sync": "Tag customers featured in testimonials for advocacy (see customer_advocacy_playbook.json).",
+    "reporting": "Track conversion lift from social proof placements in reporting_dashboard_spec.json.",
+    "cross_playbook_hooks": [
+      "growth_playbook.json",
+      "customer_feedback_playbook.json",
+      "user_generated_content_playbook.json",
+      "customer_advocacy_playbook.json"
+    ]
+  }
+}

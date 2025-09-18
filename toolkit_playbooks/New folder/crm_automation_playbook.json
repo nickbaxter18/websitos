@@ -1,0 +1,69 @@
+{
+  "global": {
+    "title": "U-Dig It AI CRM Automation Playbook",
+    "description": "Frameworks for CRM workflows including lead scoring, lifecycle triggers, and pipeline automation.",
+    "tone": "systematic, data-driven, customer-first",
+    "guardrails": "Automation must respect user consent, privacy regulations (GDPR, PIPEDA), and avoid over-emailing."
+  },
+  "lead_scoring": {
+    "rules": [
+      { "action": "visited_landing_page", "points": 5 },
+      { "action": "downloaded_freebie", "points": 10 },
+      { "action": "attended_webinar", "points": 15 },
+      { "action": "purchased_entry_product", "points": 20 },
+      { "action": "purchased_high_ticket", "points": 40 }
+    ],
+    "thresholds": {
+      "marketing_qualified_lead": 20,
+      "sales_qualified_lead": 40
+    }
+  },
+  "lifecycle_triggers": {
+    "new_lead": {
+      "trigger": "lead_created",
+      "action": "assign_to_email_sequence (lead_capture_email_sequence.json)"
+    },
+    "mql": {
+      "trigger": "lead_score >= 20",
+      "action": "notify_sales_team, add_to_nurture_sequence"
+    },
+    "sql": {
+      "trigger": "lead_score >= 40",
+      "action": "assign_to_sales_pipeline, prioritize_followup"
+    },
+    "customer_onboarding": {
+      "trigger": "purchase",
+      "action": "assign_to_email_sequence (post_purchase_email_sequence.json)"
+    },
+    "churn_risk": {
+      "trigger": "inactivity > 14 days OR churn_survey.reason=too_expensive",
+      "action": "assign_to_email_sequence (retention_email_sequence.json)"
+    }
+  },
+  "pipeline_automation": {
+    "stages": [
+      "Lead Captured",
+      "MQL",
+      "SQL",
+      "Opportunity",
+      "Customer",
+      "Upsell/Expansion",
+      "Churn Risk"
+    ],
+    "automation_rules": [
+      { "if_stage": "Lead Captured", "then": "send nurture emails" },
+      { "if_stage": "Opportunity", "then": "notify account manager" },
+      { "if_stage": "Upsell/Expansion", "then": "trigger cross-sell offer" },
+      { "if_stage": "Churn Risk", "then": "send retention email sequence" }
+    ]
+  },
+  "integration": {
+    "platforms": ["HubSpot", "Salesforce", "Pipedrive", "Zoho"],
+    "sync_rules": {
+      "stripe": "Sync purchases and refunds into CRM contacts",
+      "ga4": "Sync traffic source and attribution into CRM",
+      "community": "Tag members active in Slack/Discord channels"
+    },
+    "reporting": "All CRM pipeline data must flow into reporting_dashboard_spec.json"
+  }
+}

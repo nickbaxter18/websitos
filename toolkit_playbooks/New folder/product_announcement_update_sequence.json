@@ -1,0 +1,57 @@
+{
+  "global": {
+    "from_name": "U-Dig It AI",
+    "from_email": "nickbaxter@udigit.ca",
+    "support_email": "nickbaxter@udigit.ca",
+    "tone": "excited, value-driven, community-first",
+    "cta_style": "bold, benefit-focused",
+    "channels": ["email", "community_post", "blog_announcement"]
+  },
+  "sequence": {
+    "launch_day": {
+      "subject": "🚀 New Update: {{UPDATE_TITLE}} is Live!",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Big news — we’ve just launched {{UPDATE_TITLE}} 🎉",
+        "What’s new:",
+        "- {{FEATURE_1}}",
+        "- {{FEATURE_2}}",
+        "- {{FEATURE_3}}",
+        "👉 Try it now: {{UPDATE_LINK}}",
+        "As always, you’re covered by our 30-day guarantee. Questions? Reply anytime to nickbaxter@udigit.ca."
+      ],
+      "community_post": {
+        "headline": "🚀 {{UPDATE_TITLE}} is here!",
+        "body": "We’ve added exciting new features:\n- {{FEATURE_1}}\n- {{FEATURE_2}}\n- {{FEATURE_3}}\n👉 Explore here: {{UPDATE_LINK}}"
+      }
+    },
+    "day_3": {
+      "subject": "⚡ See How Customers Are Using {{UPDATE_TITLE}}",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Since launch, hundreds of members have already used {{UPDATE_TITLE}}.",
+        "Here’s what they’re saying:",
+        "“{{CUSTOMER_QUOTE}}”",
+        "👉 Don’t miss out: {{UPDATE_LINK}}"
+      ],
+      "community_post": {
+        "headline": "⚡ {{UPDATE_TITLE}} in Action",
+        "body": "Members are already using {{UPDATE_TITLE}} to get results:\n“{{CUSTOMER_QUOTE}}”\n👉 Try it yourself: {{UPDATE_LINK}}"
+      }
+    },
+    "day_7": {
+      "subject": "⭐ Last Call: Early Access Bonus for {{UPDATE_TITLE}}",
+      "body": [
+        "Hi {{CUSTOMER_NAME}},",
+        "Early adopters of {{UPDATE_TITLE}} get exclusive perks, but only for this week:",
+        "- {{BONUS_1}}",
+        "- {{BONUS_2}}",
+        "👉 Claim your bonus now: {{UPDATE_LINK}}"
+      ],
+      "community_post": {
+        "headline": "⭐ Early Access Bonus Ending Soon",
+        "body": "Early adopters of {{UPDATE_TITLE}} get:\n- {{BONUS_1}}\n- {{BONUS_2}}\n👉 Grab your bonus: {{UPDATE_LINK}}"
+      }
+    }
+  }
+}
