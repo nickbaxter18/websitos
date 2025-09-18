@@ -3,12 +3,10 @@ import path from "path";
 import { pathToFileURL } from "url";
 import "tsconfig-paths/register";
 
-const excludedDirs = ["v2", "tests"];
+const excludedDirs = ["v2", "tests", "pages"]; // 🚫 Exclude all pages
 const excludedFiles = [
   "validateEnv",
   "vite-env",
-  "Status.tsx",
-  "Terms.tsx",
   "reload.ts",
   "setupTests.ts"
 ];
