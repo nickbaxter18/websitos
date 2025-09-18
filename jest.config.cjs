@@ -12,8 +12,11 @@ module.exports = {
   testPathIgnorePatterns: [
     "/node_modules/",
     "src/__tests__/smoke.test.tsx",
-    "tests/e2e/" // 🚫 exclude Playwright tests from Jest
+    "tests/e2e/",
+    "dist/",
+    "coverage/"
   ],
+  setupFiles: ["<rootDir>/src/setupTests.ts"], // ✅ ensure polyfills load before tests
   coverageDirectory: "coverage/frontend",
   coverageReporters: ["lcov", "text", "json-summary", "cobertura"],
   passWithNoTests: true
