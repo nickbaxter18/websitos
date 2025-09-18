@@ -6,12 +6,13 @@ module.exports = {
     "src/**/*.{js,jsx,ts,tsx}",
     "!src/**/*.d.ts",
     "!src/**/index.{js,ts}",
-    "!src/pages/**",   // 🚫 exclude all pages from Jest coverage (E2E only)
+    "!src/pages/**",
     "!src/__tests__/**"
   ],
   testPathIgnorePatterns: [
     "/node_modules/",
-    "src/__tests__/smoke.test.tsx"
+    "src/__tests__/smoke.test.tsx",
+    "tests/e2e/" // 🚫 exclude Playwright tests from Jest
   ],
   coverageDirectory: "coverage/frontend",
   coverageReporters: ["lcov", "text", "json-summary", "cobertura"],
