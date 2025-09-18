@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: Websitos
     permissions:
-      contents: read
+      contents: write   # ✅ allow reading + uploading repo archive
+      actions: read     # ✅ allow archive download via GitHub API
+      packages: read    # ✅ allow access to packages if needed
     continue-on-error: true   # ✅ prevent sync failures from blocking CI
     env:
       EDITOR_API_KEY: ${{ secrets.EDITOR_API_KEY }}
