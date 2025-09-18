@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v40
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v41
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v20
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v21
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -93,10 +93,6 @@ jobs:
           pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
             --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
             --coverageDirectory=coverage/frontend
-
-      - name: Run frontend smoke coverage (non-blocking)
-        if: ${{ matrix.task == 'frontend' }}
-        run: pnpm jest --config jest.smoke.config.cjs --coverage || echo "⚠️ Smoke coverage failed, continuing"
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
@@ -144,8 +140,23 @@ jobs:
           path: coverage/${{ matrix.task }}
           retention-days: 1
 
+  coverage-smoke:
+    runs-on: ubuntu-latest
+    continue-on-error: true   # 🚫 Non-blocking
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm jest --config jest.smoke.config.cjs --coverage || echo "⚠️ Smoke failed, continuing"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-smoke
+          path: coverage/smoke
+
   upload-codecov:
-    needs: coverage
+    needs: [coverage, coverage-smoke]
     runs-on: ubuntu-latest
     environment: websitos
     steps:
