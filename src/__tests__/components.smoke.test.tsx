@@ -4,7 +4,14 @@
  */
 
 describe("Component stubs", () => {
-  let About: any, ErrorBoundary: any, Footer: any, Home: any, Layout: any, Navbar: any, Button: any, Card: any;
+  let About: Record<string, unknown> | undefined,
+      ErrorBoundary: Record<string, unknown> | undefined,
+      Footer: Record<string, unknown> | undefined,
+      Home: Record<string, unknown> | undefined,
+      Layout: Record<string, unknown> | undefined,
+      Navbar: Record<string, unknown> | undefined,
+      Button: Record<string, unknown> | undefined,
+      Card: Record<string, unknown> | undefined;
 
   beforeAll(async () => {
     try { About = (await import("../components/About")).default; } catch (e) { console.warn("⚠️ Failed to load About:", (e as Error).message); }

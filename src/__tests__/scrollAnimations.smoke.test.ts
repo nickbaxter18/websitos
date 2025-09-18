@@ -4,7 +4,7 @@
  */
 
 describe("scrollAnimations stub", () => {
-  let scrollAnimations: any;
+  let scrollAnimations: Record<string, unknown> | undefined;
 
   beforeAll(async () => {
     try {

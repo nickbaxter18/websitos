@@ -4,7 +4,7 @@
  */
 
 describe("utils stub", () => {
-  let utils: any;
+  let utils: Record<string, unknown> | undefined;
 
   beforeAll(async () => {
     try {

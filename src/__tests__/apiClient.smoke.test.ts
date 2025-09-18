@@ -4,7 +4,7 @@
  */
 
 describe("apiClient stub", () => {
-  let apiClient: any;
+  let apiClient: Record<string, unknown> | undefined;
 
   beforeAll(async () => {
     try {
