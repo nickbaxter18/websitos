@@ -20,8 +20,8 @@ describe("Component stubs", () => {
     try { Home = (await import("../components/Home")).default; } catch (e) { console.warn("⚠️ Failed to load Home:", (e as Error).message); }
     try { Layout = (await import("../components/Layout")).default; } catch (e) { console.warn("⚠️ Failed to load Layout:", (e as Error).message); }
     try { Navbar = (await import("../components/Navbar")).default; } catch (e) { console.warn("⚠️ Failed to load Navbar:", (e as Error).message); }
-    try { Button = (await import("../components/ui/button")).default; } catch (e) { console.warn("⚠️ Failed to load Button:", (e as Error).message); }
-    try { Card = (await import("../components/ui/card")).default; } catch (e) { console.warn("⚠️ Failed to load Card:", (e as Error).message); }
+    try { Button = await import("../components/ui/button"); } catch (e) { console.warn("⚠️ Failed to load Button:", (e as Error).message); }
+    try { Card = await import("../components/ui/card"); } catch (e) { console.warn("⚠️ Failed to load Card:", (e as Error).message); }
   });
 
   test("About loads without crashing", () => { expect(About).toBeDefined(); });
