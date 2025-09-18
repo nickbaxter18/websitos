@@ -1,5 +1,8 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+
+# Husky v10 compatible pre-push hook
+# Currently skipping checks because CI handles tests, lint, and coverage.
+# Safe to expand later if we want lightweight local validation.
 
 echo "⚠️ Skipping pre-push checks — CI will handle tests, lint, and coverage"
 exit 0
