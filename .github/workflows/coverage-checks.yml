@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v32
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v34
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v12
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v14
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -152,20 +152,24 @@ jobs:
         with:
           path: ./coverage
 
-      - name: Merge coverage
+      - name: Normalize and merge coverage files
         run: |
-          npx nyc merge coverage merged-coverage.json
-          npx nyc report --reporter=lcov --report-dir=coverage/merged --temp-dir=coverage
-
-      - name: Debug merged coverage file
-        run: |
-          ls -lh coverage/merged || true
-          head -n 50 coverage/merged/lcov.info || true
+          mkdir -p coverage/merged
+          for file in coverage/*/lcov.info; do
+            sed -i "s|/home/runner/work/websitos/websitos/||g" $file || true
+          done
+          cp coverage/backend/lcov.info coverage/merged/backend.lcov || true
+          cp coverage/frontend/lcov.info coverage/merged/frontend.lcov || true
+          cp coverage/e2e/lcov.info coverage/merged/e2e.lcov || true
+          cat coverage/merged/*.lcov > coverage/merged/lcov.info
+          echo "✅ Final merged lcov preview:" && head -n 50 coverage/merged/lcov.info
 
       - name: Upload merged coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: coverage/merged/lcov.info
+          files: |
+            coverage/merged/lcov.info
+            coverage/backend/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
