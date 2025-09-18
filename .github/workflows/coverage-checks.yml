@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v29
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v30
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v9
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v10
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -129,6 +129,13 @@ jobs:
           else
             npx nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
           fi
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.task }}
+          path: coverage/${{ matrix.task }}
+          retention-days: 1
 
   upload-codecov:
     needs: coverage
