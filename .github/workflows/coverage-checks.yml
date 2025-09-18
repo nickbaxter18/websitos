@@ -112,7 +112,15 @@ jobs:
           cd backend
           npm install --legacy-peer-deps
           npx jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
-            --coverageReporters=lcov
+            --coverageReporters=lcov 2>&1 | tee jest.log
+
+      - name: Upload Jest logs
+        if: ${{ matrix.task == 'backend-node' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-backend-node-logs
+          path: backend/jest.log
+          retention-days: 7
 
       - name: Run e2e coverage (Playwright with instrumentation)
         if: ${{ matrix.task == 'e2e' }}
