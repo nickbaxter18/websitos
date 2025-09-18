@@ -1,33 +1,16 @@
-import importlib
-import pkgutil
-import backend
+import pytest
 
 
-def run_backend_smoke_imports():
-    failures = []
-    for _, modname, _ in pkgutil.walk_packages(
-        backend.__path__, backend.__name__ + "."
-    ):
-        if modname.endswith(".tests") or modname.endswith(".test"):
-            continue
-        try:
-            importlib.import_module(modname)
-        except Exception as e:
-            failures.append(f"⚠️ Failed to import {modname}: {e}")
-    return failures
-
-
-def test_all_modules_importable():
-    failures = []
+def test_import_backend_modules() -> None:
     try:
-        failures = run_backend_smoke_imports()
-    except Exception as e:
-        failures.append(f"⚠️ Unexpected error in backend smoke test: {e}")
+        import backend  # noqa: F401
+    except ImportError as e:
+        pytest.fail(f"Failed to import backend: {e}")
 
-    if failures:
-        print("==== Backend Smoke Test Warnings ====")
-        for f in failures:
-            print(f)
-        print("=====================================")
 
-    assert True  # always pass
+def test_import_backend_submodules() -> None:
+    try:
+        import backend.module1  # noqa: F401
+        import backend.module2  # noqa: F401
+    except ImportError as e:
+        pytest.fail(f"Failed to import backend submodules: {e}")
