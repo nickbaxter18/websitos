@@ -148,6 +148,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
+      - uses: pnpm/action-setup@v2   # ✅ install pnpm in smoke job
+        with:
+          version: 10
       - run: pnpm install --frozen-lockfile
       - run: pnpm jest --config jest.smoke.config.cjs --coverage || echo "⚠️ Smoke failed, continuing"
       - uses: actions/upload-artifact@v4
