@@ -1,11 +1,20 @@
-let utils;
+/**
+ * Smoke test stub for utils library.
+ * TODO: Replace with real unit tests.
+ */
 
-try {
-  utils = require("../lib/utils");
-} catch (e) {
-  console.warn("⚠️ utils failed to load:", (e as Error).message);
-}
+describe("utils stub", () => {
+  let utils: any;
 
-test("utils module loads without crashing", () => {
-  expect(utils).toBeDefined();
+  beforeAll(async () => {
+    try {
+      utils = await import("../lib/utils");
+    } catch (e) {
+      console.warn("⚠️ Failed to load utils:", (e as Error).message);
+    }
+  });
+
+  test("utils loads without crashing", () => {
+    expect(utils).toBeDefined();
+  });
 });

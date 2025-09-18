@@ -1,11 +1,20 @@
-let scrollAnimations;
+/**
+ * Smoke test stub for scrollAnimations util.
+ * TODO: Replace with real unit tests.
+ */
 
-try {
-  scrollAnimations = require("../utils/scrollAnimations");
-} catch (e) {
-  console.warn("⚠️ scrollAnimations failed to load:", (e as Error).message);
-}
+describe("scrollAnimations stub", () => {
+  let scrollAnimations: any;
 
-test("scrollAnimations loads without crashing", () => {
-  expect(scrollAnimations).toBeDefined();
+  beforeAll(async () => {
+    try {
+      scrollAnimations = await import("../utils/scrollAnimations");
+    } catch (e) {
+      console.warn("⚠️ Failed to load scrollAnimations:", (e as Error).message);
+    }
+  });
+
+  test("scrollAnimations loads without crashing", () => {
+    expect(scrollAnimations).toBeDefined();
+  });
 });

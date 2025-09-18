@@ -1,21 +1,28 @@
-let About, ErrorBoundary, Footer, Home, Layout, Navbar, Button, Card;
+/**
+ * Smoke test stubs for components.
+ * TODO: Replace with real unit tests.
+ */
 
-try { About = require("../components/About").default; } catch (e) { console.warn("⚠️ About failed to load:", (e as Error).message); }
-try { ErrorBoundary = require("../components/ErrorBoundary").default; } catch (e) { console.warn("⚠️ ErrorBoundary failed to load:", (e as Error).message); }
-try { Footer = require("../components/Footer").default; } catch (e) { console.warn("⚠️ Footer failed to load:", (e as Error).message); }
-try { Home = require("../components/Home").default; } catch (e) { console.warn("⚠️ Home failed to load:", (e as Error).message); }
-try { Layout = require("../components/Layout").default; } catch (e) { console.warn("⚠️ Layout failed to load:", (e as Error).message); }
-try { Navbar = require("../components/Navbar").default; } catch (e) { console.warn("⚠️ Navbar failed to load:", (e as Error).message); }
-try { Button = require("../components/ui/button").default; } catch (e) { console.warn("⚠️ Button failed to load:", (e as Error).message); }
-try { Card = require("../components/ui/card").default; } catch (e) { console.warn("⚠️ Card failed to load:", (e as Error).message); }
+describe("Component stubs", () => {
+  let About: any, ErrorBoundary: any, Footer: any, Home: any, Layout: any, Navbar: any, Button: any, Card: any;
 
-test("components load without crashing", () => {
-  expect(About).toBeDefined();
-  expect(ErrorBoundary).toBeDefined();
-  expect(Footer).toBeDefined();
-  expect(Home).toBeDefined();
-  expect(Layout).toBeDefined();
-  expect(Navbar).toBeDefined();
-  expect(Button).toBeDefined();
-  expect(Card).toBeDefined();
+  beforeAll(async () => {
+    try { About = (await import("../components/About")).default; } catch (e) { console.warn("⚠️ Failed to load About:", (e as Error).message); }
+    try { ErrorBoundary = (await import("../components/ErrorBoundary")).default; } catch (e) { console.warn("⚠️ Failed to load ErrorBoundary:", (e as Error).message); }
+    try { Footer = (await import("../components/Footer")).default; } catch (e) { console.warn("⚠️ Failed to load Footer:", (e as Error).message); }
+    try { Home = (await import("../components/Home")).default; } catch (e) { console.warn("⚠️ Failed to load Home:", (e as Error).message); }
+    try { Layout = (await import("../components/Layout")).default; } catch (e) { console.warn("⚠️ Failed to load Layout:", (e as Error).message); }
+    try { Navbar = (await import("../components/Navbar")).default; } catch (e) { console.warn("⚠️ Failed to load Navbar:", (e as Error).message); }
+    try { Button = (await import("../components/ui/button")).default; } catch (e) { console.warn("⚠️ Failed to load Button:", (e as Error).message); }
+    try { Card = (await import("../components/ui/card")).default; } catch (e) { console.warn("⚠️ Failed to load Card:", (e as Error).message); }
+  });
+
+  test("About loads without crashing", () => { expect(About).toBeDefined(); });
+  test("ErrorBoundary loads without crashing", () => { expect(ErrorBoundary).toBeDefined(); });
+  test("Footer loads without crashing", () => { expect(Footer).toBeDefined(); });
+  test("Home loads without crashing", () => { expect(Home).toBeDefined(); });
+  test("Layout loads without crashing", () => { expect(Layout).toBeDefined(); });
+  test("Navbar loads without crashing", () => { expect(Navbar).toBeDefined(); });
+  test("Button loads without crashing", () => { expect(Button).toBeDefined(); });
+  test("Card loads without crashing", () => { expect(Card).toBeDefined(); });
 });
