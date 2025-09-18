@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v37
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v38
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v17
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v18
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -90,6 +90,10 @@ jobs:
           pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
             --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
             --coverageDirectory=coverage/frontend
+
+      - name: Run frontend smoke coverage (non-blocking)
+        if: ${{ matrix.task == 'frontend' }}
+        run: pnpm jest --config jest.smoke.config.cjs --coverage || true
 
       - name: Run backend coverage (Pytest with branch coverage + threshold)
         if: ${{ matrix.task == 'backend' }}
@@ -155,7 +159,7 @@ jobs:
       - name: Normalize and merge coverage files
         run: |
           mkdir -p coverage/merged
-          for file in coverage/coverage-*/lcov.info; do
+          for file in coverage/coverage-*/lcov.info coverage/coverage-smoke/lcov.info; do
             sed -i "s|/home/runner/work/websitos/websitos/||g" $file || true
             cat $file >> coverage/merged/lcov.info || true
           done
