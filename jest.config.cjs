@@ -16,8 +16,11 @@ module.exports = {
     "dist/",
     "coverage/"
   ],
-  setupFiles: ["<rootDir>/src/setupTests.ts"], // ✅ ensure polyfills load before tests
+  setupFiles: ["<rootDir>/src/setupTests.ts"],
   coverageDirectory: "coverage/frontend",
   coverageReporters: ["lcov", "text", "json-summary", "cobertura"],
-  passWithNoTests: true
+  passWithNoTests: true,
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1' // ✅ resolve @ alias to src/
+  }
 };
