@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v30
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v31
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v10
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v11
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -140,6 +140,7 @@ jobs:
   upload-codecov:
     needs: coverage
     runs-on: ubuntu-latest
+    environment: websitos
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -160,5 +161,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: coverage/merged/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
