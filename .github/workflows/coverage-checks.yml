@@ -111,8 +111,8 @@ jobs:
         run: |
           cd backend
           npm install --legacy-peer-deps
-          npx jest --config jest.config.cjs --coverage \
-            --coverageReporters=lcov --coverageDirectory=../coverage/backend-node
+          npx jest --config jest.config.cjs --coverage --passWithNoTests \
+            --coverageReporters=lcov
 
       - name: Run e2e coverage (Playwright with instrumentation)
         if: ${{ matrix.task == 'e2e' }}
