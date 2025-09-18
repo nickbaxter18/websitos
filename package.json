@@ -7,8 +7,7 @@
   "type": "module",
   "imports": {
     "@/*": "./src/*",
-    "#/*": "./src/*",
-    "v2/*": "./v2/*"
+    "#/*": "./src/*"
   },
   "scripts": {
     "preinstall": "node -e \"if (!/pnpm/.test(process.env.npm_execpath || '')) { console.error('❌ Use pnpm, not npm'); process.exit(1); }\"",
@@ -20,13 +19,13 @@
     "test:ci": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage --json --outputFile=jest-report.json",
     "test:e2e": "playwright test",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src v2 ops",
-    "lint:fix": "eslint src v2 ops --fix",
+    "lint": "eslint src ops",
+    "lint:fix": "eslint src ops --fix",
     "lint-staged": "lint-staged",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:all": "black . && prettier --write . && eslint . --fix",
-    "validate": "ts-node v2/core/schema-validator.ts",
+    "validate": "ts-node src/core/schema-validator.ts",
     "validate-env": "node --loader ts-node/esm --experimental-specifier-resolution=node src/validateEnv.ts",
     "verify-assets": "node scripts/verifyAssets.js",
     "prepare": "husky",
@@ -125,6 +124,8 @@
   },
   "overrides": {
     "lodash.template": "^4.5.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "jsdom": "22.1.0",
+    "tough-cookie": "^4.1.3"
   }
 }

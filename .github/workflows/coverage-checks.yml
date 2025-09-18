@@ -12,7 +12,7 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 60 # ⬆️ increased backend job timeout
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v23
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-v24
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -67,7 +67,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v3
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-v4
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -134,7 +134,7 @@ jobs:
 
       - name: Enforce coverage thresholds
         if: ${{ matrix.task == 'backend' }}
-        run: npx nyc check-coverage --branches=70 --functions=70 --lines=70 --statements=70 || true # prevent CI crash on git 128
+        run: npx nyc check-coverage --branches=70 --functions=70 --lines=70 --statements=70 || true
 
       - name: Run e2e coverage (Playwright with instrumentation)
         if: ${{ matrix.task == 'e2e' }}
@@ -158,11 +158,12 @@ jobs:
           ls -lh .nyc_output || echo "⚠️ No coverage output found"
 
           echo ">>> Checking and merging browser coverage"
-          if [ -d .nyc_output ]; then
+          if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
             npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
           else
-            echo "⚠️ No .nyc_output found"
+            echo "⚠️ .nyc_output empty, falling back to nyc run"
+            npx nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
           fi
 
           echo ">>> Verifying e2e coverage files"
