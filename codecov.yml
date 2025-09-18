@@ -1,6 +1,4 @@
 # Codecov configuration
-# This file customizes how Codecov processes coverage data
-
 coverage:
   precision: 2
   round: down
@@ -10,14 +8,14 @@ coverage:
     project:
       default:
         target: auto
-        threshold: 2%
+        threshold: 2
     patch:
       default:
         target: auto
-        threshold: 2%
+        threshold: 2
 
 ignore:
-  - "**/migrations/**"
+  - "migrations/**"
   - "**/*.d.ts"
   - "**/*.test.*"
   - "**/*.stories.*"
