@@ -217,6 +217,10 @@ jobs:
             try {
               const result = await callLinear(query, variables);
               console.log("Final Linear API result:", JSON.stringify(result, null, 2));
+              const issueUrl = result?.data?.issueCreate?.issue?.url || result?.data?.issueUpdate?.issue?.url;
+              if (issueUrl) {
+                console.log("🔗 Linear issue URL:", issueUrl);
+              }
             } catch (err) {
               core.setFailed("Linear API sync failed: " + err.message);
             }
