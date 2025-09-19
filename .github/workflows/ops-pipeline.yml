@@ -53,29 +53,32 @@ jobs:
       - name: Install dependencies
         run: |
           echo ">>> Installing dependencies"
-          pnpm install --frozen-lockfile || { echo "::error::pnpm install failed"; exit 1; }
+          pnpm install --frozen-lockfile 2>&1 | tee deps-install.log || { echo "::error::pnpm install failed"; exit 1; }
           python -m pip install --upgrade pip
-          pip install --prefer-binary -r requirements.txt || { echo "::error::pip install failed"; exit 1; }
-          pip install pytest pytest-github-actions-annotate-failures
+          pip install --prefer-binary -r requirements.txt 2>&1 | tee -a deps-install.log || { echo "::error::pip install failed"; exit 1; }
+          pip install pytest pytest-github-actions-annotate-failures 2>&1 | tee -a deps-install.log
 
       - name: Run Ops Cycle
         run: |
           echo ">>> Starting Ops Cycle"
-          pnpm opscycle > ops-report.json || true
+          pnpm opscycle 2>&1 | tee opscycle.log || true
           if [ ! -s ops-report.json ]; then echo '{}' > ops-report.json; fi
 
       - name: Run Security Scan
         run: |
           echo ">>> Starting Security Scan"
-          pnpm secscan --json > secscan-report.json || true
+          pnpm secscan --json 2>&1 | tee secscan.log || true
           if [ ! -s secscan-report.json ]; then echo '{}' > secscan-report.json; fi
 
-      - name: Upload Ops Reports
+      - name: Upload Ops Reports & Logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ops-reports
+          name: ops-full-reports
           path: |
             ops-report.json
             secscan-report.json
+            deps-install.log
+            opscycle.log
+            secscan.log
           retention-days: 14

@@ -26,28 +26,32 @@ jobs:
           set +e
           MAX_RETRIES=3
           DELAY=5
+          LOGFILE=smoke-tests.log
+          echo "===== Smoke Test Run =====" > $LOGFILE
 
           run_check() {
             URL=$1
             NAME=$2
             FILE=$3
 
+            RESPFILE="${FILE}.txt"
+
             for i in $(seq 1 $MAX_RETRIES); do
-              echo ">>> Checking $NAME at $URL (attempt $i/$MAX_RETRIES)"
-              RESPONSE=$(curl -s -o response.txt -w "%{http_code}" "$URL")
+              echo ">>> Checking $NAME at $URL (attempt $i/$MAX_RETRIES)" | tee -a $LOGFILE
+              RESPONSE=$(curl -s -o $RESPFILE -w "%{http_code}" "$URL")
               STATUS=$?
 
               if [ "$STATUS" -eq 0 ] && grep -q "200" <<< "$RESPONSE"; then
-                echo "✅ $NAME OK"
+                echo "✅ $NAME OK" | tee -a $LOGFILE
                 return 0
               else
-                echo "⚠️ $NAME failed with status $RESPONSE"
+                echo "⚠️ $NAME failed with status $RESPONSE" | tee -a $LOGFILE
                 if [ $i -lt $MAX_RETRIES ]; then
-                  echo "Retrying in $DELAY seconds..."
+                  echo "Retrying in $DELAY seconds..." | tee -a $LOGFILE
                   sleep $DELAY
                   DELAY=$((DELAY*2))
                 else
-                  echo "::error file=smoke/$FILE.sh,line=1::$NAME check failed after $MAX_RETRIES attempts (status $RESPONSE)"
+                  echo "::error file=smoke/$FILE.sh,line=1::$NAME check failed after $MAX_RETRIES attempts (status $RESPONSE)" | tee -a $LOGFILE
                   return 1
                 fi
               fi
@@ -59,10 +63,19 @@ jobs:
           run_check https://websitos.onrender.com/health "Root Health" root_health || exit 1
           run_check https://websitos.onrender.com/ "Frontend Homepage" frontend_homepage || exit 1
 
+          echo "==== Captured Responses ====" >> $LOGFILE
+          for f in *.txt; do
+            echo "--- $f ---" >> $LOGFILE
+            cat $f >> $LOGFILE
+            echo "" >> $LOGFILE
+          done
+
       - name: Upload Smoke Test Logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: post-deploy-smoke-logs
-          path: response.txt
+          name: post-deploy-smoke-full-logs
+          path: |
+            smoke-tests.log
+            *.txt
           retention-days: 14

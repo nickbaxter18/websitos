@@ -18,6 +18,14 @@ jobs:
         with:
           path: diagnostics-logs
 
+      - name: Validate artifact presence
+        run: |
+          if [ ! -d "diagnostics-logs" ] || [ -z "$(ls -A diagnostics-logs)" ]; then
+            echo "⚠️ Warning: No diagnostics logs were uploaded by the triggering workflow. Skipping log analysis but continuing workflow." >&2
+            echo "class=clean" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
       - name: Gather failure and warning summary with classification
         id: classify
         run: |
@@ -27,42 +35,52 @@ jobs:
           echo "Conclusion: ${{ github.event.workflow_run.conclusion }}" >> report.md
           echo "---" >> report.md
 
-          ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs || true)
-          WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs || true)
+          # Limit to 500 lines max per category to avoid flooding
+          ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs | head -n 500 || true)
+          WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs | head -n 500 || true)
           STACK=$(grep -iE "(Traceback|Error:|Exception:)" -R diagnostics-logs | head -n 20 || true)
+
+          ERROR_COUNT=$(echo "$ERRORS" | grep -c . || true)
+          WARNING_COUNT=$(echo "$WARNINGS" | grep -c . || true)
+
+          echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
 
           if [ -z "$ERRORS" ] && [ -z "$WARNINGS" ]; then
             echo "### 🔎 Log Highlights" >> report.md
             echo "No obvious errors or warnings found in logs." >> report.md
+            echo "class=clean" >> $GITHUB_OUTPUT
           else
             echo "### 🔎 Log Highlights" >> report.md
             if [ -n "$ERRORS" ]; then
-              echo "#### ❌ Errors" >> report.md
-              echo "$ERRORS" | head -n 50 >> report.md
+              echo "#### ❌ Errors (showing first 500 lines)" >> report.md
+              echo "$ERRORS" >> report.md
+              while IFS= read -r line; do
+                echo "::error::$line"
+              done <<< "$ERRORS"
             fi
             if [ -n "$WARNINGS" ]; then
-              echo "#### ⚠️ Warnings" >> report.md
-              echo "$WARNINGS" | head -n 50 >> report.md
+              echo "#### ⚠️ Warnings (showing first 500 lines)" >> report.md
+              echo "$WARNINGS" >> report.md
+              while IFS= read -r line; do
+                echo "::warning::$line"
+              done <<< "$WARNINGS"
             fi
             if [ -n "$STACK" ]; then
               echo "#### 🔍 Extracted Stack Trace" >> report.md
               echo "$STACK" >> report.md
+            fi
+
+            if [ -n "$ERRORS" ]; then
+              echo "class=failure" >> $GITHUB_OUTPUT
+            elif [ -n "$WARNINGS" ]; then
+              echo "class=warning" >> $GITHUB_OUTPUT
             fi
           fi
 
           echo "---" >> report.md
           echo "### 🧭 Classification" >> report.md
 
-          CLASS="advisory"
-          if [ -n "$ERRORS" ]; then
-            CLASS="failure"
-          elif [ -n "$WARNINGS" ]; then
-            CLASS="warning"
-          fi
-
-          echo "class=$CLASS" >> $GITHUB_OUTPUT
-
-          # Detect component from stack or logs
           COMPONENT="general"
           if echo "$STACK" | grep -qi "frontend"; then COMPONENT="frontend"; fi
           if echo "$STACK" | grep -qi "backend"; then COMPONENT="backend"; fi
@@ -70,86 +88,50 @@ jobs:
           if echo "$STACK" | grep -qi "network\|timeout"; then COMPONENT="infra"; fi
           echo "component=$COMPONENT" >> $GITHUB_OUTPUT
 
-          # Try to extract coverage delta if summary exists
           if [ -f diagnostics-logs/coverage-frontend/coverage-summary.json ]; then
-            FRONTEND_COV=$(jq '.total.lines.pct' diagnostics-logs/coverage-frontend/coverage-summary.json)
-            echo "Frontend coverage: $FRONTEND_COV%" >> report.md
+            FRONTEND_COV=$(jq -r '.total.lines.pct // 0' diagnostics-logs/coverage-frontend/coverage-summary.json || echo 0)
+            echo "frontend_cov=$FRONTEND_COV" >> $GITHUB_OUTPUT
           fi
           if [ -f diagnostics-logs/coverage-backend/coverage-summary.json ]; then
-            BACKEND_COV=$(jq '.total.lines.pct' diagnostics-logs/coverage-backend/coverage-summary.json)
-            echo "Backend coverage: $BACKEND_COV%" >> report.md
+            BACKEND_COV=$(jq -r '.total.lines.pct // 0' diagnostics-logs/coverage-backend/coverage-summary.json || echo 0)
+            echo "backend_cov=$BACKEND_COV" >> $GITHUB_OUTPUT
           fi
+          echo "timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
-      - name: Post diagnostics as PR comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: ci-diagnostics
-          path: report.md
-
-      - name: Create or update Linear issue
-        if: steps.classify.outputs.class != 'advisory'
-        uses: actions/github-script@v7
-        env:
-          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
-        with:
-          script: |
-            const fetch = require('node-fetch');
-            const fs = require('fs');
-
-            const classification = '${{ steps.classify.outputs.class }}';
-            const component = '${{ steps.classify.outputs.component }}';
-            const workflow = '${{ github.event.workflow_run.name }}';
-            const commit = '${{ github.event.workflow_run.head_sha }}';
-
-            // Read diagnostics
-            const description = fs.readFileSync('report.md', 'utf8');
-
-            // Get commit author for assignment
-            const { data: commitData } = await github.rest.repos.getCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: commit,
-            });
-            const author = commitData.commit.author.name;
-            const authorEmail = commitData.commit.author.email;
-
-            const title = `CI ${classification.toUpperCase()} in ${workflow}`;
-
-            const query = `mutation IssueCreate($input: IssueCreateInput!) {
-              issueCreate(input: $input) {
-                success
-                issue { id url }
-              }
-            }`;
-
-            const variables = {
-              input: {
-                teamId: process.env.LINEAR_TEAM_ID,
-                title: title,
-                description: `${description}\n---\n👤 Commit Author: ${author} <${authorEmail}>\n🔗 Commit: https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}\n🔗 Workflow Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.event.workflow_run.id }}`,
-                labelIds: [],
-              }
-            };
-
-            const res = await fetch("https://api.linear.app/graphql", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": process.env.LINEAR_API_KEY
-              },
-              body: JSON.stringify({ query, variables })
-            });
-
-            const data = await res.json();
-            if (data.errors) {
-              core.setFailed(JSON.stringify(data.errors));
-            } else {
-              console.log(`Created/linked Linear issue: ${data.data.issueCreate.issue.url}`);
-            }
-
-      - name: Upload raw logs artifact
+      - name: Upload CI Diagnostics Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ci-diagnostics-logs
-          path: diagnostics-logs
+          name: ci-diagnostics-report
+          path: |
+            report.md
+            diagnostics-logs
+          retention-days: 14
+
+      - name: Append CI Diagnostics to GitHub Summary
+        if: always()
+        run: |
+          echo "# ⚠️ CI Diagnostics Report" >> $GITHUB_STEP_SUMMARY
+          echo "Workflow: ${{ github.event.workflow_run.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "Conclusion: ${{ github.event.workflow_run.conclusion }}" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          cat report.md >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Coverage Overview" >> $GITHUB_STEP_SUMMARY
+          echo "| Area | Coverage |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|----------|" >> $GITHUB_STEP_SUMMARY
+          FRONTEND_COV=${{ steps.classify.outputs.frontend_cov || 0 }}
+          BACKEND_COV=${{ steps.classify.outputs.backend_cov || 0 }}
+          echo "| Frontend | ${FRONTEND_COV}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${BACKEND_COV}% |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ⚠️ Issue Counts" >> $GITHUB_STEP_SUMMARY
+          echo "| Type | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          ERROR_COUNT=${{ steps.classify.outputs.error_count || 0 }}
+          WARNING_COUNT=${{ steps.classify.outputs.warning_count || 0 }}
+          echo "| Errors | ${ERROR_COUNT} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Warnings | ${WARNING_COUNT} |" >> $GITHUB_STEP_SUMMARY

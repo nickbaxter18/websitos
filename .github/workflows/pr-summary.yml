@@ -21,13 +21,17 @@ jobs:
           echo "## ✅ CI Coverage Summary" > summary.md
           echo "| Area | Status | Coverage |" >> summary.md
           echo "|------|--------|----------|" >> summary.md
+          LOGFILE=pr-summary.log
+          echo "===== PR Coverage Summary Log =====" > $LOGFILE
 
           for area in frontend backend backend-node e2e; do
             if [ -f artifacts/coverage-${area}/coverage-summary.json ]; then
-              total=$(jq -r '.total.lines.pct' artifacts/coverage-${area}/coverage-summary.json)
+              total=$(jq -r '.total.lines.pct // 0' artifacts/coverage-${area}/coverage-summary.json || echo 0)
               echo "| ${area} | ✅ Found | ${total}% |" >> summary.md
+              echo "${area}: Coverage = ${total}%" >> $LOGFILE
             else
               echo "| ${area} | ❌ Missing | N/A |" >> summary.md
+              echo "❌ ${area} coverage report missing" >> $LOGFILE
               echo "::error::${area} coverage report missing"
             fi
           done
@@ -37,3 +41,13 @@ jobs:
         with:
           header: coverage-summary
           path: summary.md
+
+      - name: Upload PR Summary Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-summary-artifacts
+          path: |
+            summary.md
+            pr-summary.log
+          retention-days: 14

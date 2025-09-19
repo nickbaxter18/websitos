@@ -52,28 +52,28 @@ jobs:
 
       - name: Run ${{ matrix.task }}
         run: |
-          echo ">>> Starting ${{ matrix.task }} checks"
+          echo ">>> Starting ${{ matrix.task }} checks" | tee ${{ matrix.task }}-output.log
           EXIT=0
           if [ "${{ matrix.task }}" == "black" ]; then
-            black --check . --exclude '(Lib|venv|node_modules)' || EXIT=$?
+            black --check . --exclude '(Lib|venv|node_modules)' 2>&1 | tee -a ${{ matrix.task }}-output.log || EXIT=$?
           fi
           if [ "${{ matrix.task }}" == "mypy" ]; then
-            mypy . --exclude '(Lib|venv|node_modules)' --ignore-missing-imports --show-error-codes --show-traceback || EXIT=$?
+            mypy . --exclude '(Lib|venv|node_modules)' --ignore-missing-imports --show-error-codes --show-traceback 2>&1 | tee -a ${{ matrix.task }}-output.log || EXIT=$?
           fi
           if [ "${{ matrix.task }}" == "pytest" ]; then
             PYTHONPATH=. pytest -vv --maxfail=1 --disable-warnings \
-              --json-report --json-report-file=pytest-report.json || EXIT=$?
+              --json-report --json-report-file=pytest-report.json 2>&1 | tee -a ${{ matrix.task }}-output.log || EXIT=$?
             if [ ! -f pytest-report.json ]; then
               echo '{}' > pytest-report.json
-              echo "::warning file=backend/tests::pytest-report.json missing, test run may have crashed"
+              echo "::warning file=backend/tests::pytest-report.json missing, test run may have crashed" | tee -a ${{ matrix.task }}-output.log
             fi
           fi
           if [ "${{ matrix.task }}" == "flake8" ]; then
             flake8 . --exclude venv,__pycache__,.pytest_cache,node_modules,backend,Lib \
-              --max-line-length=120 --exit-zero | tee flake8-report.txt
+              --max-line-length=120 --exit-zero 2>&1 | tee -a ${{ matrix.task }}-output.log > flake8-report.txt
             if [ ! -f flake8-report.txt ]; then echo 'No flake8 output' > flake8-report.txt; fi
           fi
-          echo ">>> Finished ${{ matrix.task }} with exit code $EXIT"
+          echo ">>> Finished ${{ matrix.task }} with exit code $EXIT" | tee -a ${{ matrix.task }}-output.log
           exit $EXIT
 
       - name: Upload pytest results artifact
@@ -90,4 +90,12 @@ jobs:
         with:
           name: backend-flake8-report
           path: flake8-report.txt
+          retention-days: 14
+
+      - name: Upload raw backend job log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-job-log-${{ matrix.task }}
+          path: ${{ matrix.task }}-output.log
           retention-days: 14
