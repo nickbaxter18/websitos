@@ -6,7 +6,6 @@ on:
       - Backend Checks
       - Coverage Checks
       - Ops Pipeline
-      - PR Summary
       - Post-Deploy Smoke Tests
       - U-DIG IT Repo Sync
       - Validation
