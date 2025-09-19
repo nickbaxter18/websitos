@@ -44,58 +44,6 @@ jobs:
           echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
           echo "warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
 
-          if [ -z "$ERRORS" ] && [ -z "$WARNINGS" ]; then
-            echo "### 🔎 Log Highlights" >> report.md
-            echo "No obvious errors or warnings found in logs." >> report.md
-            echo "class=clean" >> $GITHUB_OUTPUT
-          else
-            echo "### 🔎 Log Highlights" >> report.md
-            if [ -n "$ERRORS" ]; then
-              echo "#### ❌ Errors (showing first 500 lines)" >> report.md
-              echo "$ERRORS" >> report.md
-              while IFS= read -r line; do
-                echo "::error::$line"
-              done <<< "$ERRORS"
-            fi
-            if [ -n "$WARNINGS" ]; then
-              echo "#### ⚠️ Warnings (showing first 500 lines)" >> report.md
-              echo "$WARNINGS" >> report.md
-              while IFS= read -r line; do
-                echo "::warning::$line"
-              done <<< "$WARNINGS"
-            fi
-            if [ -n "$STACK" ]; then
-              echo "#### 🔍 Extracted Stack Trace" >> report.md
-              echo "$STACK" >> report.md
-            fi
-
-            if [ -n "$ERRORS" ]; then
-              echo "class=failure" >> $GITHUB_OUTPUT
-            elif [ -n "$WARNINGS" ]; then
-              echo "class=warning" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-          echo "---" >> report.md
-          echo "### 🧭 Classification" >> report.md
-
-          COMPONENT="general"
-          if echo "$STACK" | grep -qi "frontend"; then COMPONENT="frontend"; fi
-          if echo "$STACK" | grep -qi "backend"; then COMPONENT="backend"; fi
-          if echo "$STACK" | grep -qi "test"; then COMPONENT="tests"; fi
-          if echo "$STACK" | grep -qi "network\|timeout"; then COMPONENT="infra"; fi
-          echo "component=$COMPONENT" >> $GITHUB_OUTPUT
-
-          if [ -f diagnostics-logs/coverage-frontend/coverage-summary.json ]; then
-            FRONTEND_COV=$(jq -r '.total.lines.pct // 0' diagnostics-logs/coverage-frontend/coverage-summary.json || echo 0)
-            echo "frontend_cov=$FRONTEND_COV" >> $GITHUB_OUTPUT
-          fi
-          if [ -f diagnostics-logs/coverage-backend/coverage-summary.json ]; then
-            BACKEND_COV=$(jq -r '.total.lines.pct // 0' diagnostics-logs/coverage-backend/coverage-summary.json || echo 0)
-            echo "backend_cov=$BACKEND_COV" >> $GITHUB_OUTPUT
-          fi
-          echo "timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-
       - name: Gather GitHub Check Annotations
         id: annotations
         uses: actions/github-script@v7
@@ -126,25 +74,6 @@ jobs:
             core.setOutput("errors", errors.join("\n"));
             core.setOutput("warnings", warnings.join("\n"));
 
-            console.log("Pulled annotations:", { errors, warnings });
-
-      - name: Merge Annotations into Report
-        if: always()
-        run: |
-          echo "" >> report.md
-          echo "---" >> report.md
-          echo "### 📋 GitHub Annotations" >> report.md
-
-          if [ -n "${{ steps.annotations.outputs.errors }}" ]; then
-            echo "#### ❌ Errors from GitHub Checks" >> report.md
-            echo "${{ steps.annotations.outputs.errors }}" >> report.md
-          fi
-
-          if [ -n "${{ steps.annotations.outputs.warnings }}" ]; then
-            echo "#### ⚠️ Warnings from GitHub Checks" >> report.md
-            echo "${{ steps.annotations.outputs.warnings }}" >> report.md
-          fi
-
       - name: Sync Linear issue (failure/warning)
         if: steps.classify.outputs.class == 'failure' || steps.classify.outputs.class == 'warning' || steps.annotations.outputs.errors != '' || steps.annotations.outputs.warnings != ''
         uses: actions/github-script@v7
@@ -166,9 +95,11 @@ jobs:
                   },
                   body: JSON.stringify({ query, variables })
                 });
-                if (res.ok) return await res.json();
+                const json = await res.json();
+                console.log("Linear API response attempt", i + 1, JSON.stringify(json, null, 2));
+                if (res.ok && !json.errors) return json;
                 if (i < retries - 1) {
-                  console.log(`Retrying Linear API call... attempt ${i+2}`);
+                  console.log("Retrying Linear API call...");
                   await new Promise(r => setTimeout(r, 1000 * (i+1)));
                 }
               }
@@ -179,8 +110,8 @@ jobs:
             const workflow = '${{ github.event.workflow_run.name }}';
             const commit = '${{ github.event.workflow_run.head_sha }}';
 
-            const logErrors = `${{ steps.classify.outputs.error_count }}`;
-            const logWarnings = `${{ steps.classify.outputs.warning_count }}`;
+            const logErrors = '${{ steps.classify.outputs.error_count }}';
+            const logWarnings = '${{ steps.classify.outputs.warning_count }}';
             const checkErrors = `${{ steps.annotations.outputs.errors }}`;
             const checkWarnings = `${{ steps.annotations.outputs.warnings }}`;
 
@@ -200,10 +131,14 @@ jobs:
               input: {
                 teamId: process.env.LINEAR_TEAM_ID,
                 title,
-                description: `${description}\n---\n🔍 GitHub Annotations Errors: ${checkErrors}\n🔍 GitHub Annotations Warnings: ${checkWarnings}\n---\n📊 Log Errors: ${logErrors}\n📊 Log Warnings: ${logWarnings}\n🔗 Commit: https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}\n🔗 Workflow Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.event.workflow_run.id }}`,
+                description: `${description}\n---\n📋 GitHub Annotations Errors: ${checkErrors}\n📋 GitHub Annotations Warnings: ${checkWarnings}\n---\n📊 Log Errors: ${logErrors}\n📊 Log Warnings: ${logWarnings}\n🔗 Commit: https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}\n🔗 Workflow Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.event.workflow_run.id }}`,
                 labelIds: []
               }
             };
 
-            const result = await callLinear(query, variables);
-            console.log("Linear response:", JSON.stringify(result, null, 2));
+            try {
+              const result = await callLinear(query, variables);
+              console.log("Final Linear API result:", JSON.stringify(result, null, 2));
+            } catch (err) {
+              core.setFailed("Linear API sync failed: " + err.message);
+            }

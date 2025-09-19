@@ -44,12 +44,19 @@ jobs:
         with:
           version: 10
 
-      - name: Cache pnpm (for frontend/e2e/backend-node)
+      - name: Ensure pnpm store exists
         if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
-        uses: actions/cache@v3
+        run: mkdir -p ~/.pnpm-store
+
+      - name: Cache pnpm store
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ matrix.task }}-${{ hashFiles('**/pnpm-lock.yaml') }}-v1
+          key: ${{ runner.os }}-pnpm-${{ matrix.task }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ matrix.task }}-
+            ${{ runner.os }}-pnpm-
 
       - name: Setup Python (for backend)
         if: ${{ matrix.task == 'backend' }}
@@ -73,7 +80,7 @@ jobs:
         if: ${{ matrix.task == 'frontend' }}
         run: |
           for i in 1 2 3; do
-            pnpm install --frozen-lockfile && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
+            pnpm install --frozen-lockfile --prefer-offline && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
           done
 
       - name: Install backend dependencies (Python)
@@ -115,7 +122,9 @@ jobs:
         run: |
           mkdir -p logs backend/coverage
           cd backend
-          pnpm install --frozen-lockfile
+          for i in 1 2 3; do
+            pnpm install --frozen-lockfile --prefer-offline && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
+          done
           pnpm exec jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
             --coverageReporters=lcov --coverageReporters=json-summary --coverageDirectory=coverage \
             2>&1 | tee ../logs/backend-node.log
@@ -125,7 +134,9 @@ jobs:
         if: ${{ matrix.task == 'e2e' }}
         run: |
           mkdir -p coverage/e2e logs
-          pnpm install --frozen-lockfile
+          for i in 1 2 3; do
+            pnpm install --frozen-lockfile --prefer-offline && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
+          done
           pnpm exec playwright install chromium
 
           VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts | tee logs/vite-debug.log
