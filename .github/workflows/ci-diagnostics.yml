@@ -79,8 +79,22 @@ jobs:
           echo "Branch: ${{ github.ref_name }}" >> report.md
           echo "---" >> report.md
 
+          # Parse text logs
           ERRORS=$(grep -iRE "(error|fail|exception|missing|denied)" diagnostics-logs || true | sort | uniq | head -n 500)
           WARNINGS=$(grep -iRE "(warn|warning|deprecated)" diagnostics-logs || true | sort | uniq | head -n 500)
+
+          # Parse JSON reports (eslint, jest, secscan, ops)
+          ESLINT_ERRORS=$(jq -r '.messages[]? | select(.severity==2) | "ESLint: "+.message' diagnostics-logs/**/eslint-report.json 2>/dev/null || true)
+          ESLINT_WARNINGS=$(jq -r '.messages[]? | select(.severity==1) | "ESLint: "+.message' diagnostics-logs/**/eslint-report.json 2>/dev/null || true)
+
+          JEST_ERRORS=$(jq -r '.testResults[]? | select(.status=="failed") | "Jest: "+.name' diagnostics-logs/**/jest-report.json 2>/dev/null || true)
+
+          SECSCAN_ERRORS=$(jq -r '.vulnerabilities[]? | "SecScan: "+.title+" ("+.severity+")"' diagnostics-logs/**/secscan-report.json 2>/dev/null || true)
+          OPS_ERRORS=$(jq -r '.errors[]? | "Ops: "+.' diagnostics-logs/**/ops-report.json 2>/dev/null || true)
+
+          # Combine results
+          ERRORS="$ERRORS\n$ESLINT_ERRORS\n$JEST_ERRORS\n$SECSCAN_ERRORS\n$OPS_ERRORS"
+          WARNINGS="$WARNINGS\n$ESLINT_WARNINGS"
 
           echo "error_count=$(echo "$ERRORS" | grep -c . || true)" >> $GITHUB_OUTPUT
           echo "warning_count=$(echo "$WARNINGS" | grep -c . || true)" >> $GITHUB_OUTPUT
