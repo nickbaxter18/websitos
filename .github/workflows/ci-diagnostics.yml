@@ -169,7 +169,7 @@ jobs:
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    "Authorization": process.env.LINEAR_API_KEY // raw key to avoid masking
+                    "X-Linear-API-Key": process.env.LINEAR_API_KEY // switched to X-Linear-API-Key
                   },
                   body: JSON.stringify({ query, variables })
                 });
