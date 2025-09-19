@@ -41,6 +41,12 @@ jobs:
             echo "logs_present=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Guard against empty run
+        if: steps.validate.outputs.logs_present == 'false'
+        run: |
+          echo "No logs or annotations found. Marking as clean."
+          exit 0
+
       - name: Gather failure and warning summary with classification
         id: classify
         run: |
@@ -51,8 +57,8 @@ jobs:
           echo "---" >> report.md
 
           if [ "${{ steps.validate.outputs.logs_present }}" == "true" ]; then
-            ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs | head -n 500 || true)
-            WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs | head -n 500 || true)
+            ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs | sort | uniq | head -n 500 || true)
+            WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs | sort | uniq | head -n 500 || true)
             STACK=$(grep -iE "(Traceback|Error:|Exception:)" -R diagnostics-logs | head -n 20 || true)
           else
             ERRORS=""
@@ -99,8 +105,8 @@ jobs:
             }
 
             console.log("Annotations fetched:", { errors, warnings });
-            core.setOutput("errors", errors.join("\n"));
-            core.setOutput("warnings", warnings.join("\n"));
+            core.setOutput("errors", [...new Set(errors)].join("\n"));
+            core.setOutput("warnings", [...new Set(warnings)].join("\n"));
 
       - name: Sync Linear issue (logs or annotations)
         if: steps.classify.outputs.class == 'missing_logs' || steps.classify.outputs.error_count != '0' || steps.classify.outputs.warning_count != '0' || steps.annotations.outputs.errors != '' || steps.annotations.outputs.warnings != ''
@@ -161,7 +167,7 @@ jobs:
             if (existing.data?.issues?.nodes?.length) {
               const issueId = existing.data.issues.nodes[0].id;
               query = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              variables = { id: issueId, input: { description } };
+              variables = { id: issueId, input: { description, labelIds: [] } };
               console.log("Updating existing Linear issue:", existing.data.issues.nodes[0].url);
             } else {
               query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
@@ -191,7 +197,7 @@ jobs:
               ref: "${{ github.event.workflow_run.head_sha }}"
             });
 
-            const diagCheck = checks.check_runs.find(c => c.name === "CI Diagnostics");
+            const diagCheck = checks.check_runs.find(c => c.name === "CI Diagnostics" && c.external_id === "ci-diagnostics-check");
 
             if (diagCheck) {
               console.log("Updating existing CI Diagnostics check:", diagCheck.id);
@@ -213,6 +219,7 @@ jobs:
                 repo: context.repo.repo,
                 name: "CI Diagnostics",
                 head_sha: "${{ github.event.workflow_run.head_sha }}",
+                external_id: "ci-diagnostics-check",
                 status: "completed",
                 conclusion,
                 output: {

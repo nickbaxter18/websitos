@@ -1,4 +1,4 @@
-name: Diagnostics Placeholder
+name: CI Diagnostics Placeholder
 
 on:
   pull_request:
@@ -17,6 +17,7 @@ jobs:
               repo: context.repo.repo,
               name: "CI Diagnostics",
               head_sha: context.sha,
+              external_id: "ci-diagnostics-check",
               status: "in_progress",
               output: {
                 title: "CI Diagnostics Pending",
