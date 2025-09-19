@@ -106,18 +106,25 @@ jobs:
               return;
             }
 
+            console.log("🔑 Linear key present (first 6 chars):", process.env.LINEAR_API_KEY.slice(0,6) + "***");
+            console.log("📌 Linear team ID present:", process.env.LINEAR_TEAM_ID ? "yes" : "no");
+
             const res = await fetch("https://api.linear.app/graphql", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.LINEAR_API_KEY}`
+                "X-Linear-API-Key": process.env.LINEAR_API_KEY
               },
               body: JSON.stringify({ query: "query { viewer { id name } }" })
             });
             const json = await res.json();
-            console.log("Linear API test response:", JSON.stringify(json, null, 2));
+            console.log("Linear API response:", JSON.stringify(json, null, 2));
 
-            fs.appendFileSync('report.md', `\n\n🔗 Linear API connectivity test: ${JSON.stringify(json)}`);
+            if (json.errors) {
+              fs.appendFileSync('report.md', `\n\n❌ Linear API error: ${JSON.stringify(json.errors)}`);
+            } else {
+              fs.appendFileSync('report.md', `\n\n🔗 Linear API connectivity test success: ${JSON.stringify(json.data)}`);
+            }
 
       - name: Complete CI Diagnostics check
         if: always()
