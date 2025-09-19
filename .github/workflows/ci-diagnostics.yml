@@ -44,22 +44,7 @@ jobs:
             });
             core.setOutput("check_id", check.id);
 
-      - name: Debug secrets
-        run: |
-          if [ -z "$LINEAR_API_KEY" ]; then
-            echo "❌ LINEAR_API_KEY is empty"
-          else
-            echo "🔑 LINEAR_API_KEY length: ${#LINEAR_API_KEY}"
-            echo "🔑 LINEAR_API_KEY starts with: ${LINEAR_API_KEY:0:6}***"
-          fi
-
-          if [ -z "$LINEAR_TEAM_ID" ]; then
-            echo "❌ LINEAR_TEAM_ID is empty"
-          else
-            echo "📌 LINEAR_TEAM_ID: $LINEAR_TEAM_ID"
-          fi
-
-      - name: Linear connectivity and team validation
+      - name: Run diagnostics queries
         continue-on-error: true
         uses: actions/github-script@v7
         with:
@@ -68,48 +53,95 @@ jobs:
 
             if (!process.env.LINEAR_API_KEY || !process.env.LINEAR_TEAM_ID) {
               console.log("❌ Missing Linear secrets");
-              fs.appendFileSync('report.md', `\n\n❌ Linear API key or team ID not configured.`);
+              fs.writeFileSync('report.md', `❌ Linear API key or team ID not configured.`);
               return;
             }
 
             const token = process.env.LINEAR_API_KEY.trim();
 
-            async function runQuery(query) {
+            async function runQuery(query, variables = {}) {
               const res = await fetch("https://api.linear.app/graphql", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ query })
+                body: JSON.stringify({ query, variables })
               });
               return res.json();
             }
 
+            let report = "## ⚠️ CI Diagnostics Report\n";
+
             // Viewer check
             const viewer = await runQuery("query { viewer { id name email organization { id name } } }");
             if (viewer.errors) {
-              console.log("❌ Viewer query error", viewer.errors);
-              fs.appendFileSync('report.md', `\n\n❌ Viewer query error: ${JSON.stringify(viewer.errors)}`);
+              report += `\n❌ Viewer query error: ${JSON.stringify(viewer.errors)}`;
             } else {
-              console.log("✅ Viewer query success", viewer.data);
-              fs.appendFileSync('report.md', `\n\n✅ Viewer: ${JSON.stringify(viewer.data)}`);
+              report += `\n✅ Viewer: ${JSON.stringify(viewer.data)}`;
             }
 
-            // Teams check (fix: use nodes)
+            // Teams check
             const teams = await runQuery("query { teams { nodes { id name } } }");
             if (teams.errors) {
-              console.log("❌ Teams query error", teams.errors);
-              fs.appendFileSync('report.md', `\n\n❌ Teams query error: ${JSON.stringify(teams.errors)}`);
+              report += `\n❌ Teams query error: ${JSON.stringify(teams.errors)}`;
             } else {
               const team = teams.data.teams.nodes.find(t => t.id === process.env.LINEAR_TEAM_ID.trim());
               if (team) {
-                console.log("✅ Team ID valid", team);
-                fs.appendFileSync('report.md', `\n\n✅ Team ID valid: ${team.id} (${team.name})`);
+                report += `\n✅ Team ID valid: ${team.id} (${team.name})`;
               } else {
-                console.log("❌ LINEAR_TEAM_ID mismatch", teams.data.teams.nodes);
-                fs.appendFileSync('report.md', `\n\n❌ LINEAR_TEAM_ID does not match any team. Found: ${JSON.stringify(teams.data.teams.nodes)}`);
+                report += `\n❌ LINEAR_TEAM_ID does not match any team. Found: ${JSON.stringify(teams.data.teams.nodes)}`;
               }
+            }
+
+            fs.writeFileSync('report.md', report);
+
+      - name: Sync diagnostics to Linear
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const token = process.env.LINEAR_API_KEY.trim();
+            const teamId = process.env.LINEAR_TEAM_ID.trim();
+            const commit = process.env.GITHUB_SHA;
+            const branch = process.env.GITHUB_REF_NAME;
+
+            const description = fs.readFileSync('report.md', 'utf8');
+            const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
+
+            async function runQuery(query, variables = {}) {
+              const res = await fetch("https://api.linear.app/graphql", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ query, variables })
+              });
+              return res.json();
+            }
+
+            // Check if issue exists
+            const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title } } }`;
+            const searchVars = { filter: { title: { eq: title } } };
+            const existing = await runQuery(searchQuery, searchVars);
+
+            if (existing.data?.issues?.nodes?.length) {
+              // Update existing issue
+              const issueId = existing.data.issues.nodes[0].id;
+              const updateMutation = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
+              const updateVars = { id: issueId, input: { description, teamId } };
+              const updated = await runQuery(updateMutation, updateVars);
+              console.log("🔄 Updated Linear issue:", updated);
+              fs.appendFileSync('report.md', `\n\n🔄 Updated Linear issue: ${updated?.data?.issueUpdate?.issue?.url || 'n/a'}`);
+            } else {
+              // Create new issue
+              const createMutation = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
+              const createVars = { input: { title, description, teamId } };
+              const created = await runQuery(createMutation, createVars);
+              console.log("🆕 Created Linear issue:", created);
+              fs.appendFileSync('report.md', `\n\n🆕 Created Linear issue: ${created?.data?.issueCreate?.issue?.url || 'n/a'}`);
             }
 
       - name: Complete CI Diagnostics check
@@ -119,7 +151,6 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('report.md', 'utf8').slice(0, 60000);
-            let conclusion = "success";
 
             await github.rest.checks.create({
               owner: context.repo.owner,
@@ -127,7 +158,7 @@ jobs:
               name: "CI Diagnostics",
               head_sha: process.env.GITHUB_SHA,
               status: "completed",
-              conclusion,
+              conclusion: "success",
               output: {
                 title: "CI Diagnostics Report",
                 summary
