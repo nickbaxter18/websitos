@@ -3,10 +3,14 @@ name: CI Diagnostics
 on:
   push:
     branches:
-      - main
+      - "**"
   pull_request:
     branches:
-      - main
+      - "**"
+
+permissions:
+  checks: write
+  contents: read
 
 jobs:
   analyze-diagnostics:
