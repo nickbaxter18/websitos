@@ -147,11 +147,12 @@ jobs:
             echo '```' >> report.md
           fi
 
-      - name: Sync Linear issue (create or update)
+      - name: Sync Linear issue (create or update with teamId)
         continue-on-error: true
         uses: actions/github-script@v7
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
         with:
           script: |
             const fs = require('fs');
@@ -195,11 +196,11 @@ jobs:
             if (existing.data?.issues?.nodes?.length) {
               const issueId = existing.data.issues.nodes[0].id;
               query = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              variables = { id: issueId, input: { description } };
-              console.log("Updating existing Linear issue:", existing.data.issues[0]?.url);
+              variables = { id: issueId, input: { description, teamId: process.env.LINEAR_TEAM_ID, metadata: { commit, branch } } };
+              console.log("Updating existing Linear issue:", existing.data.issues.nodes[0].url);
             } else {
               query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              variables = { input: { title, description } };
+              variables = { input: { title, description, teamId: process.env.LINEAR_TEAM_ID, metadata: { commit, branch } } };
               console.log("Creating new Linear issue");
             }
 
@@ -210,6 +211,8 @@ jobs:
               if (issueUrl) {
                 console.log("🔗 Linear issue URL:", issueUrl);
                 fs.appendFileSync('report.md', `\n\n🔗 [View Linear Issue](${issueUrl})`);
+              } else {
+                fs.appendFileSync('report.md', `\n\n❌ Linear issue not created. See logs for details.`);
               }
             } catch (err) {
               console.log("❌ Linear API sync failed:", err.message);
