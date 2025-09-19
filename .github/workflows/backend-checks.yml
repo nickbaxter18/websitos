@@ -17,85 +17,36 @@ jobs:
       matrix:
         task: [black, mypy, pytest, flake8]
     steps:
-      - name: Checkout repository (full history)
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Cache pip wheels
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Enable problem matchers
-        continue-on-error: true
-        run: |
-          echo "::add-matcher::.github/matchers/error.json"
-          echo "::add-matcher::.github/matchers/generic-errors.json"
-          echo "::add-matcher::.github/matchers/python.json"
-          echo "::add-matcher::.github/matchers/mypy.json"
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          echo ">>> Installing backend dependencies"
-          pip install --prefer-binary -r requirements.txt --timeout=60
-          pip install pytest pytest-json-report mypy black flake8
+          pip install -r requirements.txt
 
       - name: Run ${{ matrix.task }}
         run: |
-          echo ">>> Starting ${{ matrix.task }} checks" | tee ${{ matrix.task }}-output.log
-          EXIT=0
-          if [ "${{ matrix.task }}" == "black" ]; then
-            black --check . --exclude '(Lib|venv|node_modules)' 2>&1 | tee -a ${{ matrix.task }}-output.log || EXIT=$?
-          fi
-          if [ "${{ matrix.task }}" == "mypy" ]; then
-            mypy . --exclude '(Lib|venv|node_modules)' --ignore-missing-imports --show-error-codes --show-traceback 2>&1 | tee -a ${{ matrix.task }}-output.log || EXIT=$?
-          fi
+          mkdir -p logs
           if [ "${{ matrix.task }}" == "pytest" ]; then
-            PYTHONPATH=. pytest -vv --maxfail=1 --disable-warnings \
-              --json-report --json-report-file=pytest-report.json 2>&1 | tee -a ${{ matrix.task }}-output.log || EXIT=$?
-            if [ ! -f pytest-report.json ]; then
-              echo '{}' > pytest-report.json
-              echo "::warning file=backend/tests::pytest-report.json missing, test run may have crashed" | tee -a ${{ matrix.task }}-output.log
-            fi
+            pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=logs/pytest-report.json 2>&1 | tee logs/pytest.log
+          elif [ "${{ matrix.task }}" == "flake8" ]; then
+            flake8 . | tee logs/flake8.log
+          elif [ "${{ matrix.task }}" == "mypy" ]; then
+            mypy . | tee logs/mypy.log
+          elif [ "${{ matrix.task }}" == "black" ]; then
+            black --check . | tee logs/black.log
           fi
-          if [ "${{ matrix.task }}" == "flake8" ]; then
-            flake8 . --exclude venv,__pycache__,.pytest_cache,node_modules,backend,Lib \
-              --max-line-length=120 --exit-zero 2>&1 | tee -a ${{ matrix.task }}-output.log > flake8-report.txt
-            if [ ! -f flake8-report.txt ]; then echo 'No flake8 output' > flake8-report.txt; fi
-          fi
-          echo ">>> Finished ${{ matrix.task }} with exit code $EXIT" | tee -a ${{ matrix.task }}-output.log
-          exit $EXIT
 
-      - name: Upload pytest results artifact
-        if: ${{ always() && matrix.task == 'pytest' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-pytest-results
-          path: pytest-report.json
-          retention-days: 14
-
-      - name: Upload flake8 report artifact
-        if: ${{ always() && matrix.task == 'flake8' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-flake8-report
-          path: flake8-report.txt
-          retention-days: 14
-
-      - name: Upload raw backend job log
+      - name: Upload backend logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-job-log-${{ matrix.task }}
-          path: ${{ matrix.task }}-output.log
-          retention-days: 14
+          name: logs-backend-${{ matrix.task }}
+          path: logs
+          retention-days: 3

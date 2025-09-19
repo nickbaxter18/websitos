@@ -39,10 +39,13 @@ jobs:
             });
             core.setOutput("check_id", check.id);
 
-      - name: Download all artifacts
+      - name: Download relevant artifacts
         uses: actions/download-artifact@v4
         with:
           path: diagnostics-logs
+          pattern: |
+            logs-*
+            coverage-*
 
       - name: Debug info
         run: |
@@ -91,7 +94,7 @@ jobs:
             echo "$WARNINGS" >> report.md
           fi
 
-      - name: Sync Linear issue
+      - name: Sync Linear issue (logs or annotations)
         if: steps.classify.outputs.error_count != '0' || steps.classify.outputs.warning_count != '0' || steps.validate.outputs.logs_present == 'false'
         uses: actions/github-script@v7
         env:
@@ -99,7 +102,6 @@ jobs:
           LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
         with:
           script: |
-            const fetch = require('node-fetch');
             const fs = require('fs');
 
             async function callLinear(query, variables, retries = 3) {
@@ -130,8 +132,21 @@ jobs:
 
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
-            const query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-            const variables = { input: { teamId: process.env.LINEAR_TEAM_ID, title, description, labelIds: [] } };
+            const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title }}}`;
+            const searchVars = { filter: { team: { id: { eq: process.env.LINEAR_TEAM_ID } }, title: { eq: title } } };
+            const existing = await callLinear(searchQuery, searchVars);
+
+            let query, variables;
+            if (existing.data?.issues?.nodes?.length) {
+              const issueId = existing.data.issues.nodes[0].id;
+              query = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
+              variables = { id: issueId, input: { description } };
+              console.log("Updating existing Linear issue:", existing.data.issues.nodes[0].url);
+            } else {
+              query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
+              variables = { input: { teamId: process.env.LINEAR_TEAM_ID, title, description, labelIds: [] } };
+              console.log("Creating new Linear issue");
+            }
 
             try {
               const result = await callLinear(query, variables);
