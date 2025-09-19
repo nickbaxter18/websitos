@@ -10,8 +10,6 @@ on:
       - U-DIG IT Repo Sync
       - Validation
       - Lockfile Consistency Check
-      - .github/workflows/render.yaml
-      - .github/workflows/render-deploy.yml
     types:
       - completed
 
