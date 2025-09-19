@@ -147,7 +147,7 @@ jobs:
             echo '```' >> report.md
           fi
 
-      - name: Sync Linear issue (create or update with teamId)
+      - name: Sync Linear issue (create or update with teamId, labels, validation)
         continue-on-error: true
         uses: actions/github-script@v7
         env:
@@ -157,13 +157,19 @@ jobs:
           script: |
             const fs = require('fs');
 
+            if (!process.env.LINEAR_API_KEY || !process.env.LINEAR_TEAM_ID) {
+              console.log("❌ Missing Linear secrets");
+              fs.appendFileSync('report.md', `\n\n❌ Linear API key or team ID not configured.`);
+              return;
+            }
+
             async function callLinear(query, variables, retries = 3) {
               for (let i = 0; i < retries; i++) {
                 const res = await fetch("https://api.linear.app/graphql", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${process.env.LINEAR_API_KEY}`
+                    "Authorization": process.env.LINEAR_API_KEY // raw key to avoid masking
                   },
                   body: JSON.stringify({ query, variables })
                 });
@@ -185,6 +191,13 @@ jobs:
 
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
+            // Assign labels depending on results
+            const errorCount = parseInt('${{ steps.classify.outputs.error_count }}' || '0');
+            const warningCount = parseInt('${{ steps.classify.outputs.warning_count }}' || '0');
+            let labels = [];
+            if (errorCount > 0) labels.push("ci-error");
+            else if (warningCount > 0) labels.push("ci-warning");
+
             // Search for existing issue
             const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title } } }`;
             const searchVars = { filter: { title: { eq: title } } };
@@ -196,11 +209,11 @@ jobs:
             if (existing.data?.issues?.nodes?.length) {
               const issueId = existing.data.issues.nodes[0].id;
               query = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              variables = { id: issueId, input: { description, teamId: process.env.LINEAR_TEAM_ID, metadata: { commit, branch } } };
+              variables = { id: issueId, input: { description, teamId: process.env.LINEAR_TEAM_ID, labelIds: labels, metadata: { commit, branch } } };
               console.log("Updating existing Linear issue:", existing.data.issues.nodes[0].url);
             } else {
               query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              variables = { input: { title, description, teamId: process.env.LINEAR_TEAM_ID, metadata: { commit, branch } } };
+              variables = { input: { title, description, teamId: process.env.LINEAR_TEAM_ID, labelIds: labels, metadata: { commit, branch } } };
               console.log("Creating new Linear issue");
             }
 
