@@ -2,7 +2,16 @@ name: CI Diagnostics
 
 on:
   workflow_run:
-    workflows: ["*"]
+    workflows:
+      - Backend Checks
+      - Coverage Checks
+      - Ops Pipeline
+      - Post-Deploy Smoke Tests
+      - U-DIG IT Repo Sync
+      - Validation
+      - Lockfile Consistency Check
+      - .github/workflows/render.yaml
+      - .github/workflows/render-deploy.yml
     types:
       - completed
 
@@ -17,14 +26,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: diagnostics-logs
-
-      - name: Filter out excluded workflows/jobs (CodeQL + Frontend E2E)
-        run: |
-          echo "Filtering logs: removing CodeQL and frontend test:e2e artifacts"
-          rm -rf diagnostics-logs/*codeql* || true
-          rm -rf diagnostics-logs/*CodeQL* || true
-          rm -rf diagnostics-logs/*analyze* || true
-          rm -rf diagnostics-logs/*test-e2e* || true
 
       - name: Validate artifact presence
         id: validate
