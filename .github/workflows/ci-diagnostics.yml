@@ -12,16 +12,11 @@ on:
       - Lockfile Consistency Check
       - .github/workflows/render.yaml
       - .github/workflows/render-deploy.yml
-      - CodeQL Analysis
-      - Frontend Checks
     types:
       - completed
 
 jobs:
   analyze-diagnostics:
-    if: |
-      github.event.workflow_run.name != 'CodeQL Analysis' &&
-      github.event.workflow_run.name != 'Frontend Checks'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
