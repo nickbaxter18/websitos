@@ -52,6 +52,8 @@ jobs:
           echo "Branch: ${{ github.ref_name }}"
           echo "Downloaded artifacts:"
           ls -R diagnostics-logs || echo "No artifacts found"
+          echo "--- Artifact File Listing ---"
+          find diagnostics-logs -type f || echo "No files found"
 
       - name: Validate artifact presence
         id: validate
@@ -84,13 +86,13 @@ jobs:
           WARNINGS=$(grep -iRE "(warn|warning|deprecated)" diagnostics-logs || true | sort | uniq | head -n 500)
 
           # Parse JSON reports (eslint, jest, secscan, ops)
-          ESLINT_ERRORS=$(jq -r '.messages[]? | select(.severity==2) | "ESLint: "+.message' diagnostics-logs/**/eslint-report.json 2>/dev/null || true)
-          ESLINT_WARNINGS=$(jq -r '.messages[]? | select(.severity==1) | "ESLint: "+.message' diagnostics-logs/**/eslint-report.json 2>/dev/null || true)
+          ESLINT_ERRORS=$(jq -r '.messages[]? | select(.severity==2) | "ESLint: "+.message' $(find diagnostics-logs -name "eslint-report.json") 2>/dev/null || true)
+          ESLINT_WARNINGS=$(jq -r '.messages[]? | select(.severity==1) | "ESLint: "+.message' $(find diagnostics-logs -name "eslint-report.json") 2>/dev/null || true)
 
-          JEST_ERRORS=$(jq -r '.testResults[]? | select(.status=="failed") | "Jest: "+.name' diagnostics-logs/**/jest-report.json 2>/dev/null || true)
+          JEST_ERRORS=$(jq -r '.testResults[]? | select(.status=="failed") | "Jest: "+.name' $(find diagnostics-logs -name "jest-report.json") 2>/dev/null || true)
 
-          SECSCAN_ERRORS=$(jq -r '.vulnerabilities[]? | "SecScan: "+.title+" ("+.severity+")"' diagnostics-logs/**/secscan-report.json 2>/dev/null || true)
-          OPS_ERRORS=$(jq -r '.errors[]? | "Ops: "+.' diagnostics-logs/**/ops-report.json 2>/dev/null || true)
+          SECSCAN_ERRORS=$(jq -r '.vulnerabilities[]? | "SecScan: "+.title+" ("+.severity+")"' $(find diagnostics-logs -name "secscan-report.json") 2>/dev/null || true)
+          OPS_ERRORS=$(jq -r '.errors[]? | "Ops: "+.' $(find diagnostics-logs -name "ops-report.json") 2>/dev/null || true)
 
           # Combine results
           ERRORS="$ERRORS\n$ESLINT_ERRORS\n$JEST_ERRORS\n$SECSCAN_ERRORS\n$OPS_ERRORS"
