@@ -1,13 +1,14 @@
 name: CI Diagnostics
 
 on:
-  push:
-    branches:
-      - "**"
-  pull_request:
-    branches:
-      - "**"
-  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Backend Checks
+      - Coverage Checks
+      - Frontend Checks
+      - Ops Pipeline
+    types:
+      - completed
 
 permissions:
   checks: write
@@ -31,7 +32,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               name: "CI Diagnostics",
-              head_sha: "${{ github.sha }}",
+              head_sha: "${{ github.event.workflow_run.head_sha }}",
               status: "in_progress",
               output: {
                 title: "CI Diagnostics Running",
@@ -48,8 +49,8 @@ jobs:
       - name: Debug info
         run: |
           echo "✅ CI Diagnostics workflow triggered"
-          echo "Commit: ${{ github.sha }}"
-          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}"
           echo "Downloaded artifacts:"
           ls -R diagnostics-logs || echo "No artifacts found"
           echo "--- Artifact File Listing ---"
@@ -69,16 +70,15 @@ jobs:
         if: steps.validate.outputs.logs_present == 'false'
         run: |
           echo "## CI Diagnostics Report" > report.md
-          echo "No artifacts found for commit ${{ github.sha }} on branch ${{ github.ref_name }}." >> report.md
-          echo "Diagnostics may have run before other jobs finished." >> report.md
+          echo "No artifacts found for commit ${{ github.event.workflow_run.head_sha }} (triggered by ${{ github.event.workflow_run.name }})." >> report.md
 
       - name: Gather failure and warning summary from all artifacts
         id: classify
         if: steps.validate.outputs.logs_present == 'true'
         run: |
           echo "## ⚠️ CI Diagnostics Report" > report.md
-          echo "Commit: ${{ github.sha }}" >> report.md
-          echo "Branch: ${{ github.ref_name }}" >> report.md
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}" >> report.md
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}" >> report.md
           echo "---" >> report.md
 
           # Parse text logs
@@ -150,7 +150,7 @@ jobs:
               throw new Error("Linear API request failed after retries");
             }
 
-            const commit = '${{ github.sha }}';
+            const commit = '${{ github.event.workflow_run.head_sha }}';
             const branch = process.env.GITHUB_REF_NAME || "unknown";
             let description = fs.readFileSync('report.md', 'utf8')
               .replace(/(password|secret|token|apikey|jwt|bearer|auth|key|cred)\s*[:=]\s*\S+/gi, "[REDACTED]");
@@ -206,7 +206,7 @@ jobs:
             const { data: checks } = await github.rest.checks.listForRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "${{ github.sha }}"
+              ref: "${{ github.event.workflow_run.head_sha }}"
             });
 
             const diagCheck = checks.check_runs.find(c => c.name === "CI Diagnostics");
@@ -230,7 +230,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 name: "CI Diagnostics",
-                head_sha: "${{ github.sha }}",
+                head_sha: "${{ github.event.workflow_run.head_sha }}",
                 status: "completed",
                 conclusion,
                 output: {
