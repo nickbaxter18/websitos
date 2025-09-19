@@ -18,6 +18,8 @@ jobs:
     name: Run CI Diagnostics
     runs-on: ubuntu-latest
     if: always()
+    needs: [backend-checks, coverage-checks]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -39,19 +41,24 @@ jobs:
             });
             core.setOutput("check_id", check.id);
 
-      - name: Download relevant artifacts
+      - name: Download logs artifacts
         uses: actions/download-artifact@v4
         with:
           path: diagnostics-logs
-          pattern: |
-            logs-*
-            coverage-*
+          pattern: logs-*
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: diagnostics-logs
+          pattern: coverage-*
 
       - name: Debug info
         run: |
           echo "✅ CI Diagnostics workflow triggered"
           echo "Commit: ${{ github.sha }}"
           echo "Branch: ${{ github.ref_name }}"
+          echo "Downloaded artifacts:"
           ls -R diagnostics-logs || echo "No artifacts found"
 
       - name: Validate artifact presence
@@ -69,6 +76,7 @@ jobs:
         run: |
           echo "## CI Diagnostics Report" > report.md
           echo "No artifacts found for commit ${{ github.sha }} on branch ${{ github.ref_name }}." >> report.md
+          echo "Diagnostics may have run before backend/coverage jobs finished." >> report.md
 
       - name: Gather failure and warning summary
         id: classify
@@ -84,6 +92,10 @@ jobs:
 
           echo "error_count=$(echo "$ERRORS" | grep -c . || true)" >> $GITHUB_OUTPUT
           echo "warning_count=$(echo "$WARNINGS" | grep -c . || true)" >> $GITHUB_OUTPUT
+
+          if [ -z "$ERRORS" ] && [ -z "$WARNINGS" ]; then
+            echo "Diagnostics complete. No errors or warnings found." >> report.md
+          fi
 
           if [ -n "$ERRORS" ]; then
             echo "### ❌ Errors" >> report.md
@@ -110,7 +122,7 @@ jobs:
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${process.env.LINEAR_API_KEY}`
+                    "Authorization": process.env.LINEAR_API_KEY
                   },
                   body: JSON.stringify({ query, variables })
                 });
@@ -132,19 +144,33 @@ jobs:
 
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
-            const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title }}}`;
-            const searchVars = { filter: { team: { id: { eq: process.env.LINEAR_TEAM_ID } }, title: { eq: title } } };
+            // Dedup by branch + commit
+            const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title labels { nodes { name } } }}}`;
+            const searchVars = {
+              filter: {
+                team: { id: { eq: process.env.LINEAR_TEAM_ID } },
+                title: { eq: title }
+              }
+            };
             const existing = await callLinear(searchQuery, searchVars);
 
             let query, variables;
             if (existing.data?.issues?.nodes?.length) {
               const issueId = existing.data.issues.nodes[0].id;
               query = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              variables = { id: issueId, input: { description } };
+              variables = { id: issueId, input: { description, labelIds: [] } };
               console.log("Updating existing Linear issue:", existing.data.issues.nodes[0].url);
             } else {
               query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              variables = { input: { teamId: process.env.LINEAR_TEAM_ID, title, description, labelIds: [] } };
+              variables = {
+                input: {
+                  teamId: process.env.LINEAR_TEAM_ID,
+                  title,
+                  description,
+                  labelIds: [],
+                  metadata: { commit, branch }
+                }
+              };
               console.log("Creating new Linear issue");
             }
 
