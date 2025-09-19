@@ -2,141 +2,154 @@ name: CI Diagnostics
 
 on:
   workflow_run:
-    workflows: ["Coverage Checks", "Frontend Checks", "Backend Checks", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests"]
+    workflows: ["Coverage Checks", "Frontend Checks", "Backend Checks", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests", "Lint", "Prettier", "Type Check", "Sync", "Test:Unit", "Test:E2E", "Analyze (javascript)", "Analyze (python)", "Checks (flake8)", "Checks (black)", "Checks (mypy)", "Checks (pytest)", "Upload Codecov", "PR Summary"]
     types:
       - completed
 
 jobs:
-  analyze-failures:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+  analyze-diagnostics:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download logs from failed workflow
+      - name: Download logs from completed workflow
         uses: actions/download-artifact@v4
         with:
           path: diagnostics-logs
 
-      - name: Gather failure summary with classification
+      - name: Gather failure and warning summary with classification
         id: classify
         run: |
-          echo "## ❌ CI Diagnostics Report" > report.md
+          echo "## ⚠️ CI Diagnostics Report" > report.md
           echo "Workflow: ${{ github.event.workflow_run.name }}" >> report.md
           echo "Commit: ${{ github.event.workflow_run.head_sha }}" >> report.md
+          echo "Conclusion: ${{ github.event.workflow_run.conclusion }}" >> report.md
           echo "---" >> report.md
 
           ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs || true)
+          WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs || true)
+          STACK=$(grep -iE "(Traceback|Error:|Exception:)" -R diagnostics-logs | head -n 20 || true)
 
-          if [ -z "$ERRORS" ]; then
+          if [ -z "$ERRORS" ] && [ -z "$WARNINGS" ]; then
             echo "### 🔎 Log Highlights" >> report.md
-            echo "No obvious errors found in logs." >> report.md
+            echo "No obvious errors or warnings found in logs." >> report.md
           else
             echo "### 🔎 Log Highlights" >> report.md
-            echo "$ERRORS" | head -n 50 >> report.md
+            if [ -n "$ERRORS" ]; then
+              echo "#### ❌ Errors" >> report.md
+              echo "$ERRORS" | head -n 50 >> report.md
+            fi
+            if [ -n "$WARNINGS" ]; then
+              echo "#### ⚠️ Warnings" >> report.md
+              echo "$WARNINGS" | head -n 50 >> report.md
+            fi
+            if [ -n "$STACK" ]; then
+              echo "#### 🔍 Extracted Stack Trace" >> report.md
+              echo "$STACK" >> report.md
+            fi
           fi
 
           echo "---" >> report.md
-          echo "### 🧭 Failure Classification" >> report.md
+          echo "### 🧭 Classification" >> report.md
 
-          CLASS="unclassified"
-          if echo "$ERRORS" | grep -qi "ModuleNotFoundError\|ImportError\|cannot find module"; then
-            echo "- **Dependency Issue**: Missing or misconfigured package." >> report.md
-            CLASS="dependency"
-          elif echo "$ERRORS" | grep -qi "test.*not found\|collected 0 items"; then
-            echo "- **Test Discovery Issue**: No tests found, check test patterns." >> report.md
-            CLASS="test-discovery"
-          elif echo "$ERRORS" | grep -qi "coverage\|lcov\|report missing"; then
-            echo "- **Coverage Issue**: Coverage artifact missing or path mismatch." >> report.md
-            CLASS="coverage"
-          elif echo "$ERRORS" | grep -qi "eslint\|flake8\|prettier"; then
-            echo "- **Linting/Formatting Issue**: Run local lint/format fixes." >> report.md
-            CLASS="lint"
-          elif echo "$ERRORS" | grep -qi "timeout\|connection refused\|502\|504"; then
-            echo "- **Infrastructure Issue**: Network, service, or environment instability." >> report.md
-            CLASS="infrastructure"
-          elif echo "$ERRORS" | grep -qi "exception"; then
-            echo "- **Runtime Exception**: Likely bug in code execution." >> report.md
-            CLASS="runtime"
-          else
-            echo "- **Unclassified Failure**: Further log inspection needed." >> report.md
+          CLASS="advisory"
+          if [ -n "$ERRORS" ]; then
+            CLASS="failure"
+          elif [ -n "$WARNINGS" ]; then
+            CLASS="warning"
           fi
 
-          SIG=$(echo "$ERRORS" | md5sum | cut -c1-12)
           echo "class=$CLASS" >> $GITHUB_OUTPUT
-          echo "signature=$SIG" >> $GITHUB_OUTPUT
 
-          echo "---" >> report.md
-          echo "### 📌 Suggested Fixes" >> report.md
-          echo "- If dependency issue: Add missing libs to package.json/requirements.txt." >> report.md
-          echo "- If coverage issue: Ensure coverage artifacts are uploaded correctly." >> report.md
-          echo "- If linting issue: Run ESLint/Prettier/Flake8 locally before commit." >> report.md
-          echo "- If test discovery issue: Verify test file patterns and locations." >> report.md
-          echo "- If infra issue: Retry run, check external services, or increase timeouts." >> report.md
+          # Detect component from stack or logs
+          COMPONENT="general"
+          if echo "$STACK" | grep -qi "frontend"; then COMPONENT="frontend"; fi
+          if echo "$STACK" | grep -qi "backend"; then COMPONENT="backend"; fi
+          if echo "$STACK" | grep -qi "test"; then COMPONENT="tests"; fi
+          if echo "$STACK" | grep -qi "network\|timeout"; then COMPONENT="infra"; fi
+          echo "component=$COMPONENT" >> $GITHUB_OUTPUT
 
-      - name: Check for existing issue
-        id: search
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: "ci,${{ steps.classify.outputs.class }}",
-              state: "open"
-            });
-            const sig = "${{ steps.classify.outputs.signature }}";
-            const existing = issues.find(i => i.title.includes(sig));
-            if (existing) {
-              core.setOutput('found', 'true');
-              core.setOutput('url', existing.html_url);
-              core.setOutput('count', existing.comments || 1);
-            } else {
-              core.setOutput('found', 'false');
-              core.setOutput('count', '1');
-            }
-
-      - name: Auto-create GitHub Issue for recurring failures with severity
-        if: steps.search.outputs.found != 'true'
-        id: create_issue
-        uses: peter-evans/create-issue-from-file@v4
-        with:
-          title: "CI Failure [${{ steps.classify.outputs.class }}:${{ steps.classify.outputs.signature }}] in ${{ github.event.workflow_run.name }}"
-          content-filepath: report.md
-          labels: bug, ci, ${{ steps.classify.outputs.class }}, severity:low
-
-      - name: Update severity for recurring issue
-        if: steps.search.outputs.found == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const count = parseInt('${{ steps.search.outputs.count }}', 10);
-            let severity = 'severity:low';
-            if (count > 3 && count <= 6) severity = 'severity:medium';
-            if (count > 6) severity = 'severity:high';
-
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: parseInt('${{ steps.search.outputs.issue_number }}', 10),
-              labels: ['bug','ci','${{ steps.classify.outputs.class }}', severity]
-            });
-
-      - name: Post diagnostics as PR comment with issue link
-        run: |
-          echo "## ❌ CI Diagnostics Report" > final_report.md
-          cat report.md >> final_report.md
-
-          if [ "${{ steps.search.outputs.found }}" == 'true' ]; then
-            echo "\n🔗 Related issue: ${{ steps.search.outputs.url }}" >> final_report.md
-          elif [ "${{ steps.create_issue.outputs.issue-url }}" != '' ]; then
-            echo "\n🔗 Related issue: ${{ steps.create_issue.outputs.issue-url }}" >> final_report.md
+          # Try to extract coverage delta if summary exists
+          if [ -f diagnostics-logs/coverage-frontend/coverage-summary.json ]; then
+            FRONTEND_COV=$(jq '.total.lines.pct' diagnostics-logs/coverage-frontend/coverage-summary.json)
+            echo "Frontend coverage: $FRONTEND_COV%" >> report.md
           fi
-        shell: bash
+          if [ -f diagnostics-logs/coverage-backend/coverage-summary.json ]; then
+            BACKEND_COV=$(jq '.total.lines.pct' diagnostics-logs/coverage-backend/coverage-summary.json)
+            echo "Backend coverage: $BACKEND_COV%" >> report.md
+          fi
 
-      - name: Comment PR with diagnostics
+      - name: Post diagnostics as PR comment
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: ci-diagnostics
-          path: final_report.md
+          path: report.md
+
+      - name: Create or update Linear issue
+        if: steps.classify.outputs.class != 'advisory'
+        uses: actions/github-script@v7
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        with:
+          script: |
+            const fetch = require('node-fetch');
+            const fs = require('fs');
+
+            const classification = '${{ steps.classify.outputs.class }}';
+            const component = '${{ steps.classify.outputs.component }}';
+            const workflow = '${{ github.event.workflow_run.name }}';
+            const commit = '${{ github.event.workflow_run.head_sha }}';
+
+            // Read diagnostics
+            const description = fs.readFileSync('report.md', 'utf8');
+
+            // Get commit author for assignment
+            const { data: commitData } = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: commit,
+            });
+            const author = commitData.commit.author.name;
+            const authorEmail = commitData.commit.author.email;
+
+            const title = `CI ${classification.toUpperCase()} in ${workflow}`;
+
+            const query = `mutation IssueCreate($input: IssueCreateInput!) {
+              issueCreate(input: $input) {
+                success
+                issue { id url }
+              }
+            }`;
+
+            const variables = {
+              input: {
+                teamId: process.env.LINEAR_TEAM_ID,
+                title: title,
+                description: `${description}\n---\n👤 Commit Author: ${author} <${authorEmail}>\n🔗 Commit: https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}\n🔗 Workflow Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.event.workflow_run.id }}`,
+                labelIds: [],
+              }
+            };
+
+            const res = await fetch("https://api.linear.app/graphql", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": process.env.LINEAR_API_KEY
+              },
+              body: JSON.stringify({ query, variables })
+            });
+
+            const data = await res.json();
+            if (data.errors) {
+              core.setFailed(JSON.stringify(data.errors));
+            } else {
+              console.log(`Created/linked Linear issue: ${data.data.issueCreate.issue.url}`);
+            }
+
+      - name: Upload raw logs artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics-logs
+          path: diagnostics-logs
