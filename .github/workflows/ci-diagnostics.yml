@@ -145,8 +145,7 @@ jobs:
             echo '```' >> report.md
           fi
 
-      - name: Sync Linear issue (logs or annotations)
-        if: steps.classify.outputs.error_count != '0' || steps.classify.outputs.warning_count != '0' || steps.validate.outputs.logs_present == 'false'
+      - name: Sync Linear issue (always run, log responses)
         continue-on-error: true
         uses: actions/github-script@v7
         env:
@@ -184,7 +183,6 @@ jobs:
 
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
-            // Dedup by branch + commit
             const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title labels { nodes { name } } }}}`;
             const searchVars = {
               filter: {
@@ -192,6 +190,8 @@ jobs:
                 title: { eq: title }
               }
             };
+
+            console.log("Searching for existing Linear issue with title:", title);
             const existing = await callLinear(searchQuery, searchVars);
 
             let query, variables;
@@ -222,7 +222,7 @@ jobs:
                 console.log("🔗 Linear issue URL:", issueUrl);
               }
             } catch (err) {
-              core.setFailed("Linear API sync failed: " + err.message);
+              console.log("❌ Linear API sync failed:", err.message);
             }
 
       - name: Complete CI Diagnostics check
