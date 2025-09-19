@@ -9,6 +9,7 @@ on:
       - Ops Pipeline
     types:
       - completed
+  workflow_dispatch:
 
 permissions:
   checks: write
