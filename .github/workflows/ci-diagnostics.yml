@@ -21,9 +21,8 @@ jobs:
       - name: Validate artifact presence
         run: |
           if [ ! -d "diagnostics-logs" ] || [ -z "$(ls -A diagnostics-logs)" ]; then
-            echo "⚠️ Warning: No diagnostics logs were uploaded by the triggering workflow. Skipping log analysis but continuing workflow." >&2
+            echo "⚠️ Warning: No diagnostics logs were uploaded by the triggering workflow. Skipping artifact log analysis but continuing." >&2
             echo "class=clean" >> $GITHUB_OUTPUT
-            exit 0
           fi
 
       - name: Gather failure and warning summary with classification
@@ -35,7 +34,6 @@ jobs:
           echo "Conclusion: ${{ github.event.workflow_run.conclusion }}" >> report.md
           echo "---" >> report.md
 
-          # Limit to 500 lines max per category to avoid flooding
           ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs | head -n 500 || true)
           WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs | head -n 500 || true)
           STACK=$(grep -iE "(Traceback|Error:|Exception:)" -R diagnostics-logs | head -n 20 || true)
@@ -98,40 +96,114 @@ jobs:
           fi
           echo "timestamp=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
-      - name: Upload CI Diagnostics Report
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Gather GitHub Check Annotations
+        id: annotations
+        uses: actions/github-script@v7
         with:
-          name: ci-diagnostics-report
-          path: |
-            report.md
-            diagnostics-logs
-          retention-days: 14
+          script: |
+            const runId = ${{ github.event.workflow_run.id }};
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId
+            });
 
-      - name: Append CI Diagnostics to GitHub Summary
+            let warnings = [];
+            let errors = [];
+
+            for (const job of jobs.jobs) {
+              const { data: annots } = await github.rest.checks.listAnnotations({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                check_run_id: job.id
+              });
+              for (const a of annots) {
+                if (a.annotation_level === 'failure') errors.push(a.message);
+                if (a.annotation_level === 'warning') warnings.push(a.message);
+              }
+            }
+
+            core.setOutput("errors", errors.join("\n"));
+            core.setOutput("warnings", warnings.join("\n"));
+
+            console.log("Pulled annotations:", { errors, warnings });
+
+      - name: Merge Annotations into Report
         if: always()
         run: |
-          echo "# ⚠️ CI Diagnostics Report" >> $GITHUB_STEP_SUMMARY
-          echo "Workflow: ${{ github.event.workflow_run.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "Commit: ${{ github.event.workflow_run.head_sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "Conclusion: ${{ github.event.workflow_run.conclusion }}" >> $GITHUB_STEP_SUMMARY
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          cat report.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> report.md
+          echo "---" >> report.md
+          echo "### 📋 GitHub Annotations" >> report.md
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Coverage Overview" >> $GITHUB_STEP_SUMMARY
-          echo "| Area | Coverage |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|----------|" >> $GITHUB_STEP_SUMMARY
-          FRONTEND_COV=${{ steps.classify.outputs.frontend_cov || 0 }}
-          BACKEND_COV=${{ steps.classify.outputs.backend_cov || 0 }}
-          echo "| Frontend | ${FRONTEND_COV}% |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${BACKEND_COV}% |" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.annotations.outputs.errors }}" ]; then
+            echo "#### ❌ Errors from GitHub Checks" >> report.md
+            echo "${{ steps.annotations.outputs.errors }}" >> report.md
+          fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## ⚠️ Issue Counts" >> $GITHUB_STEP_SUMMARY
-          echo "| Type | Count |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          ERROR_COUNT=${{ steps.classify.outputs.error_count || 0 }}
-          WARNING_COUNT=${{ steps.classify.outputs.warning_count || 0 }}
-          echo "| Errors | ${ERROR_COUNT} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Warnings | ${WARNING_COUNT} |" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.annotations.outputs.warnings }}" ]; then
+            echo "#### ⚠️ Warnings from GitHub Checks" >> report.md
+            echo "${{ steps.annotations.outputs.warnings }}" >> report.md
+          fi
+
+      - name: Sync Linear issue (failure/warning)
+        if: steps.classify.outputs.class == 'failure' || steps.classify.outputs.class == 'warning' || steps.annotations.outputs.errors != '' || steps.annotations.outputs.warnings != ''
+        uses: actions/github-script@v7
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
+        with:
+          script: |
+            const fetch = require('node-fetch');
+            const fs = require('fs');
+
+            async function callLinear(query, variables, retries = 3) {
+              for (let i = 0; i < retries; i++) {
+                const res = await fetch("https://api.linear.app/graphql", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.LINEAR_API_KEY}`
+                  },
+                  body: JSON.stringify({ query, variables })
+                });
+                if (res.ok) return await res.json();
+                if (i < retries - 1) {
+                  console.log(`Retrying Linear API call... attempt ${i+2}`);
+                  await new Promise(r => setTimeout(r, 1000 * (i+1)));
+                }
+              }
+              throw new Error("Linear API request failed after retries");
+            }
+
+            const classification = '${{ steps.classify.outputs.class }}';
+            const workflow = '${{ github.event.workflow_run.name }}';
+            const commit = '${{ github.event.workflow_run.head_sha }}';
+
+            const logErrors = `${{ steps.classify.outputs.error_count }}`;
+            const logWarnings = `${{ steps.classify.outputs.warning_count }}`;
+            const checkErrors = `${{ steps.annotations.outputs.errors }}`;
+            const checkWarnings = `${{ steps.annotations.outputs.warnings }}`;
+
+            const description = fs.readFileSync('report.md', 'utf8')
+              .replace(/(password|secret|token|apikey|jwt|bearer|auth|key|cred)\s*[:=]\s*\S+/gi, "[REDACTED]");
+
+            const title = `CI ${classification.toUpperCase()} in ${workflow}`;
+
+            const query = `mutation IssueCreate($input: IssueCreateInput!) {
+              issueCreate(input: $input) {
+                success
+                issue { id url }
+              }
+            }`;
+
+            const variables = {
+              input: {
+                teamId: process.env.LINEAR_TEAM_ID,
+                title,
+                description: `${description}\n---\n🔍 GitHub Annotations Errors: ${checkErrors}\n🔍 GitHub Annotations Warnings: ${checkWarnings}\n---\n📊 Log Errors: ${logErrors}\n📊 Log Warnings: ${logWarnings}\n🔗 Commit: https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}\n🔗 Workflow Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.event.workflow_run.id }}`,
+                labelIds: []
+              }
+            };
+
+            const result = await callLinear(query, variables);
+            console.log("Linear response:", JSON.stringify(result, null, 2));
