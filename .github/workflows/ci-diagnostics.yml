@@ -2,12 +2,15 @@ name: CI Diagnostics
 
 on:
   workflow_run:
-    workflows: ["Coverage Checks", "Frontend Checks", "Backend Checks", "Render Deploy with Smoke Test", "Post-Deploy Smoke Tests", "Lint", "Prettier", "Type Check", "Sync", "Test:Unit", "Test:E2E", "Analyze (javascript)", "Analyze (python)", "Checks (flake8)", "Checks (black)", "Checks (mypy)", "Checks (pytest)", "Upload Codecov", "PR Summary"]
+    workflows: ["*"]
     types:
       - completed
 
 jobs:
   analyze-diagnostics:
+    if: |
+      github.event.workflow_run.name != 'Analyze (javascript)' &&
+      github.event.workflow_run.name != 'Analyze (python)'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,7 +24,7 @@ jobs:
       - name: Validate artifact presence
         run: |
           if [ ! -d "diagnostics-logs" ] || [ -z "$(ls -A diagnostics-logs)" ]; then
-            echo "⚠️ Warning: No diagnostics logs were uploaded by the triggering workflow. Skipping artifact log analysis but continuing." >&2
+            echo "⚠️ Warning: No diagnostics logs were uploaded by the triggering workflow. Skipping artifact log analysis but continuing workflow." >&2
             echo "class=clean" >> $GITHUB_OUTPUT
           fi
 
