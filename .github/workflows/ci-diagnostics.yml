@@ -16,6 +16,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create pending CI Diagnostics check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: check } = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: "CI Diagnostics",
+              head_sha: "${{ github.sha }}",
+              status: "in_progress",
+              output: {
+                title: "CI Diagnostics Running",
+                summary: "Diagnostics workflow has started."
+              }
+            });
+            core.setOutput("check_id", check.id);
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -23,7 +40,7 @@ jobs:
 
       - name: Debug info
         run: |
-          echo "CI Diagnostics triggered on push/pr"
+          echo "CI Diagnostics triggered on push/pr ✅"
           echo "Commit: ${{ github.sha }}"
           echo "Branch: ${{ github.ref_name }}"
           echo "Listing downloaded artifacts:"
@@ -43,10 +60,12 @@ jobs:
         if: steps.validate.outputs.logs_present == 'false'
         run: |
           echo "No logs or annotations found. Marking as clean."
-          exit 0
+          echo "## CI Diagnostics Report" > report.md
+          echo "No artifacts found for commit ${{ github.sha }} on branch ${{ github.ref_name }}." >> report.md
 
       - name: Gather failure and warning summary with classification
         id: classify
+        if: steps.validate.outputs.logs_present == 'true'
         run: |
           echo "## ⚠️ CI Diagnostics Report" > report.md
           echo "Triggered by: push/pr" >> report.md
@@ -54,15 +73,9 @@ jobs:
           echo "Branch: ${{ github.ref_name }}" >> report.md
           echo "---" >> report.md
 
-          if [ "${{ steps.validate.outputs.logs_present }}" == "true" ]; then
-            ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs | sort | uniq | head -n 500 || true)
-            WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs | sort | uniq | head -n 500 || true)
-            STACK=$(grep -iE "(Traceback|Error:|Exception:)" -R diagnostics-logs | head -n 20 || true)
-          else
-            ERRORS=""
-            WARNINGS=""
-            STACK=""
-          fi
+          ERRORS=$(grep -iE "(error|fail|exception|missing|denied)" -R diagnostics-logs | sort | uniq | head -n 500 || true)
+          WARNINGS=$(grep -iE "(warn|warning|deprecated)" -R diagnostics-logs | sort | uniq | head -n 500 || true)
+          STACK=$(grep -iE "(Traceback|Error:|Exception:)" -R diagnostics-logs | head -n 20 || true)
 
           ERROR_COUNT=$(echo "$ERRORS" | grep -c . || true)
           WARNING_COUNT=$(echo "$WARNINGS" | grep -c . || true)
@@ -70,13 +83,21 @@ jobs:
           echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
           echo "warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
 
-          if [ "${{ steps.validate.outputs.logs_present }}" != "true" ]; then
-            echo "⚠️ No logs were available for analysis." >> report.md
-            echo "class=missing_logs" >> $GITHUB_OUTPUT
+          if [ -z "$ERRORS" ] && [ -z "$WARNINGS" ]; then
+            echo "⚠️ No issues detected in logs." >> report.md
+          else
+            if [ -n "$ERRORS" ]; then
+              echo "### ❌ Errors" >> report.md
+              echo "$ERRORS" >> report.md
+            fi
+            if [ -n "$WARNINGS" ]; then
+              echo "### ⚠️ Warnings" >> report.md
+              echo "$WARNINGS" >> report.md
+            fi
           fi
 
       - name: Sync Linear issue (logs or annotations)
-        if: steps.classify.outputs.class == 'missing_logs' || steps.classify.outputs.error_count != '0' || steps.classify.outputs.warning_count != '0'
+        if: steps.classify.outputs.error_count != '0' || steps.classify.outputs.warning_count != '0' || steps.validate.outputs.logs_present == 'false'
         uses: actions/github-script@v7
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
@@ -111,15 +132,8 @@ jobs:
             const commit = '${{ github.sha }}';
             const branch = process.env.GITHUB_REF_NAME || "unknown";
 
-            const logErrors = '${{ steps.classify.outputs.error_count }}';
-            const logWarnings = '${{ steps.classify.outputs.warning_count }}';
-
             let description = fs.readFileSync('report.md', 'utf8')
               .replace(/(password|secret|token|apikey|jwt|bearer|auth|key|cred)\s*[:=]\s*\S+/gi, "[REDACTED]");
-
-            if (classification === 'missing_logs') {
-              description += "\n❌ Logs were missing from this run.";
-            }
 
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
@@ -133,7 +147,7 @@ jobs:
               core.setFailed("Linear API sync failed: " + err.message);
             }
 
-      - name: Upload CI Diagnostics summary as check
+      - name: Complete CI Diagnostics check
         if: always()
         uses: actions/github-script@v7
         with:
@@ -142,15 +156,39 @@ jobs:
             const summary = fs.readFileSync('report.md', 'utf8').slice(0, 60000);
             const conclusion = "${{ job.status }}" === "success" ? "success" : "failure";
 
-            await github.rest.checks.create({
+            const { data: checks } = await github.rest.checks.listForRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: "CI Diagnostics",
-              head_sha: "${{ github.sha }}",
-              status: "completed",
-              conclusion,
-              output: {
-                title: "CI Diagnostics Report",
-                summary
-              }
+              ref: "${{ github.sha }}"
             });
+
+            const diagCheck = checks.check_runs.find(c => c.name === "CI Diagnostics");
+
+            if (diagCheck) {
+              console.log("Updating existing CI Diagnostics check:", diagCheck.id);
+              await github.rest.checks.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                check_run_id: diagCheck.id,
+                status: "completed",
+                conclusion,
+                output: {
+                  title: "CI Diagnostics Report",
+                  summary
+                }
+              });
+            } else {
+              console.log("No existing CI Diagnostics check, creating new one");
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: "CI Diagnostics",
+                head_sha: "${{ github.sha }}",
+                status: "completed",
+                conclusion,
+                output: {
+                  title: "CI Diagnostics Report",
+                  summary
+                }
+              });
+            }
