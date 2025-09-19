@@ -90,7 +90,7 @@ jobs:
             echo '```' >> report.md
           fi
 
-      - name: Sync Linear issue
+      - name: Sync Linear issue & validate team
         continue-on-error: true
         uses: actions/github-script@v7
         env:
@@ -109,21 +109,37 @@ jobs:
             console.log("🔑 Linear key present (first 6 chars):", process.env.LINEAR_API_KEY.slice(0,6) + "***");
             console.log("📌 Linear team ID present:", process.env.LINEAR_TEAM_ID ? "yes" : "no");
 
-            const res = await fetch("https://api.linear.app/graphql", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Linear-API-Key": process.env.LINEAR_API_KEY
-              },
-              body: JSON.stringify({ query: "query { viewer { id name } }" })
-            });
-            const json = await res.json();
-            console.log("Linear API response:", JSON.stringify(json, null, 2));
+            async function runQuery(query) {
+              const res = await fetch("https://api.linear.app/graphql", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${process.env.LINEAR_API_KEY}`
+                },
+                body: JSON.stringify({ query })
+              });
+              return res.json();
+            }
 
-            if (json.errors) {
-              fs.appendFileSync('report.md', `\n\n❌ Linear API error: ${JSON.stringify(json.errors)}`);
+            // Viewer check
+            const viewer = await runQuery("query { viewer { id name email organization { id name } } }");
+            if (viewer.errors) {
+              fs.appendFileSync('report.md', `\n\n❌ Viewer query error: ${JSON.stringify(viewer.errors)}`);
             } else {
-              fs.appendFileSync('report.md', `\n\n🔗 Linear API connectivity test success: ${JSON.stringify(json.data)}`);
+              fs.appendFileSync('report.md', `\n\n✅ Viewer: ${JSON.stringify(viewer.data)}`);
+            }
+
+            // Team check
+            const teams = await runQuery("query { teams { id name } }");
+            if (teams.errors) {
+              fs.appendFileSync('report.md', `\n\n❌ Teams query error: ${JSON.stringify(teams.errors)}`);
+            } else {
+              const team = teams.data.teams.find(t => t.id === process.env.LINEAR_TEAM_ID);
+              if (team) {
+                fs.appendFileSync('report.md', `\n\n✅ Team ID valid: ${team.id} (${team.name})`);
+              } else {
+                fs.appendFileSync('report.md', `\n\n❌ LINEAR_TEAM_ID does not match any team. Found: ${JSON.stringify(teams.data.teams)}`);
+              }
             }
 
       - name: Complete CI Diagnostics check
