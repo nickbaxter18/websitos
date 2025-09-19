@@ -18,7 +18,6 @@ jobs:
     name: Run CI Diagnostics
     runs-on: ubuntu-latest
     if: always()
-    needs: [checks, coverage]
 
     steps:
       - name: Checkout repository
