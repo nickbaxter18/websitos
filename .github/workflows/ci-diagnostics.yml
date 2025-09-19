@@ -152,7 +152,6 @@ jobs:
         uses: actions/github-script@v7
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
-          LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
         with:
           script: |
             const fs = require('fs');
@@ -185,42 +184,21 @@ jobs:
 
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
-            console.log("Searching or creating Linear issue with title:", title);
+            console.log("Creating or updating Linear issue with title:", title);
 
-            const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title labels { nodes { name } } }}}`;
-            const searchVars = {
-              filter: {
-                team: { id: { eq: process.env.LINEAR_TEAM_ID } },
-                title: { eq: title }
+            // Always create issue in main issues (no team filter)
+            const query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
+            const variables = {
+              input: {
+                title,
+                description
               }
             };
-
-            const existing = await callLinear(searchQuery, searchVars);
-
-            let query, variables;
-            if (existing.data?.issues?.nodes?.length) {
-              const issueId = existing.data.issues.nodes[0].id;
-              query = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              variables = { id: issueId, input: { description, labelIds: [] } };
-              console.log("Updating existing Linear issue:", existing.data.issues.nodes[0].url);
-            } else {
-              query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              variables = {
-                input: {
-                  teamId: process.env.LINEAR_TEAM_ID,
-                  title,
-                  description,
-                  labelIds: [],
-                  metadata: { commit, branch }
-                }
-              };
-              console.log("Creating new Linear issue");
-            }
 
             try {
               const result = await callLinear(query, variables);
               console.log("Final Linear API result:", JSON.stringify(result, null, 2));
-              const issueUrl = result?.data?.issueCreate?.issue?.url || result?.data?.issueUpdate?.issue?.url;
+              const issueUrl = result?.data?.issueCreate?.issue?.url;
               if (issueUrl) {
                 console.log("🔗 Linear issue URL:", issueUrl);
               }
