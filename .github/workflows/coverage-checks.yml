@@ -211,3 +211,8 @@ jobs:
           verbose: true
         env:
           CODECOV_API_TOKEN: ${{ secrets.CODECOV_API_TOKEN }}
+
+  call-diagnostics:
+    needs: coverage
+    uses: ./.github/workflows/ci-diagnostics.yml
+    secrets: inherit

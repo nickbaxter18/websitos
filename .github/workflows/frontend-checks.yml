@@ -125,3 +125,8 @@ jobs:
           name: frontend-playwright-results
           path: coverage/e2e/lcov.info
           retention-days: 14
+
+  call-diagnostics:
+    needs: checks
+    uses: ./.github/workflows/ci-diagnostics.yml
+    secrets: inherit

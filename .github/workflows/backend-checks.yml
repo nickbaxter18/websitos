@@ -50,3 +50,8 @@ jobs:
           name: logs-backend-${{ matrix.task }}
           path: logs
           retention-days: 3
+
+  call-diagnostics:
+    needs: checks
+    uses: ./.github/workflows/ci-diagnostics.yml
+    secrets: inherit

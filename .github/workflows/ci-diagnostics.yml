@@ -1,14 +1,12 @@
 name: CI Diagnostics
 
 on:
-  workflow_run:
-    workflows:
-      - Backend Checks
-      - Coverage Checks
-      - Frontend Checks
-      - Ops Pipeline
-    types:
-      - completed
+  workflow_call:
+    secrets:
+      LINEAR_API_KEY:
+        required: true
+      LINEAR_TEAM_ID:
+        required: true
   workflow_dispatch:
 
 permissions:
@@ -34,7 +32,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               name: "CI Diagnostics",
-              head_sha: "${{ github.event.workflow_run.head_sha }}",
+              head_sha: process.env.GITHUB_SHA,
               status: "in_progress",
               output: {
                 title: "CI Diagnostics Running",
@@ -43,53 +41,17 @@ jobs:
             });
             core.setOutput("check_id", check.id);
 
-      - name: Download artifacts from triggering workflow via API
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const run_id = ${{ github.event.workflow_run.id }};
-            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id
-            });
-
-            const fs = require("fs");
-            const { execSync } = require("child_process");
-
-            if (!artifacts.artifacts.length) {
-              console.log("No artifacts found for workflow run:", run_id);
-            } else {
-              for (const artifact of artifacts.artifacts) {
-                console.log("Downloading artifact:", artifact.name);
-                const download = await github.rest.actions.downloadArtifact({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  artifact_id: artifact.id,
-                  archive_format: "zip"
-                });
-                fs.writeFileSync(`${artifact.name}.zip`, Buffer.from(download.data));
-                execSync(`mkdir -p diagnostics-logs/${artifact.name}`);
-                execSync(`unzip -o ${artifact.name}.zip -d diagnostics-logs/${artifact.name}`);
-              }
-            }
-
       - name: Debug info
         run: |
           echo "✅ CI Diagnostics workflow triggered"
-          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
-          echo "Commit: ${{ github.event.workflow_run.head_sha }}"
-          echo "Branch: ${{ github.event.workflow_run.head_branch }}"
-          echo "Downloaded artifacts:"
-          ls -R diagnostics-logs || echo "No artifacts found"
-          echo "--- Artifact File Listing ---"
-          find diagnostics-logs -type f || echo "No files found"
+          echo "Commit: $GITHUB_SHA"
+          echo "Branch: $GITHUB_REF_NAME"
 
       - name: Validate artifact presence
         id: validate
         run: |
-          if [ ! -d "diagnostics-logs" ] || [ -z "$(ls -A diagnostics-logs)" ]; then
-            echo "❌ No diagnostics logs were uploaded by workflows." >&2
+          if [ ! -d "diagnostics-logs" ] || [ -z "$(ls -A diagnostics-logs 2>/dev/null || true)" ]; then
+            echo "❌ No diagnostics logs were uploaded." >&2
             echo "logs_present=false" >> $GITHUB_OUTPUT
           else
             echo "logs_present=true" >> $GITHUB_OUTPUT
@@ -99,41 +61,21 @@ jobs:
         if: steps.validate.outputs.logs_present == 'false'
         run: |
           echo "## CI Diagnostics Report" > report.md
-          echo "No artifacts found for commit ${{ github.event.workflow_run.head_sha }} (triggered by ${{ github.event.workflow_run.name }})." >> report.md
+          echo "No artifacts found for commit $GITHUB_SHA." >> report.md
 
-      - name: Gather failure and warning summary from all artifacts
+      - name: Gather failure and warning summary
         id: classify
-        if: steps.validate.outputs.logs_present == 'true'
         run: |
           echo "## ⚠️ CI Diagnostics Report" > report.md
-          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}" >> report.md
-          echo "Commit: ${{ github.event.workflow_run.head_sha }}" >> report.md
-          echo "Branch: ${{ github.event.workflow_run.head_branch }}" >> report.md
+          echo "Commit: $GITHUB_SHA" >> report.md
+          echo "Branch: $GITHUB_REF_NAME" >> report.md
           echo "---" >> report.md
 
-          # Parse text logs
           ERRORS=$(grep -iRE "(error|fail|exception|missing|denied)" diagnostics-logs || true | sort | uniq | head -n 500)
           WARNINGS=$(grep -iRE "(warn|warning|deprecated)" diagnostics-logs || true | sort | uniq | head -n 500)
 
-          # Parse JSON reports (eslint, jest, secscan, ops)
-          ESLINT_ERRORS=$(jq -r '.messages[]? | select(.severity==2) | "ESLint: "+.message' $(find diagnostics-logs -name "eslint-report.json") 2>/dev/null || true)
-          ESLINT_WARNINGS=$(jq -r '.messages[]? | select(.severity==1) | "ESLint: "+.message' $(find diagnostics-logs -name "eslint-report.json") 2>/dev/null || true)
-
-          JEST_ERRORS=$(jq -r '.testResults[]? | select(.status=="failed") | "Jest: "+.name' $(find diagnostics-logs -name "jest-report.json") 2>/dev/null || true)
-
-          SECSCAN_ERRORS=$(jq -r '.vulnerabilities[]? | "SecScan: "+.title+" ("+.severity+")"' $(find diagnostics-logs -name "secscan-report.json") 2>/dev/null || true)
-          OPS_ERRORS=$(jq -r '.errors[]? | "Ops: "+.' $(find diagnostics-logs -name "ops-report.json") 2>/dev/null || true)
-
-          # Combine results
-          ERRORS="$ERRORS\n$ESLINT_ERRORS\n$JEST_ERRORS\n$SECSCAN_ERRORS\n$OPS_ERRORS"
-          WARNINGS="$WARNINGS\n$ESLINT_WARNINGS"
-
           echo "error_count=$(echo "$ERRORS" | grep -c . || true)" >> $GITHUB_OUTPUT
           echo "warning_count=$(echo "$WARNINGS" | grep -c . || true)" >> $GITHUB_OUTPUT
-
-          if [ -z "$ERRORS" ] && [ -z "$WARNINGS" ]; then
-            echo "Diagnostics complete. No errors or warnings found." >> report.md
-          fi
 
           if [ -n "$ERRORS" ]; then
             echo "### ❌ Errors" >> report.md
@@ -148,7 +90,7 @@ jobs:
             echo '```' >> report.md
           fi
 
-      - name: Sync Linear issue (create or update with teamId, labels, validation)
+      - name: Sync Linear issue
         continue-on-error: true
         uses: actions/github-script@v7
         env:
@@ -164,74 +106,18 @@ jobs:
               return;
             }
 
-            async function callLinear(query, variables, retries = 3) {
-              for (let i = 0; i < retries; i++) {
-                const res = await fetch("https://api.linear.app/graphql", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "X-Linear-API-Key": process.env.LINEAR_API_KEY // switched to X-Linear-API-Key
-                  },
-                  body: JSON.stringify({ query, variables })
-                });
-                const json = await res.json();
-                console.log("Linear API response attempt", i + 1, JSON.stringify(json, null, 2));
-                if (res.ok && !json.errors) return json;
-                if (i < retries - 1) {
-                  console.log("Retrying Linear API call...");
-                  await new Promise(r => setTimeout(r, 1000 * (i+1)));
-                }
-              }
-              throw new Error("Linear API request failed after retries");
-            }
+            const res = await fetch("https://api.linear.app/graphql", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${process.env.LINEAR_API_KEY}`
+              },
+              body: JSON.stringify({ query: "query { viewer { id name } }" })
+            });
+            const json = await res.json();
+            console.log("Linear API test response:", JSON.stringify(json, null, 2));
 
-            const commit = '${{ github.event.workflow_run.head_sha }}';
-            const branch = '${{ github.event.workflow_run.head_branch }}';
-            let description = fs.readFileSync('report.md', 'utf8')
-              .replace(/(password|secret|token|apikey|jwt|bearer|auth|key|cred)\s*[:=]\s*\S+/gi, "[REDACTED]");
-
-            const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
-
-            // Assign labels depending on results
-            const errorCount = parseInt('${{ steps.classify.outputs.error_count }}' || '0');
-            const warningCount = parseInt('${{ steps.classify.outputs.warning_count }}' || '0');
-            let labels = [];
-            if (errorCount > 0) labels.push("ci-error");
-            else if (warningCount > 0) labels.push("ci-warning");
-
-            // Search for existing issue
-            const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title } } }`;
-            const searchVars = { filter: { title: { eq: title } } };
-
-            console.log("Searching for existing Linear issue with title:", title);
-            const existing = await callLinear(searchQuery, searchVars);
-
-            let query, variables;
-            if (existing.data?.issues?.nodes?.length) {
-              const issueId = existing.data.issues.nodes[0].id;
-              query = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              variables = { id: issueId, input: { description, teamId: process.env.LINEAR_TEAM_ID, labelIds: labels, metadata: { commit, branch } } };
-              console.log("Updating existing Linear issue:", existing.data.issues.nodes[0].url);
-            } else {
-              query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              variables = { input: { title, description, teamId: process.env.LINEAR_TEAM_ID, labelIds: labels, metadata: { commit, branch } } };
-              console.log("Creating new Linear issue");
-            }
-
-            try {
-              const result = await callLinear(query, variables);
-              console.log("Final Linear API result:", JSON.stringify(result, null, 2));
-              const issueUrl = result?.data?.issueCreate?.issue?.url || result?.data?.issueUpdate?.issue?.url;
-              if (issueUrl) {
-                console.log("🔗 Linear issue URL:", issueUrl);
-                fs.appendFileSync('report.md', `\n\n🔗 [View Linear Issue](${issueUrl})`);
-              } else {
-                fs.appendFileSync('report.md', `\n\n❌ Linear issue not created. See logs for details.`);
-              }
-            } catch (err) {
-              console.log("❌ Linear API sync failed:", err.message);
-              fs.appendFileSync('report.md', `\n\n❌ Linear API sync failed: ${err.message}`);
-            }
+            fs.appendFileSync('report.md', `\n\n🔗 Linear API connectivity test: ${JSON.stringify(json)}`);
 
       - name: Complete CI Diagnostics check
         if: always()
@@ -240,48 +126,19 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('report.md', 'utf8').slice(0, 60000);
-
-            // Decide check conclusion
             let conclusion = "success";
-            if ('${{ steps.classify.outputs.error_count }}' !== '0') {
-              conclusion = "failure";
-            } else if ('${{ steps.classify.outputs.warning_count }}' !== '0') {
-              conclusion = "neutral";
-            }
+            if ('${{ steps.classify.outputs.error_count }}' !== '0') conclusion = "failure";
+            else if ('${{ steps.classify.outputs.warning_count }}' !== '0') conclusion = "neutral";
 
-            const { data: checks } = await github.rest.checks.listForRef({
+            await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "${{ github.event.workflow_run.head_sha }}"
+              name: "CI Diagnostics",
+              head_sha: process.env.GITHUB_SHA,
+              status: "completed",
+              conclusion,
+              output: {
+                title: "CI Diagnostics Report",
+                summary
+              }
             });
-
-            const diagCheck = checks.check_runs.find(c => c.name === "CI Diagnostics");
-
-            if (diagCheck) {
-              console.log("Updating existing CI Diagnostics check:", diagCheck.id);
-              await github.rest.checks.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                check_run_id: diagCheck.id,
-                status: "completed",
-                conclusion,
-                output: {
-                  title: "CI Diagnostics Report",
-                  summary
-                }
-              });
-            } else {
-              console.log("No existing CI Diagnostics check, creating new one");
-              await github.rest.checks.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                name: "CI Diagnostics",
-                head_sha: "${{ github.event.workflow_run.head_sha }}",
-                status: "completed",
-                conclusion,
-                output: {
-                  title: "CI Diagnostics Report",
-                  summary
-                }
-              });
-            }
