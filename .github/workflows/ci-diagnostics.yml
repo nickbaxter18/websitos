@@ -42,11 +42,36 @@ jobs:
             });
             core.setOutput("check_id", check.id);
 
-      - name: Download artifacts from triggering workflow
-        uses: actions/download-artifact@v4
+      - name: Download artifacts from triggering workflow via API
+        uses: actions/github-script@v7
         with:
-          path: diagnostics-logs
-          run-id: ${{ github.event.workflow_run.id }}
+          script: |
+            const run_id = ${{ github.event.workflow_run.id }};
+            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id
+            });
+
+            const fs = require("fs");
+            const { execSync } = require("child_process");
+
+            if (!artifacts.artifacts.length) {
+              console.log("No artifacts found for workflow run:", run_id);
+            } else {
+              for (const artifact of artifacts.artifacts) {
+                console.log("Downloading artifact:", artifact.name);
+                const download = await github.rest.actions.downloadArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                  archive_format: "zip"
+                });
+                fs.writeFileSync(`${artifact.name}.zip`, Buffer.from(download.data));
+                execSync(`mkdir -p diagnostics-logs/${artifact.name}`);
+                execSync(`unzip -o ${artifact.name}.zip -d diagnostics-logs/${artifact.name}`);
+              }
+            }
 
       - name: Debug info
         run: |
