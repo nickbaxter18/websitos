@@ -10,6 +10,7 @@ on:
 
 jobs:
   analyze-diagnostics:
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,6 +25,7 @@ jobs:
         run: |
           echo "CI Diagnostics triggered on push/pr"
           echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
           echo "Listing downloaded artifacts:"
           ls -R diagnostics-logs || echo "No artifacts found"
 
@@ -49,6 +51,7 @@ jobs:
           echo "## ⚠️ CI Diagnostics Report" > report.md
           echo "Triggered by: push/pr" >> report.md
           echo "Commit: ${{ github.sha }}" >> report.md
+          echo "Branch: ${{ github.ref_name }}" >> report.md
           echo "---" >> report.md
 
           if [ "${{ steps.validate.outputs.logs_present }}" == "true" ]; then
@@ -106,6 +109,7 @@ jobs:
 
             const classification = '${{ steps.classify.outputs.class || "unknown" }}';
             const commit = '${{ github.sha }}';
+            const branch = process.env.GITHUB_REF_NAME || "unknown";
 
             const logErrors = '${{ steps.classify.outputs.error_count }}';
             const logWarnings = '${{ steps.classify.outputs.warning_count }}';
@@ -117,7 +121,7 @@ jobs:
               description += "\n❌ Logs were missing from this run.";
             }
 
-            const title = `CI Diagnostics (${commit.substring(0,7)})`;
+            const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
             const query = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
             const variables = { input: { teamId: process.env.LINEAR_TEAM_ID, title, description, labelIds: [] } };
