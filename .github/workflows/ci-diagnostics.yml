@@ -2,15 +2,22 @@ name: CI Diagnostics
 
 on:
   workflow_run:
-    workflows: ["*"]
+    workflows:
+      - Backend Checks
+      - Coverage Checks
+      - Ops Pipeline
+      - PR Summary
+      - Post-Deploy Smoke Tests
+      - U-DIG IT Repo Sync
+      - Validation
+      - Lockfile Consistency Check
+      - .github/workflows/render.yaml
+      - .github/workflows/render-deploy.yml
     types:
       - completed
 
 jobs:
   analyze-diagnostics:
-    if: |
-      github.event.workflow_run.name != 'Analyze (javascript)' &&
-      github.event.workflow_run.name != 'Analyze (python)'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
