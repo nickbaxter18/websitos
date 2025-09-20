@@ -19,7 +19,6 @@ jobs:
     name: Run CI Diagnostics
     runs-on: ubuntu-latest
     if: always()
-    needs: [frontend/package-and-upload, backend/package-and-upload, coverage/package-and-upload]
     env:
       LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
       LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}

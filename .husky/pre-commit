@@ -1,6 +1,6 @@
-echo "✅ Husky pre-commit running..."
+#!/bin/sh
 
-# Run lint-staged (Prettier, ESLint, Black on staged files only)
-npx lint-staged --config package.json || true
+echo "✅ Husky pre-commit running with auto-fix..."
 
-exit 0
+# Run lint-staged (Prettier, ESLint, Black with auto-fix)
+npx lint-staged --config package.json
