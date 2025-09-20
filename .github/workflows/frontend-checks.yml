@@ -52,11 +52,10 @@ jobs:
       - name: Run ESLint
         if: ${{ matrix.task == 'lint' }}
         run: |
-          echo ">>> Running ESLint"
-          pnpm exec eslint src v2 ops --format json --output-file eslint-report.json || true
-          if [ ! -f eslint-report.json ]; then echo '{}' > eslint-report.json; fi
+          pnpm exec eslint src v2 ops --format json --output-file eslint-output.json || true
+          node scripts/convert-eslint.js eslint-output.json eslint-report.json
 
-      - name: Upload ESLint report
+      - name: Upload ESLint summary
         if: ${{ always() && matrix.task == 'lint' }}
         uses: actions/upload-artifact@v4
         with:
@@ -67,43 +66,42 @@ jobs:
       - name: Run Prettier
         if: ${{ matrix.task == 'prettier' }}
         run: |
-          pnpm exec prettier --check . > prettier-report.txt 2>&1 || true
-          if [ ! -s prettier-report.txt ]; then echo 'No Prettier output' > prettier-report.txt; fi
+          pnpm exec prettier --check . > prettier-output.txt 2>&1 || true
+          node scripts/convert-prettier.js prettier-output.txt prettier-report.json
 
-      - name: Upload Prettier report
+      - name: Upload Prettier summary
         if: ${{ always() && matrix.task == 'prettier' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-prettier-report
-          path: prettier-report.txt
+          path: prettier-report.json
           retention-days: 14
 
       - name: Run TypeScript type-check
         if: ${{ matrix.task == 'type-check' }}
         run: |
-          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck | tee tsc-report.txt || true
-          if [ ! -s tsc-report.txt ]; then echo 'No TSC output' > tsc-report.txt; fi
+          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck | tee tsc-output.txt || true
+          node -e 'const fs=require("fs"); const lines=fs.readFileSync("tsc-output.txt","utf-8").split("\n"); const summary={workflow:"frontend-checks",job:"tsc",status:"success",errors:[],warnings:[],notices:[]}; lines.forEach(l=>{if(l.includes("error")){summary.errors.push({file:"unknown",line:null,column:null,message:l,rule:"tsc",severity:"error"});summary.status="failure"}}); fs.writeFileSync("tsc-report.json",JSON.stringify(summary,null,2));'
 
-      - name: Upload TSC report
+      - name: Upload TSC summary
         if: ${{ always() && matrix.task == 'type-check' }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-tsc-report
-          path: tsc-report.txt
+          path: tsc-report.json
           retention-days: 14
 
       - name: Run Jest unit tests
         if: ${{ matrix.task == 'test:unit' }}
         run: |
-          echo ">>> Running Jest"
-          pnpm exec jest --coverage --json --outputFile=jest-report.json || true
-          if [ ! -f jest-report.json ]; then echo '{}' > jest-report.json; fi
+          pnpm exec jest --coverage --json --outputFile=jest-output.json || true
+          node -e 'const fs=require("fs"); const raw=fs.existsSync("jest-output.json")?JSON.parse(fs.readFileSync("jest-output.json","utf-8")):{testResults:[]}; const summary={workflow:"frontend-checks",job:"jest-unit",status:"success",errors:[],warnings:[],notices:[]}; raw.testResults.forEach(t=>{if(t.status==="failed"){summary.errors.push({file:t.name||"unknown",line:null,column:null,message:"Test failed",rule:"jest",severity:"error"});summary.status="failure"}}); fs.writeFileSync("jest-report.json",JSON.stringify(summary,null,2));'
 
-      - name: Upload Jest results
+      - name: Upload Jest summary
         if: ${{ always() && matrix.task == 'test:unit' }}
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-jest-results
+          name: frontend-jest-report
           path: jest-report.json
           retention-days: 14
 
@@ -114,16 +112,15 @@ jobs:
       - name: Run Playwright E2E tests with coverage
         if: ${{ matrix.task == 'test:e2e' }}
         run: |
-          echo ">>> Running Playwright E2E"
           pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || true
-          if [ ! -f coverage/e2e/lcov.info ]; then echo 'TN:\nSF:dummy.ts\nFNF:0\nFNH:0\nDA:1,1\nLF:1\nLH:1\nend_of_record' > coverage/e2e/lcov.info; fi
+          node scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json playwright-coverage-report.json
 
-      - name: Upload Playwright E2E results
+      - name: Upload Playwright coverage summary
         if: ${{ always() && matrix.task == 'test:e2e' }}
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-playwright-results
-          path: coverage/e2e/lcov.info
+          name: frontend-playwright-report
+          path: playwright-coverage-report.json
           retention-days: 14
 
   call-diagnostics:

@@ -27,64 +27,60 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create pending CI Diagnostics check
-        uses: actions/github-script@v7
+      - name: Download all summary artifacts
+        uses: actions/download-artifact@v4
         with:
-          script: |
-            const { data: check } = await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: "CI Diagnostics",
-              head_sha: process.env.GITHUB_SHA,
-              status: "in_progress",
-              output: {
-                title: "CI Diagnostics Running",
-                summary: "Diagnostics workflow has started."
+          path: ./summaries
+
+      - name: Aggregate summaries into report
+        run: |
+          node -e '
+          const fs = require("fs");
+          const path = require("path");
+
+          const dir = "./summaries";
+          let report = "## ⚠️ CI Diagnostics Report\n";
+
+          const files = fs.readdirSync(dir, { recursive: true }).filter(f => f.endsWith("-report.json"));
+
+          let totalErrors = 0, totalWarnings = 0;
+
+          if (!files.length) {
+            report += "\n❌ No summary artifacts found.";
+          } else {
+            for (const file of files) {
+              const raw = JSON.parse(fs.readFileSync(path.join(dir, file), "utf-8"));
+              report += `\n### ${raw.workflow} / ${raw.job}\n`;
+              report += `Status: ${raw.status}\n`;
+              if (raw.errors.length) {
+                totalErrors += raw.errors.length;
+                report += "\n❌ Errors:\n";
+                raw.errors.forEach(e => {
+                  report += `- ${e.file}:${e.line||"?"} ${e.message} (rule: ${e.rule}) [${e.severity}]\n`;
+                  if (e.suggestion) report += `  💡 Suggestion: ${e.suggestion}\n`;
+                });
               }
-            });
-            core.setOutput("check_id", check.id);
-
-      - name: Aggregate annotations from all checks
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-
-            const { data: checks } = await github.rest.checks.listForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: process.env.GITHUB_SHA,
-            });
-
-            let allAnnotations = [];
-
-            for (const check of checks.check_runs) {
-              const annotations = await github.paginate(github.rest.checks.listAnnotationsForCheckRun, {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                check_run_id: check.id,
-              });
-
-              if (annotations.length) {
-                allAnnotations.push({ check: check.name, annotations });
+              if (raw.warnings.length) {
+                totalWarnings += raw.warnings.length;
+                report += "\n⚠️ Warnings:\n";
+                raw.warnings.forEach(w => {
+                  report += `- ${w.file}:${w.line||"?"} ${w.message} (rule: ${w.rule}) [${w.severity}]\n`;
+                  if (w.suggestion) report += `  💡 Suggestion: ${w.suggestion}\n`;
+                });
+              }
+              if (raw.notices.length) {
+                report += "\nℹ️ Notices:\n";
+                raw.notices.forEach(n => {
+                  report += `- ${n.file}:${n.line||"?"} ${n.message}\n`;
+                });
               }
             }
+          }
 
-            let report = "## ⚠️ CI Diagnostics Report\n";
-
-            if (!allAnnotations.length) {
-              report += "\n✅ No errors or warnings detected across checks.";
-            } else {
-              report += "\n### 🔎 Aggregated Annotations\n";
-              for (const block of allAnnotations) {
-                report += `\n**${block.check}**\n`;
-                for (const a of block.annotations) {
-                  report += `- ${a.annotation_level.toUpperCase()}: ${a.message} (${a.path}:${a.start_line})\n`;
-                }
-              }
-            }
-
-            fs.writeFileSync('report.md', report);
+          fs.writeFileSync("report.md", report);
+          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
+          console.log(report);
+          '
 
       - name: Sync diagnostics to Linear
         continue-on-error: true
@@ -98,7 +94,13 @@ jobs:
             const branch = process.env.GITHUB_REF_NAME;
 
             const description = fs.readFileSync('report.md', 'utf8');
+            const meta = JSON.parse(fs.readFileSync('diagnostics-meta.json', 'utf8'));
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
+
+            let labels = [];
+            if (meta.totalErrors > 0) labels.push("ci-error");
+            else if (meta.totalWarnings > 0) labels.push("ci-warning");
+            else labels.push("ci-success");
 
             async function runQuery(query, variables = {}) {
               const res = await fetch("https://api.linear.app/graphql", {
@@ -112,7 +114,6 @@ jobs:
               return res.json();
             }
 
-            // Check if issue exists
             const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title } } }`;
             const searchVars = { filter: { title: { eq: title } } };
             const existing = await runQuery(searchQuery, searchVars);
@@ -120,12 +121,12 @@ jobs:
             if (existing.data?.issues?.nodes?.length) {
               const issueId = existing.data.issues.nodes[0].id;
               const updateMutation = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              const updateVars = { id: issueId, input: { description, teamId } };
+              const updateVars = { id: issueId, input: { description, teamId, labelIds: labels } };
               const updated = await runQuery(updateMutation, updateVars);
               fs.appendFileSync('report.md', `\n\n🔄 Updated Linear issue: ${updated?.data?.issueUpdate?.issue?.url || 'n/a'}`);
             } else {
               const createMutation = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              const createVars = { input: { title, description, teamId } };
+              const createVars = { input: { title, description, teamId, labelIds: labels } };
               const created = await runQuery(createMutation, createVars);
               fs.appendFileSync('report.md', `\n\n🆕 Created Linear issue: ${created?.data?.issueCreate?.issue?.url || 'n/a'}`);
             }

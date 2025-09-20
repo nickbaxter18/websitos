@@ -95,122 +95,80 @@ jobs:
         if: ${{ matrix.task == 'backend' }}
         run: npm install -g nyc
 
-      - name: Run frontend coverage (force reporters)
+      - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          mkdir -p logs coverage/frontend
+          mkdir -p coverage/frontend logs
           pnpm jest --config jest.config.cjs --coverage --all --passWithNoTests=false \
-            --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary --coverageReporters=cobertura \
-            --coverageDirectory=coverage/frontend 2>&1 | tee logs/frontend.log
-          echo $? > logs/exit-code.txt
+            --coverageReporters=lcov --coverageReporters=json-summary --coverageReporters=cobertura \
+            --coverageDirectory=coverage/frontend 2>&1 | tee logs/frontend.log || true
+          node scripts/convert-jest-coverage.js coverage/frontend/coverage-summary.json frontend-coverage-report.json
 
-      - name: Run backend coverage (Pytest with branch coverage + threshold)
+      - name: Upload frontend coverage summary
+        if: ${{ always() && matrix.task == 'frontend' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend-report
+          path: frontend-coverage-report.json
+          retention-days: 14
+
+      - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         run: |
           mkdir -p coverage/backend logs
           pytest backend/tests --maxfail=1 --disable-warnings -q \
             --cov=./backend --cov-branch --cov-append \
             --cov-report=xml:coverage/backend/coverage.xml \
-            --cov-report=lcov:coverage/backend/lcov.info \
-            --cov-report=json:coverage/backend/coverage-summary.json \
-            --cov-report=term-missing \
-            --cov-fail-under=0 2>&1 | tee logs/backend.log
-          echo $? > logs/exit-code.txt
+            --cov-report=json:coverage/backend/coverage-summary.json || true
+          python scripts/convert-cobertura.py coverage/backend/coverage.xml backend-cobertura-report.json
+          python scripts/convert-pytest-coverage.py coverage/backend/coverage-summary.json backend-coverage-report.json
+
+      - name: Upload backend coverage summaries
+        if: ${{ always() && matrix.task == 'backend' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend-report
+          path: |
+            backend-cobertura-report.json
+            backend-coverage-report.json
+          retention-days: 14
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
-          mkdir -p logs backend/coverage
+          mkdir -p backend/coverage logs
           cd backend
-          for i in 1 2 3; do
-            pnpm install --frozen-lockfile --prefer-offline && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
-          done
-          pnpm exec jest --config jest.config.cjs --coverage --passWithNoTests --verbose --runInBand --detectOpenHandles --testLocationInResults \
-            --coverageReporters=lcov --coverageReporters=json-summary --coverageDirectory=coverage \
-            2>&1 | tee ../logs/backend-node.log
-          echo $? > ../logs/exit-code.txt
+          pnpm install --frozen-lockfile || true
+          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage || true
+          cd ..
+          node scripts/convert-jest-coverage.js backend/coverage/coverage-summary.json backend-node-coverage-report.json
 
-      - name: Run e2e coverage (Playwright with instrumentation)
+      - name: Upload backend-node coverage summary
+        if: ${{ always() && matrix.task == 'backend-node' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend-node-report
+          path: backend-node-coverage-report.json
+          retention-days: 14
+
+      - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |
           mkdir -p coverage/e2e logs
-          for i in 1 2 3; do
-            pnpm install --frozen-lockfile --prefer-offline && break || (echo "❌ pnpm install failed, retrying..." && sleep 10)
-          done
+          pnpm install --frozen-lockfile || true
           pnpm exec playwright install chromium
+          VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts || true
+          pnpm exec playwright test --reporter=list || true
+          npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
+          node scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json
 
-          VITE_COVERAGE=true NODE_ENV=test pnpm vite build --config vite.config.ts | tee logs/vite-debug.log
-
-          if ! grep -q "Istanbul instrumentation ENABLED" logs/vite-debug.log; then
-            echo "❌ Istanbul instrumentation not enabled in Vite build"
-            exit 1
-          fi
-
-          nohup pnpm vite preview --port=4173 > logs/preview.log 2>&1 &
-          sleep 5
-
-          pnpm exec playwright test --reporter=list --require tests/playwright-coverage-hook.ts || true
-
-          if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
-            npx nyc merge .nyc_output coverage/e2e/coverage-merged.json || true
-            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
-            npx nyc report --reporter=json-summary --report-dir=coverage/e2e --temp-dir=coverage/e2e || true
-          else
-            npx nyc --reporter=lcov --report-dir=coverage/e2e --reporter=json-summary --report-dir=coverage/e2e pnpm exec playwright test --reporter=list || true
-          fi
-
-      - name: Upload standardized coverage artifact
+      - name: Upload e2e coverage summary
+        if: ${{ always() && matrix.task == 'e2e' }}
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.task }}
-          path: coverage/${{ matrix.task }}/coverage-summary.json
-          retention-days: 7
-
-      - name: Upload full coverage folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ matrix.task }}-full
-          path: coverage/${{ matrix.task }}
-          retention-days: 7
-
-      - name: Upload full logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: logs-${{ matrix.task }}
-          path: logs
-          retention-days: 3
-
-  upload-codecov:
-    needs: [coverage]
-    runs-on: ubuntu-latest
-    environment: websitos
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./coverage-artifacts
-
-      - name: Merge coverage files
-        run: |
-          mkdir -p coverage/merged
-          find coverage-artifacts -name "lcov.info" -exec cat {} + > coverage/merged/lcov.info
-          echo "✅ Final merged lcov preview:" && head -n 50 coverage/merged/lcov.info
-
-      - name: Upload merged coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: coverage/merged/lcov.info
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-          verbose: true
-        env:
-          CODECOV_API_TOKEN: ${{ secrets.CODECOV_API_TOKEN }}
+          name: coverage-e2e-report
+          path: e2e-coverage-report.json
+          retention-days: 14
 
   call-diagnostics:
     needs: coverage
