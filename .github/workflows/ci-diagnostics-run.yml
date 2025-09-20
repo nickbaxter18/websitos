@@ -9,9 +9,16 @@ on:
       - '**'
   workflow_dispatch:
 
+permissions:
+  checks: write
+  contents: read
+  actions: read
+
 jobs:
   diagnostics:
+    name: CI Diagnostics (Central)
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,3 +44,29 @@ jobs:
       - name: Run CI Diagnostics reusable workflow
         uses: ./.github/workflows/ci-diagnostics.yml
         secrets: inherit
+
+      - name: Post central diagnostics check
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0 };
+
+            let conclusion = "success";
+            if (meta.totalErrors > 0) conclusion = "failure";
+            else if (meta.totalWarnings > 0) conclusion = "neutral";
+
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: "CI Diagnostics (Central)",
+              head_sha: process.env.GITHUB_SHA,
+              status: "completed",
+              conclusion,
+              output: {
+                title: "Central CI Diagnostics Report",
+                summary
+              }
+            });
