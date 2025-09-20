@@ -1,0 +1,19 @@
+# Ignore node modules
+node_modules/
+
+# Ignore build outputs
+dist/
+build/
+
+# Ignore coverage data
+coverage/
+.coverage
+
+# Ignore Codecov config files
+codecov.yml
+codecov.yaml
+.github/codecov.yml
+
+# Ignore GitHub workflow files
+.github/workflows/*.yml
+.github/workflows/*.yaml
