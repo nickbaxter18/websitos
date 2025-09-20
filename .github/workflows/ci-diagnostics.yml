@@ -61,17 +61,32 @@ jobs:
 
           let files = [];
           try {
-            files = fs.readdirSync(dir, { recursive: true }).filter(f => f.endsWith("-report.json"));
+            // Recursively collect all *-report.json from summaries/* subfolders
+            const walk = (dirPath) => {
+              let results = [];
+              const list = fs.readdirSync(dirPath);
+              list.forEach((file) => {
+                const filePath = path.join(dirPath, file);
+                const stat = fs.statSync(filePath);
+                if (stat && stat.isDirectory()) {
+                  results = results.concat(walk(filePath));
+                } else if (file.endsWith("-report.json")) {
+                  results.push(filePath);
+                }
+              });
+              return results;
+            };
+
+            files = walk(dir);
           } catch (e) {
             report += "\n⚠️ No summaries directory found.";
           }
 
           console.log("📂 Found report files:", files);
 
-          const expected = ["frontend-summaries","backend-summaries","coverage-summaries"];
-
-          const present = new Set(files.map(f => path.basename(f)));
-          const missing = expected.filter(name => !files.some(f => f.includes(name.replace(/-summaries/, ""))));
+          const expected = ["frontend","backend","coverage"];
+          const present = new Set(files.map(f => f.split(path.sep)[1]));
+          const missing = expected.filter(name => !present.has(name));
 
           if (missing.length) {
             report += "\n⚠️ Missing summaries: " + missing.join(", ") + "\n";
@@ -90,7 +105,7 @@ jobs:
             report += "|--------------|--------|----------|\n";
 
             for (const file of files) {
-              const raw = JSON.parse(fs.readFileSync(path.join(dir, file), "utf-8"));
+              const raw = JSON.parse(fs.readFileSync(file, "utf-8"));
               totalErrors += raw.errors.length;
               totalWarnings += raw.warnings.length;
 
@@ -100,7 +115,7 @@ jobs:
             report += "\n---\n";
 
             for (const file of files) {
-              const raw = JSON.parse(fs.readFileSync(path.join(dir, file), "utf-8"));
+              const raw = JSON.parse(fs.readFileSync(file, "utf-8"));
               report += `\n### ${raw.workflow} / ${raw.job}\n`;
               report += `Status: ${raw.status}\n`;
               if (raw.errors.length) {
