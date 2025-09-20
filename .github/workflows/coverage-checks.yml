@@ -50,29 +50,15 @@ jobs:
         run: |
           pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary || true
           node scripts/convert-jest-coverage.js coverage/frontend/coverage-summary.json frontend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"frontend","status":"success","errors":[],"warnings":[],"notices":[]}' > frontend-coverage-report.json
-
-      - name: Upload frontend coverage summary
-        if: ${{ always() && matrix.task == 'frontend' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-frontend-report
-          path: frontend-coverage-report.json
+          mkdir -p summaries && mv frontend-coverage-report.json summaries/
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         run: |
           pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json || true
-          python scripts/convert-cobertura.py coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-cobertura-report.json
-          python scripts/convert-pytest-coverage.py coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-coverage-report.json
-
-      - name: Upload backend coverage summaries
-        if: ${{ always() && matrix.task == 'backend' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-backend-report
-          path: |
-            backend-cobertura-report.json
-            backend-coverage-report.json
+          python scripts/convert_cobertura.py coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-cobertura-report.json
+          python scripts/convert_pytest_coverage.py coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-coverage-report.json
+          mkdir -p summaries && mv backend-cobertura-report.json backend-coverage-report.json summaries/
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
@@ -81,13 +67,7 @@ jobs:
           pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage || true
           cd ..
           node scripts/convert-jest-coverage.js backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
-
-      - name: Upload backend-node coverage summary
-        if: ${{ always() && matrix.task == 'backend-node' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-backend-node-report
-          path: backend-node-coverage-report.json
+          mkdir -p summaries && mv backend-node-coverage-report.json summaries/
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
@@ -96,13 +76,15 @@ jobs:
           pnpm exec playwright test || true
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
           node scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > e2e-coverage-report.json
+          mkdir -p summaries && mv e2e-coverage-report.json summaries/
 
-      - name: Upload e2e coverage summary
-        if: ${{ always() && matrix.task == 'e2e' }}
+      - name: Upload coverage summaries
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-e2e-report
-          path: e2e-coverage-report.json
+          name: coverage-summaries
+          path: summaries/
+          retention-days: 2
 
   call-diagnostics:
     needs: coverage

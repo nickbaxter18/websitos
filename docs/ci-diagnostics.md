@@ -18,12 +18,16 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
    - Errors include file, line, rule, message, and suggestions.
 
 2. **Workflows**:
-   - Frontend, Backend, and Coverage workflows run tools, call converters, and upload JSON artifacts (`*-report.json`).
-   - Fail-safe defaults ensure that even if a converter fails, a valid JSON is uploaded.
+   - Frontend, Backend, and Coverage workflows run tools, call converters, and collect JSON artifacts into a `summaries/` folder.
+   - Each workflow uploads its **packaged summaries** as a single artifact:
+     - `frontend-summaries`
+     - `backend-summaries`
+     - `coverage-summaries`
+   - Artifacts are retained for **2 days**.
 
 3. **CI Diagnostics Aggregator** (`ci-diagnostics.yml`):
-   - Downloads all JSON summaries.
-   - Aggregates them into a single `report.md`.
+   - Downloads the 3 packaged artifacts.
+   - Aggregates all JSON reports into a single `report.md`.
    - Adds a **summary table** of errors/warnings.
    - Includes full error/warning details + suggestions.
    - Syncs to Linear with labels (`ci-error`, `ci-warning`, `ci-success`).
@@ -38,7 +42,14 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 
 ## 📂 File Locations
 
-- **Converters**: `scripts/convert-*.js` / `scripts/convert-*.py`
+- **Converters** (Python, snake_case):
+  - `scripts/convert_pytest.py`
+  - `scripts/convert_mypy.py`
+  - `scripts/convert_flake8.py`
+  - `scripts/convert_black.py`
+  - `scripts/convert_pytest_coverage.py`
+  - `scripts/convert_cobertura.py`
+- **Converters (JS)**: `scripts/convert-eslint.js`, `scripts/convert-prettier.js`, `scripts/convert-jest.js`, `scripts/convert-jest-coverage.js`, `scripts/convert-tsc.js`
 - **Workflows**: `.github/workflows/*checks.yml`
 - **Docs**: `docs/ci-diagnostics.md`
 
@@ -50,6 +61,8 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 - Developers don’t need to parse raw logs.
 - Linear becomes the single source of truth for CI health.
 - Chat integration makes debugging fast and interactive.
+- Packaged artifacts keep GitHub Actions UI clean.
+- 2-day artifact retention keeps storage lean.
 
 ---
 
@@ -64,7 +77,7 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 
 ## 👩‍💻 Developer Notes
 
-- Always ensure your workflow uploads `*-report.json` artifacts.
+- Each workflow must place its reports in `summaries/` and upload as `*-summaries`.
 - Converters can be tested locally with:
   ```bash
   node scripts/convert-eslint.js eslint-output.json eslint-report.json
