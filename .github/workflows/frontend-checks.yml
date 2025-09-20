@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        task: [lint, prettier, type-check, test:unit, test:e2e]
+        task: [lint, prettier, type-check, test-unit, test-e2e]
     defaults:
       run:
         working-directory: .
@@ -64,7 +64,7 @@ jobs:
           mkdir -p summaries && mv tsc-report.json summaries/
 
       - name: Run Jest unit tests
-        if: ${{ matrix.task == 'test:unit' }}
+        if: ${{ matrix.task == 'test-unit' }}
         continue-on-error: true
         run: |
           pnpm exec jest --coverage --json --outputFile=jest-output.json || true
@@ -72,11 +72,11 @@ jobs:
           mkdir -p summaries && mv jest-report.json summaries/
 
       - name: Install Playwright Browsers
-        if: ${{ matrix.task == 'test:e2e' }}
+        if: ${{ matrix.task == 'test-e2e' }}
         run: pnpm exec playwright install --with-deps
 
       - name: Run Playwright E2E tests with coverage
-        if: ${{ matrix.task == 'test:e2e' }}
+        if: ${{ matrix.task == 'test-e2e' }}
         continue-on-error: true
         run: |
           pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || true
