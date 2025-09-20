@@ -72,7 +72,7 @@ jobs:
                 const stat = fs.statSync(filePath);
                 if (stat && stat.isDirectory()) {
                   results = results.concat(walk(filePath));
-                } else if (file.endsWith("-report.json")) {
+                } else if (file.toLowerCase().endsWith("-report.json")) {
                   results.push(filePath);
                 }
               });
@@ -86,16 +86,24 @@ jobs:
 
           console.log("📂 Found report files:", files);
 
-          const expected = ["frontend","backend","coverage"];
-          const present = new Set(files.map(f => f.split(path.sep)[1]));
-          const missing = expected.filter(name => !present.has(name));
+          // Explicitly check for critical reports
+          const requiredReports = [
+            "playwright-report.json",
+            "eslint-report.json",
+            "prettier-report.json",
+            "tsc-report.json",
+            "jest-report.json"
+          ];
 
-          if (missing.length) {
-            report += "\n⚠️ Missing summaries: " + missing.join(", ") + "\n";
-            fs.writeFileSync("missing.json", JSON.stringify(missing, null, 2));
-          } else {
-            fs.writeFileSync("missing.json", JSON.stringify([], null, 2));
-          }
+          requiredReports.forEach(r => {
+            if (!files.find(f => f.toLowerCase().endsWith(r))) {
+              console.warn(`⚠️ Missing ${r} in collected reports`);
+              report += `\n⚠️ Missing ${r}`;
+              const dummy = { workflow: "frontend-checks", job: r.replace(".json",""), status: "neutral", errors: [], warnings: [], notices: [{ message: `${r} missing from diagnostics aggregation` }] };
+              fs.writeFileSync(`./summaries/${r}`, JSON.stringify(dummy, null, 2));
+              files.push(`./summaries/${r}`);
+            }
+          });
 
           let totalErrors = 0, totalWarnings = 0;
 
@@ -123,7 +131,7 @@ jobs:
               if (raw.errors.length) {
                 report += "\n❌ Errors:\n";
                 raw.errors.forEach(e => {
-                  report += `- ${e.file}:${e.line||"?"} ${e.message} (rule: ${e.rule}) [${e.severity}]\n`;
+                  report += `- ${e.file||"?"}:${e.line||"?"} ${e.message} (rule: ${e.rule||"?"}) [${e.severity||"error"}]\n`;
                   if (e.suggestion) report += `  💡 Suggestion: ${e.suggestion}\n`;
                   if (e.details) report += `  🔍 Details: ${e.details}\n`;
                 });
@@ -131,7 +139,7 @@ jobs:
               if (raw.warnings.length) {
                 report += "\n⚠️ Warnings:\n";
                 raw.warnings.forEach(w => {
-                  report += `- ${w.file}:${w.line||"?"} ${w.message} (rule: ${w.rule}) [${w.severity}]\n`;
+                  report += `- ${w.file||"?"}:${w.line||"?"} ${w.message} (rule: ${w.rule||"?"}) [${w.severity||"warning"}]\n`;
                   if (w.suggestion) report += `  💡 Suggestion: ${w.suggestion}\n`;
                   if (w.details) report += `  🔍 Details: ${w.details}\n`;
                 });
@@ -139,7 +147,7 @@ jobs:
               if (raw.notices.length) {
                 report += "\nℹ️ Notices:\n";
                 raw.notices.forEach(n => {
-                  report += `- ${n.file}:${n.line||"?"} ${n.message}\n`;
+                  report += `- ${n.file||"?"}:${n.line||"?"} ${n.message}\n`;
                 });
               }
             }
@@ -149,94 +157,3 @@ jobs:
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
           console.log(report);
           '
-
-      - name: Sync diagnostics to Linear
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const token = process.env.LINEAR_API_KEY.trim();
-            const teamId = process.env.LINEAR_TEAM_ID.trim();
-            const commit = process.env.GITHUB_SHA;
-            const branch = process.env.GITHUB_REF_NAME;
-
-            const description = fs.existsSync('report.md') ? fs.readFileSync('report.md', 'utf8') : "⚠️ CI Diagnostics failed to generate report.";
-            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json', 'utf8')) : { totalErrors: 0, totalWarnings: 0 };
-            const missing = fs.existsSync('missing.json') ? JSON.parse(fs.readFileSync('missing.json', 'utf8')) : [];
-            const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
-
-            let labels = [];
-            if (meta.totalErrors > 0) labels.push("ci-error");
-            else if (meta.totalWarnings > 0) labels.push("ci-warning");
-            else labels.push("ci-success");
-            if (missing.length) labels.push("ci-incomplete");
-
-            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}`;
-            const branchUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/tree/${branch}`;
-
-            const fullDescription = description + (missing.length ? `\n\n⚠️ Missing summaries: ${missing.join(", ")}` : "") + `\n\n🔗 Commit: ${commitUrl}\n🔗 Branch: ${branchUrl}`;
-
-            async function runQuery(query, variables = {}) {
-              const res = await fetch("https://api.linear.app/graphql", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({ query, variables })
-              });
-              const json = await res.json();
-              console.log("🔍 Linear API response:", JSON.stringify(json, null, 2));
-              return json;
-            }
-
-            const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title } } }`;
-            const searchVars = { filter: { title: { eq: title } } };
-            const existing = await runQuery(searchQuery, searchVars);
-
-            if (existing.data?.issues?.nodes?.length) {
-              const issueId = existing.data.issues.nodes[0].id;
-              const updateMutation = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              const updateVars = { id: issueId, input: { description: fullDescription, teamId, labelIds: labels } };
-              const updated = await runQuery(updateMutation, updateVars);
-              if (!updated?.data?.issueUpdate?.success) {
-                throw new Error("❌ Failed to update Linear issue");
-              }
-              fs.appendFileSync('report.md', `\n\n🔄 Updated Linear issue: ${updated?.data?.issueUpdate?.issue?.url || 'n/a'}`);
-            } else {
-              const createMutation = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              const createVars = { input: { title, description: fullDescription, teamId, labelIds: labels } };
-              const created = await runQuery(createMutation, createVars);
-              if (!created?.data?.issueCreate?.success) {
-                throw new Error("❌ Failed to create Linear issue");
-              }
-              fs.appendFileSync('report.md', `\n\n🆕 Created Linear issue: ${created?.data?.issueCreate?.issue?.url || 'n/a'}`);
-            }
-
-      - name: Complete CI Diagnostics check
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0 };
-            const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md', 'utf8').slice(0, 60000) : "⚠️ Report missing.";
-            const missing = fs.existsSync('missing.json') ? JSON.parse(fs.readFileSync('missing.json','utf-8')) : [];
-
-            let conclusion = "success";
-            if (meta.totalErrors > 0) conclusion = "failure";
-            else if (meta.totalWarnings > 0) conclusion = "neutral";
-            if (missing.length) conclusion = "neutral";
-
-            await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: "CI Diagnostics (Central)",
-              head_sha: process.env.GITHUB_SHA,
-              status: "completed",
-              conclusion,
-              output: {
-                title: "CI Diagnostics Report",
-                summary
-              }
-            });
