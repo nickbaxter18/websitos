@@ -129,7 +129,7 @@ jobs:
           mkdir -p summaries && mv black-report.json summaries/
 
       - name: Upload backend summaries
-        if: always()
+        if: always
         uses: actions/upload-artifact@v4
         with:
           name: backend-summaries
@@ -197,7 +197,7 @@ jobs:
           mkdir -p summaries && mv e2e-coverage-report.json summaries/
 
       - name: Upload coverage summaries
-        if: always()
+        if: always
         uses: actions/upload-artifact@v4
         with:
           name: coverage-summaries
@@ -205,28 +205,9 @@ jobs:
           retention-days: 2
 
   # ---------------------------
-  # Central Diagnostics
+  # Central Diagnostics (Reusable Workflow)
   # ---------------------------
   diagnostics:
     needs: [frontend-checks, backend-checks, coverage-checks]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download frontend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-summaries
-          path: ./summaries/frontend
-      - name: Download backend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-summaries
-          path: ./summaries/backend
-      - name: Download coverage summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries
-          path: ./summaries/coverage
-      - name: Run CI Diagnostics
-        uses: ./.github/workflows/ci-diagnostics.yml
-        secrets: inherit
+    uses: ./.github/workflows/ci-diagnostics.yml
+    secrets: inherit
