@@ -84,26 +84,33 @@ jobs:
           echo "${PIPESTATUS[0]}" > exit-code.txt || true
           (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
 
-          # Always try converter, fallback if it fails
-          if ! node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json; then
-            echo '{"workflow":"frontend-checks","job":"test-e2e","status":"failure","errors":[{"message":"Converter failed or produced no output"}],"warnings":[],"notices":[]}' > playwright-report.json
+          # Run converter, fallback if it fails
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || true
+
+          # Ensure playwright-report.json exists and is non-empty
+          if [ ! -s playwright-report.json ]; then
+            echo '{"workflow":"frontend-checks","job":"test-e2e","status":"failure","errors":[{"message":"No report generated"}],"warnings":[],"notices":[]}' > playwright-report.json
           fi
 
-          echo "📂 Dumping playwright-report.json for debug"
+          echo "📂 Checking playwright-report.json:"
+          ls -lh playwright-report.json || true
           cat playwright-report.json || true
 
           mkdir -p summaries
           mv playwright-report.json summaries/ || true
           mv coverage/e2e/coverage-summary.json summaries/playwright-coverage-report.json || true
 
-          # Collect raw logs inside summaries too (so Diagnostics can see them if needed)
+          # Collect raw logs inside summaries too
           cp playwright-output.txt summaries/playwright-output.txt || true
           cp exit-code.txt summaries/exit-code.txt || true
 
-          # Ensure dummy fallback exists
-          if [ ! -f summaries/playwright-report.json ]; then
+          # Dummy fallback if somehow missing
+          if [ ! -s summaries/playwright-report.json ]; then
             echo '{"workflow":"frontend-checks","job":"test-e2e","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"dummy fallback created"}]}' > summaries/playwright-report.json
           fi
+
+          # Metadata summary file for easier debugging
+          echo '{"artifact":"frontend-partial-test-e2e","files":["playwright-report.json","playwright-output.txt","exit-code.txt","playwright-coverage-report.json"]}' > summaries/e2e-meta.json
 
           echo "📂 Contents of summaries before upload (with sizes):"
           ls -lah summaries || true
