@@ -19,18 +19,22 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 
 2. **Workflows**:
    - Frontend, Backend, and Coverage workflows run tools, call converters, and collect JSON artifacts into a `summaries/` folder.
-   - Each workflow uploads its **packaged summaries** as a single artifact:
+   - Each workflow uploads its packaged summaries as uniquely named artifacts:
      - `frontend-summaries`
-     - `backend-summaries`
-     - `coverage-summaries`
+     - `backend-summaries-pytest`, `backend-summaries-mypy`, `backend-summaries-flake8`, `backend-summaries-black`
+     - `coverage-summaries-frontend`, `coverage-summaries-backend`, `coverage-summaries-backend-node`, `coverage-summaries-e2e`
    - Artifacts are retained for **2 days**.
 
 3. **CI Diagnostics Aggregator** (`ci-diagnostics.yml`):
-   - Downloads the 3 packaged artifacts.
+   - Downloads all packaged artifacts.
    - Aggregates all JSON reports into a single `report.md`.
    - Adds a **summary table** of errors/warnings.
    - Includes full error/warning details + suggestions.
-   - Syncs to Linear with labels (`ci-error`, `ci-warning`, `ci-success`).
+   - Syncs to Linear with labels:
+     - `ci-error` → errors present
+     - `ci-warning` → only warnings
+     - `ci-success` → clean run
+     - `ci-incomplete` → one or more artifacts missing (due to job cancellation or skip)
    - Links back to the GitHub commit + branch.
 
 4. **Linear Integration**:
@@ -63,6 +67,7 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 - Chat integration makes debugging fast and interactive.
 - Packaged artifacts keep GitHub Actions UI clean.
 - 2-day artifact retention keeps storage lean.
+- `ci-incomplete` label provides visibility when jobs are cancelled or skipped.
 
 ---
 
@@ -77,10 +82,10 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 
 ## 👩‍💻 Developer Notes
 
-- Each workflow must place its reports in `summaries/` and upload as `*-summaries`.
+- Each workflow must place its reports in `summaries/` and upload as packaged artifacts.
 - Converters can be tested locally with:
   ```bash
   node scripts/convert-eslint.js eslint-output.json eslint-report.json
   python scripts/convert_pytest.py pytest-output.json pytest-report.json
   ```
-- CI Diagnostics will fail if no summaries are uploaded.
+- CI Diagnostics will mark a run as `ci-incomplete` if artifacts are missing.

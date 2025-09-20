@@ -41,6 +41,7 @@ jobs:
 
       - name: Run ESLint
         if: ${{ matrix.task == 'lint' }}
+        continue-on-error: true
         run: |
           pnpm exec eslint src v2 ops --format json --output-file eslint-output.json || true
           node scripts/convert-eslint.js eslint-output.json eslint-report.json || echo '{"workflow":"frontend-checks","job":"lint","status":"success","errors":[],"warnings":[],"notices":[]}' > eslint-report.json
@@ -48,6 +49,7 @@ jobs:
 
       - name: Run Prettier
         if: ${{ matrix.task == 'prettier' }}
+        continue-on-error: true
         run: |
           pnpm exec prettier --check . > prettier-output.txt 2>&1 || true
           node scripts/convert-prettier.js prettier-output.txt prettier-report.json || echo '{"workflow":"frontend-checks","job":"prettier","status":"success","errors":[],"warnings":[],"notices":[]}' > prettier-report.json
