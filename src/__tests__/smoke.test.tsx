@@ -4,12 +4,7 @@ import { pathToFileURL } from "url";
 import "tsconfig-paths/register";
 
 const excludedDirs = ["v2", "tests", "pages"]; // 🚫 Exclude all pages
-const excludedFiles = [
-  "validateEnv",
-  "vite-env",
-  "reload.ts",
-  "setupTests.ts"
-];
+const excludedFiles = ["validateEnv", "vite-env", "reload.ts", "setupTests.ts"];
 
 async function importAllFromDir(dir: string, failures: string[]) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -29,7 +24,7 @@ async function importAllFromDir(dir: string, failures: string[]) {
       !entry.name.endsWith(".test.tsx") &&
       !entry.name.endsWith(".stories.tsx") &&
       !entry.name.endsWith(".d.ts") &&
-      !excludedFiles.some(ex => fullPath.includes(ex))
+      !excludedFiles.some((ex) => fullPath.includes(ex))
     ) {
       try {
         await import(pathToFileURL(fullPath).href);
@@ -52,7 +47,7 @@ async function runSmokeImports(): Promise<string[]> {
 }
 
 test("smoke: all modules importable (warnings only, never fails)", async () => {
-  const failures = await Promise.resolve(runSmokeImports()).catch(err => [
+  const failures = await Promise.resolve(runSmokeImports()).catch((err) => [
     `⚠️ Smoke test crashed: ${(err as Error).message}`,
   ]);
 

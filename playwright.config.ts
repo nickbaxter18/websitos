@@ -1,7 +1,7 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
   timeout: 30 * 1000,
   expect: {
     timeout: 5000,
@@ -10,20 +10,20 @@ export default defineConfig({
   workers: 2,
   projects: [
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         headless: true,
-        browserName: 'chromium',
+        browserName: "chromium",
         launchOptions: {
-          args: ['--js-flags=--coverage', '--enable-precise-memory-info'],
+          args: ["--js-flags=--coverage", "--enable-precise-memory-info"],
         },
       },
     },
   ],
   use: {
-    trace: 'on-first-retry',
-    video: 'retain-on-failure',
-    screenshot: 'only-on-failure',
+    trace: "on-first-retry",
+    video: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
 });

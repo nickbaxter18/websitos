@@ -7,9 +7,9 @@ module.exports = {
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
     "!src/v2/**",
-    "!src/pages/**",   // 🚫 Exclude all pages, covered by E2E instead
+    "!src/pages/**", // 🚫 Exclude all pages, covered by E2E instead
     "!src/reload.ts",
-    "!src/setupTests.ts"
+    "!src/setupTests.ts",
   ],
   coverageDirectory: "coverage/smoke",
   coverageReporters: ["lcov", "text-summary"],
