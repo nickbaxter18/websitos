@@ -27,24 +27,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download frontend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-summaries
-          path: ./summaries/frontend
-
-      - name: Download backend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-summaries
-          path: ./summaries/backend
-
-      - name: Download coverage summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries
-          path: ./summaries/coverage
-
       - name: Aggregate summaries into report
         run: |
           node -e '
@@ -61,17 +43,13 @@ jobs:
             report += "\n⚠️ No summaries directory found.";
           }
 
-          const expected = [
-            "frontend-summaries",
-            "backend-summaries",
-            "coverage-summaries"
-          ];
+          const expected = ["frontend", "backend", "coverage"];
 
           const present = new Set(files.map(f => path.basename(f)));
-          const missing = expected.filter(name => !files.some(f => f.includes(name.replace(/-summaries/, ""))));
+          const missing = expected.filter(name => !files.some(f => f.includes(name)));
 
           if (missing.length) {
-            report += "\n⚠️ Missing artifacts: " + missing.join(", ") + "\n";
+            report += "\n⚠️ Missing summaries: " + missing.join(", ") + "\n";
             fs.writeFileSync("missing.json", JSON.stringify(missing, null, 2));
           } else {
             fs.writeFileSync("missing.json", JSON.stringify([], null, 2));
@@ -80,7 +58,7 @@ jobs:
           let totalErrors = 0, totalWarnings = 0;
 
           if (!files.length) {
-            report += "\n⚠️ No summary artifacts found (some workflows may have been cancelled).";
+            report += "\n⚠️ No summary reports found (some jobs may have been skipped).";
           } else {
             report += "\n### 📊 Summary Table\n";
             report += "| Workflow/Job | Errors | Warnings |\n";
@@ -155,7 +133,7 @@ jobs:
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}`;
             const branchUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/tree/${branch}`;
 
-            const fullDescription = description + (missing.length ? `\n\n⚠️ Missing artifacts: ${missing.join(", ")}` : "") + `\n\n🔗 Commit: ${commitUrl}\n🔗 Branch: ${branchUrl}`;
+            const fullDescription = description + (missing.length ? `\n\n⚠️ Missing summaries: ${missing.join(", ")}` : "") + `\n\n🔗 Commit: ${commitUrl}\n🔗 Branch: ${branchUrl}`;
 
             async function runQuery(query, variables = {}) {
               const res = await fetch("https://api.linear.app/graphql", {
