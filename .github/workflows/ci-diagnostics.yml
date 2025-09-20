@@ -48,24 +48,38 @@ jobs:
           if (!files.length) {
             report += "\n❌ No summary artifacts found.";
           } else {
+            report += "\n### 📊 Summary Table\n";
+            report += "| Workflow/Job | Errors | Warnings |\n";
+            report += "|--------------|--------|----------|\n";
+
+            for (const file of files) {
+              const raw = JSON.parse(fs.readFileSync(path.join(dir, file), "utf-8"));
+              totalErrors += raw.errors.length;
+              totalWarnings += raw.warnings.length;
+
+              report += `| ${raw.workflow}/${raw.job} | ${raw.errors.length} | ${raw.warnings.length} |\n`;
+            }
+
+            report += "\n---\n";
+
             for (const file of files) {
               const raw = JSON.parse(fs.readFileSync(path.join(dir, file), "utf-8"));
               report += `\n### ${raw.workflow} / ${raw.job}\n`;
               report += `Status: ${raw.status}\n`;
               if (raw.errors.length) {
-                totalErrors += raw.errors.length;
                 report += "\n❌ Errors:\n";
                 raw.errors.forEach(e => {
                   report += `- ${e.file}:${e.line||"?"} ${e.message} (rule: ${e.rule}) [${e.severity}]\n`;
                   if (e.suggestion) report += `  💡 Suggestion: ${e.suggestion}\n`;
+                  if (e.details) report += `  🔍 Details: ${e.details}\n`;
                 });
               }
               if (raw.warnings.length) {
-                totalWarnings += raw.warnings.length;
                 report += "\n⚠️ Warnings:\n";
                 raw.warnings.forEach(w => {
                   report += `- ${w.file}:${w.line||"?"} ${w.message} (rule: ${w.rule}) [${w.severity}]\n`;
                   if (w.suggestion) report += `  💡 Suggestion: ${w.suggestion}\n`;
+                  if (w.details) report += `  🔍 Details: ${w.details}\n`;
                 });
               }
               if (raw.notices.length) {
@@ -102,6 +116,11 @@ jobs:
             else if (meta.totalWarnings > 0) labels.push("ci-warning");
             else labels.push("ci-success");
 
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}`;
+            const branchUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/tree/${branch}`;
+
+            const fullDescription = description + `\n\n🔗 Commit: ${commitUrl}\n🔗 Branch: ${branchUrl}`;
+
             async function runQuery(query, variables = {}) {
               const res = await fetch("https://api.linear.app/graphql", {
                 method: "POST",
@@ -121,12 +140,12 @@ jobs:
             if (existing.data?.issues?.nodes?.length) {
               const issueId = existing.data.issues.nodes[0].id;
               const updateMutation = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
-              const updateVars = { id: issueId, input: { description, teamId, labelIds: labels } };
+              const updateVars = { id: issueId, input: { description: fullDescription, teamId, labelIds: labels } };
               const updated = await runQuery(updateMutation, updateVars);
               fs.appendFileSync('report.md', `\n\n🔄 Updated Linear issue: ${updated?.data?.issueUpdate?.issue?.url || 'n/a'}`);
             } else {
               const createMutation = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
-              const createVars = { input: { title, description, teamId, labelIds: labels } };
+              const createVars = { input: { title, description: fullDescription, teamId, labelIds: labels } };
               const created = await runQuery(createMutation, createVars);
               fs.appendFileSync('report.md', `\n\n🆕 Created Linear issue: ${created?.data?.issueCreate?.issue?.url || 'n/a'}`);
             }
@@ -137,7 +156,12 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const meta = JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8'));
             const summary = fs.readFileSync('report.md', 'utf8').slice(0, 60000);
+
+            let conclusion = "success";
+            if (meta.totalErrors > 0) conclusion = "failure";
+            else if (meta.totalWarnings > 0) conclusion = "neutral";
 
             await github.rest.checks.create({
               owner: context.repo.owner,
@@ -145,7 +169,7 @@ jobs:
               name: "CI Diagnostics",
               head_sha: process.env.GITHUB_SHA,
               status: "completed",
-              conclusion: "success",
+              conclusion,
               output: {
                 title: "CI Diagnostics Report",
                 summary
