@@ -27,37 +27,49 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download frontend summaries
+      - name: Try downloading frontend summaries
+        id: frontend
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: frontend-summaries
           path: ./summaries/frontend
 
-      - name: Download backend summaries
+      - name: Try downloading backend summaries
+        id: backend
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: backend-summaries
           path: ./summaries/backend
 
-      - name: Download coverage summaries (frontend)
+      - name: Try downloading coverage summaries (frontend)
+        id: cov_frontend
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-frontend
           path: ./summaries/coverage/frontend
 
-      - name: Download coverage summaries (backend)
+      - name: Try downloading coverage summaries (backend)
+        id: cov_backend
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-backend
           path: ./summaries/coverage/backend
 
-      - name: Download coverage summaries (backend-node)
+      - name: Try downloading coverage summaries (backend-node)
+        id: cov_backend_node
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-backend-node
           path: ./summaries/coverage/backend-node
 
-      - name: Download coverage summaries (e2e)
+      - name: Try downloading coverage summaries (e2e)
+        id: cov_e2e
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-e2e
@@ -72,12 +84,36 @@ jobs:
           const dir = "./summaries";
           let report = "## ⚠️ CI Diagnostics Report\n";
 
-          const files = fs.readdirSync(dir, { recursive: true }).filter(f => f.endsWith("-report.json"));
+          let files = [];
+          try {
+            files = fs.readdirSync(dir, { recursive: true }).filter(f => f.endsWith("-report.json"));
+          } catch (e) {
+            report += "\n⚠️ No summaries directory found.";
+          }
+
+          const expected = [
+            "frontend-summaries",
+            "backend-summaries",
+            "coverage-summaries-frontend",
+            "coverage-summaries-backend",
+            "coverage-summaries-backend-node",
+            "coverage-summaries-e2e"
+          ];
+
+          const present = new Set(files.map(f => path.basename(f)));
+          const missing = expected.filter(name => !files.some(f => f.includes(name.replace(/-summaries/, ""))));
+
+          if (missing.length) {
+            report += "\n⚠️ Missing artifacts: " + missing.join(", ") + "\n";
+            fs.writeFileSync("missing.json", JSON.stringify(missing, null, 2));
+          } else {
+            fs.writeFileSync("missing.json", JSON.stringify([], null, 2));
+          }
 
           let totalErrors = 0, totalWarnings = 0;
 
           if (!files.length) {
-            report += "\n❌ No summary artifacts found.";
+            report += "\n⚠️ No summary artifacts found (some workflows may have been cancelled).";
           } else {
             report += "\n### 📊 Summary Table\n";
             report += "| Workflow/Job | Errors | Warnings |\n";
@@ -138,19 +174,21 @@ jobs:
             const commit = process.env.GITHUB_SHA;
             const branch = process.env.GITHUB_REF_NAME;
 
-            const description = fs.readFileSync('report.md', 'utf8');
-            const meta = JSON.parse(fs.readFileSync('diagnostics-meta.json', 'utf8'));
+            const description = fs.existsSync('report.md') ? fs.readFileSync('report.md', 'utf8') : "⚠️ CI Diagnostics failed to generate report.";
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json', 'utf8')) : { totalErrors: 0, totalWarnings: 0 };
+            const missing = fs.existsSync('missing.json') ? JSON.parse(fs.readFileSync('missing.json', 'utf8')) : [];
             const title = `CI Diagnostics (${branch}, ${commit.substring(0,7)})`;
 
             let labels = [];
             if (meta.totalErrors > 0) labels.push("ci-error");
             else if (meta.totalWarnings > 0) labels.push("ci-warning");
             else labels.push("ci-success");
+            if (missing.length) labels.push("ci-incomplete");
 
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commit}`;
             const branchUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/tree/${branch}`;
 
-            const fullDescription = description + `\n\n🔗 Commit: ${commitUrl}\n🔗 Branch: ${branchUrl}`;
+            const fullDescription = description + (missing.length ? `\n\n⚠️ Missing artifacts: ${missing.join(", ")}` : "") + `\n\n🔗 Commit: ${commitUrl}\n🔗 Branch: ${branchUrl}`;
 
             async function runQuery(query, variables = {}) {
               const res = await fetch("https://api.linear.app/graphql", {
@@ -187,12 +225,14 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const meta = JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8'));
-            const summary = fs.readFileSync('report.md', 'utf8').slice(0, 60000);
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0 };
+            const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md', 'utf8').slice(0, 60000) : "⚠️ Report missing.";
+            const missing = fs.existsSync('missing.json') ? JSON.parse(fs.readFileSync('missing.json','utf-8')) : [];
 
             let conclusion = "success";
             if (meta.totalErrors > 0) conclusion = "failure";
             else if (meta.totalWarnings > 0) conclusion = "neutral";
+            if (missing.length) conclusion = "neutral";
 
             await github.rest.checks.create({
               owner: context.repo.owner,
