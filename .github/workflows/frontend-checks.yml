@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: [lint, prettier, type-check, test-unit, test-e2e]
+        task: [lint, prettier, type-check, test-unit, playwright-e2e]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,7 +76,7 @@ jobs:
           mkdir -p summaries && mv jest-report.json summaries/
 
       - name: Run Playwright E2E tests
-        if: ${{ matrix.task == 'test-e2e' }}
+        if: ${{ matrix.task == 'playwright-e2e' }}
         shell: bash {0}
         run: |
           pnpm exec playwright install --with-deps || true
@@ -84,28 +84,28 @@ jobs:
           echo "${PIPESTATUS[0]}" > exit-code.txt || true
           (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
 
-          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || true
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-e2e-report.json || true
 
-          if [ ! -s playwright-report.json ]; then
-            echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"failure","errors":[{"message":"No report generated"}],"warnings":[],"notices":[]}' > playwright-report.json
+          if [ ! -s playwright-e2e-report.json ]; then
+            echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"failure","errors":[{"message":"No report generated"}],"warnings":[],"notices":[]}' > playwright-e2e-report.json
           fi
 
-          echo "📂 Checking playwright-report.json:"
-          ls -lh playwright-report.json || true
-          cat playwright-report.json || true
+          echo "📂 Checking playwright-e2e-report.json:"
+          ls -lh playwright-e2e-report.json || true
+          cat playwright-e2e-report.json || true
 
           mkdir -p summaries
-          mv playwright-report.json summaries/ || true
+          mv playwright-e2e-report.json summaries/ || true
           mv coverage/e2e/coverage-summary.json summaries/playwright-coverage-report.json || true
 
           cp playwright-output.txt summaries/playwright-output.txt || true
           cp exit-code.txt summaries/exit-code.txt || true
 
-          if [ ! -s summaries/playwright-report.json ]; then
-            echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"dummy fallback created"}]}' > summaries/playwright-report.json
+          if [ ! -s summaries/playwright-e2e-report.json ]; then
+            echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"dummy fallback created"}]}' > summaries/playwright-e2e-report.json
           fi
 
-          echo '{"artifact":"frontend-partial-playwright-e2e","files":["playwright-report.json","playwright-output.txt","exit-code.txt","playwright-coverage-report.json"]}' > summaries/e2e-meta.json
+          echo '{"artifact":"frontend-partial-playwright-e2e","files":["playwright-e2e-report.json","playwright-output.txt","exit-code.txt","playwright-coverage-report.json"]}' > summaries/e2e-meta.json
 
           echo "📂 Contents of summaries before upload (with sizes):"
           ls -lah summaries || true
@@ -119,7 +119,7 @@ jobs:
           retention-days: 2
 
       - name: Upload raw E2E logs
-        if: ${{ matrix.task == 'test-e2e' }}
+        if: ${{ matrix.task == 'playwright-e2e' }}
         uses: actions/upload-artifact@v4
         with:
           name: e2e-raw-logs
@@ -150,18 +150,18 @@ jobs:
             cp "$f" summaries/
           done
 
-          # Explicitly check playwright-report.json
-          PLAYWRIGHT_FILE=$(find downloaded -type f -iname "playwright-report.json" | head -n 1)
+          # Explicitly check playwright-e2e-report.json
+          PLAYWRIGHT_FILE=$(find downloaded -type f -iname "playwright-e2e-report.json" | head -n 1)
           if [ -n "$PLAYWRIGHT_FILE" ]; then
-            echo "📥 Copying $PLAYWRIGHT_FILE into summaries/"
-            cp "$PLAYWRIGHT_FILE" summaries/playwright-report.json
+            echo "📥 Using real Playwright report: $PLAYWRIGHT_FILE"
+            cp "$PLAYWRIGHT_FILE" summaries/playwright-e2e-report.json
           else
-            echo "⚠️ No playwright-report.json found in artifacts, injecting dummy"
-            echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"playwright-report.json missing in aggregator"}]}' > summaries/playwright-report.json
+            echo "⚠️ No playwright-e2e-report.json found in artifacts, injecting dummy"
+            echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"playwright-e2e-report.json missing in aggregator"}]}' > summaries/playwright-e2e-report.json
           fi
 
           # Ensure critical reports exist (fallback if missing)
-          for required in playwright-report.json eslint-report.json prettier-report.json tsc-report.json jest-report.json; do
+          for required in playwright-e2e-report.json eslint-report.json prettier-report.json tsc-report.json jest-report.json; do
             if [ ! -f summaries/$required ]; then
               echo "⚠️ Missing $required in summaries/"
               echo '{"workflow":"frontend-checks","job":"missing","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"'$required' missing from artifact collection"}]}' > summaries/$required
