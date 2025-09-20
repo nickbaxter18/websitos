@@ -78,11 +78,11 @@ jobs:
           node scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > e2e-coverage-report.json
           mkdir -p summaries && mv e2e-coverage-report.json summaries/
 
-      - name: Upload coverage summaries
+      - name: Upload coverage summaries (per matrix task)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-summaries
+          name: coverage-summaries-${{ matrix.task }}
           path: summaries/
           retention-days: 2
 
