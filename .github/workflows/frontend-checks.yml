@@ -77,16 +77,23 @@ jobs:
 
       - name: Run Playwright E2E tests
         if: ${{ matrix.task == 'test-e2e' }}
-        shell: bash {0}   # remove -e so the block won’t exit early
+        shell: bash {0}
         run: |
           pnpm exec playwright install --with-deps || true
+          # Run tests and capture output
           (pnpm exec playwright test 2>&1 | tee playwright-output.txt) || true
-          echo $? > exit-code.txt || true
+          # Capture the exit code of Playwright correctly
+          echo "${PIPESTATUS[0]}" > exit-code.txt || true
+          # Try to generate coverage report (may fail if no .nyc_output)
           (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
-          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || echo '{"workflow":"frontend-checks","job":"test-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
+          # Run converter after logs and coverage are ready
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json \
+            || echo '{"workflow":"frontend-checks","job":"test-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
           echo "📂 Dumping playwright-report.json for debug"
           cat playwright-report.json || true
           mkdir -p summaries && mv playwright-report.json summaries/
+          # Move raw logs + exit code for artifact upload
+          mkdir -p raw-logs && mv playwright-output.txt exit-code.txt raw-logs/
 
       - name: Upload frontend summaries
         if: always()
@@ -94,6 +101,14 @@ jobs:
         with:
           name: frontend-partial-${{ matrix.task }}
           path: summaries/
+          retention-days: 2
+
+      - name: Upload raw E2E logs
+        if: ${{ matrix.task == 'test-e2e' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-raw-logs
+          path: raw-logs/
           retention-days: 2
 
   package-and-upload:
