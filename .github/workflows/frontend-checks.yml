@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: [lint, prettier, type-check, test-unit]
+        task: [lint, prettier, type-check, test-unit, test-e2e]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -74,6 +74,18 @@ jobs:
           echo "📂 Dumping jest-report.json for debug"
           cat jest-report.json || true
           mkdir -p summaries && mv jest-report.json summaries/
+
+      - name: Run Playwright E2E tests
+        if: ${{ matrix.task == 'test-e2e' }}
+        run: |
+          pnpm exec playwright install --with-deps || true
+          pnpm exec playwright test 2>&1 | tee playwright-output.txt
+          echo $? > exit-code.txt
+          npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || echo '{"workflow":"frontend-checks","job":"test-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
+          echo "📂 Dumping playwright-report.json for debug"
+          cat playwright-report.json || true
+          mkdir -p summaries && mv playwright-report.json summaries/
 
       - name: Upload frontend summaries
         if: always()

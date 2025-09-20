@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: [frontend, backend, backend-node, e2e]
+        # Removed e2e to avoid duplication; handled in frontend-checks.yml
+        task: [frontend, backend, backend-node]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,7 +28,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Setup pnpm
-        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'backend-node' }}
         uses: pnpm/action-setup@v2
         with:
           version: 10
@@ -64,19 +65,6 @@ jobs:
           cd ..
           node Scripts/convert-jest-coverage.js backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
           mkdir -p summaries && mv backend-node-coverage-report.json summaries/
-
-      - name: Run e2e coverage (Playwright)
-        if: ${{ matrix.task == 'e2e' }}
-        continue-on-error: true
-        run: |
-          pnpm exec playwright install --with-deps || true
-          pnpm exec playwright test 2>&1 | tee playwright-output.txt
-          echo $? > exit-code.txt
-          npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
-          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
-          echo "📂 Dumping playwright-report.json for debug"
-          cat playwright-report.json || true
-          mkdir -p summaries && mv playwright-report.json summaries/
 
       - name: Upload partial coverage summaries
         if: always()
