@@ -10,36 +10,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  coverage:
+  checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         task: [frontend, backend, backend-node, e2e]
-    defaults:
-      run:
-        working-directory: .
-    env:
-      NODE_OPTIONS: "--experimental-vm-modules"
-      LOGS_API_TOKEN: ${{ secrets.LOGS_API_TOKEN }}
     steps:
-      - name: Checkout repository (robust)
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js (for frontend/e2e/backend-node)
+      - name: Setup Node.js
         if: ${{ matrix.task != 'backend' }}
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
 
-      - name: Setup pnpm (for frontend/e2e/backend-node)
+      - name: Setup pnpm
         if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
         uses: pnpm/action-setup@v2
         with:
           version: 10
 
-      - name: Setup Python (for backend)
+      - name: Setup Python
         if: ${{ matrix.task == 'backend' }}
         uses: actions/setup-python@v5
         with:
@@ -76,13 +69,14 @@ jobs:
         if: ${{ matrix.task == 'e2e' }}
         continue-on-error: true
         run: |
-          pnpm exec playwright install chromium || true
-          pnpm exec playwright test || true
+          pnpm exec playwright install --with-deps || true
+          pnpm exec playwright test 2>&1 | tee playwright-output.txt
+          echo $? > exit-code.txt
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
-          node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > e2e-coverage-report.json
-          mkdir -p summaries && mv e2e-coverage-report.json summaries/
+          node Scripts/convert-playwright.js playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
+          mkdir -p summaries && mv playwright-report.json summaries/
 
-      - name: Upload partial summaries (per job)
+      - name: Upload partial coverage summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -92,7 +86,7 @@ jobs:
 
   package-and-upload:
     runs-on: ubuntu-latest
-    needs: coverage
+    needs: checks
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

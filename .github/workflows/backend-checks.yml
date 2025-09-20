@@ -34,8 +34,12 @@ jobs:
         if: ${{ matrix.task == 'pytest' }}
         continue-on-error: true
         run: |
-          pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json || true
-          python Scripts/convert_pytest.py pytest-output.json pytest-report.json || echo '{"workflow":"backend-checks","job":"pytest","status":"success","errors":[],"warnings":[],"notices":[]}' > pytest-report.json
+          pytest --maxfail=1 --disable-warnings -q \
+            --json-report --json-report-file=pytest-output.json \
+            2>&1 | tee pytest-output.txt
+          echo $? > exit-code.txt
+          node Scripts/convert-pytest.js pytest-output.txt pytest-output.json pytest-report.json \
+            || echo '{"workflow":"backend-checks","job":"pytest","status":"success","errors":[],"warnings":[],"notices":[]}' > pytest-report.json
           mkdir -p summaries && mv pytest-report.json summaries/
 
       - name: Run Mypy
