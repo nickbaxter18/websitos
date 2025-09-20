@@ -74,9 +74,25 @@ jobs:
           node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json playwright-coverage-report.json || echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-coverage-report.json
           mkdir -p summaries && mv playwright-coverage-report.json summaries/
 
-      - name: Upload frontend summaries
+      - name: Upload partial frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
+        with:
+          name: frontend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  frontend-package:
+    runs-on: ubuntu-latest
+    needs: frontend-checks
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded
+      - run: |
+          mkdir -p summaries
+          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
+      - uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
           path: summaries/
@@ -128,9 +144,25 @@ jobs:
           python Scripts/convert_black.py black-output.txt black-report.json || echo '{"workflow":"backend-checks","job":"black","status":"success","errors":[],"warnings":[],"notices":[]}' > black-report.json
           mkdir -p summaries && mv black-report.json summaries/
 
-      - name: Upload backend summaries
-        if: always
+      - name: Upload partial backend summaries
+        if: always()
         uses: actions/upload-artifact@v4
+        with:
+          name: backend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  backend-package:
+    runs-on: ubuntu-latest
+    needs: backend-checks
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded
+      - run: |
+          mkdir -p summaries
+          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
+      - uses: actions/upload-artifact@v4
         with:
           name: backend-summaries
           path: summaries/
@@ -196,9 +228,25 @@ jobs:
           node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > e2e-coverage-report.json
           mkdir -p summaries && mv e2e-coverage-report.json summaries/
 
-      - name: Upload coverage summaries
-        if: always
+      - name: Upload partial coverage summaries
+        if: always()
         uses: actions/upload-artifact@v4
+        with:
+          name: coverage-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  coverage-package:
+    runs-on: ubuntu-latest
+    needs: coverage-checks
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded
+      - run: |
+          mkdir -p summaries
+          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage-summaries
           path: summaries/
@@ -208,6 +256,6 @@ jobs:
   # Central Diagnostics (Reusable Workflow)
   # ---------------------------
   diagnostics:
-    needs: [frontend-checks, backend-checks, coverage-checks]
+    needs: [frontend-package, backend-package, coverage-package]
     uses: ./.github/workflows/ci-diagnostics.yml
     secrets: inherit
