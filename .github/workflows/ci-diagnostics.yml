@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   diagnostics:
-    name: Run CI Diagnostics
+    name: Run CI Diagnostics (Central)
     runs-on: ubuntu-latest
     if: always()
     env:
@@ -26,6 +26,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download frontend summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-summaries
+          path: ./summaries/frontend
+
+      - name: Download backend summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-summaries
+          path: ./summaries/backend
+
+      - name: Download coverage summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-summaries
+          path: ./summaries/coverage
 
       - name: Aggregate summaries into report
         run: |
@@ -43,10 +61,10 @@ jobs:
             report += "\n⚠️ No summaries directory found.";
           }
 
-          const expected = ["frontend", "backend", "coverage"];
+          const expected = ["frontend-summaries","backend-summaries","coverage-summaries"];
 
           const present = new Set(files.map(f => path.basename(f)));
-          const missing = expected.filter(name => !files.some(f => f.includes(name)));
+          const missing = expected.filter(name => !files.some(f => f.includes(name.replace(/-summaries/, ""))));
 
           if (missing.length) {
             report += "\n⚠️ Missing summaries: " + missing.join(", ") + "\n";
@@ -182,7 +200,7 @@ jobs:
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: "CI Diagnostics",
+              name: "CI Diagnostics (Central)",
               head_sha: process.env.GITHUB_SHA,
               status: "completed",
               conclusion,
