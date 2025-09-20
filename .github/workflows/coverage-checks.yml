@@ -105,7 +105,7 @@ jobs:
       - name: Collect coverage summaries
         run: |
           mkdir -p summaries
-          cp -r downloaded/**/summaries/* summaries/ || true
+          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
 
       - name: Upload combined coverage summaries
         if: always()

@@ -85,7 +85,7 @@ jobs:
       - name: Collect backend summaries
         run: |
           mkdir -p summaries
-          cp -r downloaded/**/summaries/* summaries/ || true
+          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
 
       - name: Upload combined backend summaries
         if: always()
