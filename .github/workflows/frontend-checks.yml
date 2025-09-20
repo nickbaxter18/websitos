@@ -44,7 +44,7 @@ jobs:
         continue-on-error: true
         run: |
           pnpm exec eslint src v2 ops --format json --output-file eslint-output.json || true
-          node scripts/convert-eslint.js eslint-output.json eslint-report.json || echo '{"workflow":"frontend-checks","job":"lint","status":"success","errors":[],"warnings":[],"notices":[]}' > eslint-report.json
+          node Scripts/convert-eslint.js eslint-output.json eslint-report.json || echo '{"workflow":"frontend-checks","job":"lint","status":"success","errors":[],"warnings":[],"notices":[]}' > eslint-report.json
           mkdir -p summaries && mv eslint-report.json summaries/
 
       - name: Run Prettier
@@ -52,7 +52,7 @@ jobs:
         continue-on-error: true
         run: |
           pnpm exec prettier --check . > prettier-output.txt 2>&1 || true
-          node scripts/convert-prettier.js prettier-output.txt prettier-report.json || echo '{"workflow":"frontend-checks","job":"prettier","status":"success","errors":[],"warnings":[],"notices":[]}' > prettier-report.json
+          node Scripts/convert-prettier.js prettier-output.txt prettier-report.json || echo '{"workflow":"frontend-checks","job":"prettier","status":"success","errors":[],"warnings":[],"notices":[]}' > prettier-report.json
           mkdir -p summaries && mv prettier-report.json summaries/
 
       - name: Run TypeScript type-check
@@ -60,7 +60,7 @@ jobs:
         continue-on-error: true
         run: |
           pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-output.txt 2>&1 || true
-          node scripts/convert-tsc.js tsc-output.txt tsc-report.json || echo '{"workflow":"frontend-checks","job":"tsc","status":"success","errors":[],"warnings":[],"notices":[]}' > tsc-report.json
+          node Scripts/convert-tsc.js tsc-output.txt tsc-report.json || echo '{"workflow":"frontend-checks","job":"tsc","status":"success","errors":[],"warnings":[],"notices":[]}' > tsc-report.json
           mkdir -p summaries && mv tsc-report.json summaries/
 
       - name: Run Jest unit tests
@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
         run: |
           pnpm exec jest --coverage --json --outputFile=jest-output.json || true
-          node scripts/convert-jest.js jest-output.json jest-report.json || echo '{"workflow":"frontend-checks","job":"jest-unit","status":"success","errors":[],"warnings":[],"notices":[]}' > jest-report.json
+          node Scripts/convert-jest.js jest-output.json jest-report.json || echo '{"workflow":"frontend-checks","job":"jest-unit","status":"success","errors":[],"warnings":[],"notices":[]}' > jest-report.json
           mkdir -p summaries && mv jest-report.json summaries/
 
       - name: Install Playwright Browsers
@@ -80,7 +80,7 @@ jobs:
         continue-on-error: true
         run: |
           pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || true
-          node scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json playwright-coverage-report.json || echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-coverage-report.json
+          node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json playwright-coverage-report.json || echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-coverage-report.json
           mkdir -p summaries && mv playwright-coverage-report.json summaries/
 
       - name: Upload frontend summaries

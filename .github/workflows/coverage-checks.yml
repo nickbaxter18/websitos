@@ -49,15 +49,15 @@ jobs:
         if: ${{ matrix.task == 'frontend' }}
         run: |
           pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary || true
-          node scripts/convert-jest-coverage.js coverage/frontend/coverage-summary.json frontend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"frontend","status":"success","errors":[],"warnings":[],"notices":[]}' > frontend-coverage-report.json
+          node Scripts/convert-jest-coverage.js coverage/frontend/coverage-summary.json frontend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"frontend","status":"success","errors":[],"warnings":[],"notices":[]}' > frontend-coverage-report.json
           mkdir -p summaries && mv frontend-coverage-report.json summaries/
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         run: |
           pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json || true
-          python scripts/convert_cobertura.py coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-cobertura-report.json
-          python scripts/convert_pytest_coverage.py coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-coverage-report.json
+          python Scripts/convert_cobertura.py coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-cobertura-report.json
+          python Scripts/convert_pytest_coverage.py coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-coverage-report.json
           mkdir -p summaries && mv backend-cobertura-report.json backend-coverage-report.json summaries/
 
       - name: Run backend-node coverage (Jest)
@@ -66,7 +66,7 @@ jobs:
           cd backend
           pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage || true
           cd ..
-          node scripts/convert-jest-coverage.js backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
+          node Scripts/convert-jest-coverage.js backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
           mkdir -p summaries && mv backend-node-coverage-report.json summaries/
 
       - name: Run e2e coverage (Playwright)
@@ -75,10 +75,10 @@ jobs:
           pnpm exec playwright install chromium || true
           pnpm exec playwright test || true
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
-          node scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > e2e-coverage-report.json
+          node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > e2e-coverage-report.json
           mkdir -p summaries && mv e2e-coverage-report.json summaries/
 
-      - name: Upload coverage summaries (per matrix task)
+      - name: Upload coverage summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:

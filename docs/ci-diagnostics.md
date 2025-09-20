@@ -12,7 +12,7 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 
 ## 🛠 How It Works
 
-1. **Converters**: Each tool (ESLint, Prettier, Jest, Pytest, Mypy, Flake8, Black, Coverage) has a converter script in `scripts/`.
+1. **Converters**: Each tool (ESLint, Prettier, Jest, Pytest, Mypy, Flake8, Black, Coverage) has a converter script in `Scripts/`.
    - Converts raw output (JSON, text, XML) into a standardized JSON schema.
    - Schema includes workflow, job, status, errors, warnings, notices.
    - Errors include file, line, rule, message, and suggestions.
@@ -47,13 +47,18 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 ## 📂 File Locations
 
 - **Converters** (Python, snake_case):
-  - `scripts/convert_pytest.py`
-  - `scripts/convert_mypy.py`
-  - `scripts/convert_flake8.py`
-  - `scripts/convert_black.py`
-  - `scripts/convert_pytest_coverage.py`
-  - `scripts/convert_cobertura.py`
-- **Converters (JS)**: `scripts/convert-eslint.js`, `scripts/convert-prettier.js`, `scripts/convert-jest.js`, `scripts/convert-jest-coverage.js`, `scripts/convert-tsc.js`
+  - `Scripts/convert_pytest.py`
+  - `Scripts/convert_mypy.py`
+  - `Scripts/convert_flake8.py`
+  - `Scripts/convert_black.py`
+  - `Scripts/convert_pytest_coverage.py`
+  - `Scripts/convert_cobertura.py`
+- **Converters (JS)**:
+  - `Scripts/convert-eslint.js`
+  - `Scripts/convert-prettier.js`
+  - `Scripts/convert-jest.js`
+  - `Scripts/convert-jest-coverage.js`
+  - `Scripts/convert-tsc.js`
 - **Workflows**: `.github/workflows/*checks.yml`
 - **Docs**: `docs/ci-diagnostics.md`
 
@@ -85,7 +90,7 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
 - Each workflow must place its reports in `summaries/` and upload as packaged artifacts.
 - Converters can be tested locally with:
   ```bash
-  node scripts/convert-eslint.js eslint-output.json eslint-report.json
-  python scripts/convert_pytest.py pytest-output.json pytest-report.json
+  node Scripts/convert-eslint.js eslint-output.json eslint-report.json
+  python Scripts/convert_pytest.py pytest-output.json pytest-report.json
   ```
 - CI Diagnostics will mark a run as `ci-incomplete` if artifacts are missing.
