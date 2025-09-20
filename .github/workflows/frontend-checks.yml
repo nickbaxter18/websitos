@@ -83,19 +83,30 @@ jobs:
           (pnpm exec playwright test 2>&1 | tee playwright-output.txt) || true
           echo "${PIPESTATUS[0]}" > exit-code.txt || true
           (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
-          # Run converter with guaranteed fallback
-          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json \
-            || echo '{"workflow":"frontend-checks","job":"test-e2e","status":"failure","errors":[{"message":"Converter failed or produced no output"}],"warnings":[],"notices":[]}' > playwright-report.json
+
+          # Always try converter, fallback if it fails
+          if ! node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json; then
+            echo '{"workflow":"frontend-checks","job":"test-e2e","status":"failure","errors":[{"message":"Converter failed or produced no output"}],"warnings":[],"notices":[]}' > playwright-report.json
+          fi
+
           echo "📂 Dumping playwright-report.json for debug"
           cat playwright-report.json || true
+
           mkdir -p summaries
           mv playwright-report.json summaries/ || true
           mv coverage/e2e/coverage-summary.json summaries/playwright-coverage-report.json || true
-          # Collect raw logs too
-          mkdir -p raw-logs
-          mv playwright-output.txt exit-code.txt raw-logs/ || true
-          echo "📂 Contents of summaries before upload:"
-          ls -R summaries || true
+
+          # Collect raw logs inside summaries too (so Diagnostics can see them if needed)
+          cp playwright-output.txt summaries/playwright-output.txt || true
+          cp exit-code.txt summaries/exit-code.txt || true
+
+          # Ensure dummy fallback exists
+          if [ ! -f summaries/playwright-report.json ]; then
+            echo '{"workflow":"frontend-checks","job":"test-e2e","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"dummy fallback created"}]}' > summaries/playwright-report.json
+          fi
+
+          echo "📂 Contents of summaries before upload (with sizes):"
+          ls -lah summaries || true
 
       - name: Upload frontend summaries
         if: always()
@@ -130,7 +141,7 @@ jobs:
           mkdir -p summaries
           find downloaded -type f -name "*-report.json" -exec cp {} summaries/ \;
           echo "📂 Collected summaries:" 
-          ls -R summaries || true
+          ls -lah summaries || true
 
       - name: Upload combined frontend summaries
         if: always()
