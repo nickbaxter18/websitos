@@ -64,7 +64,6 @@ jobs:
 
           let files = [];
           try {
-            // Recursively collect all *-report.json from summaries/* subfolders
             const walk = (dirPath) => {
               let results = [];
               const list = fs.readdirSync(dirPath);
@@ -152,7 +151,6 @@ jobs:
           '
 
       - name: Sync diagnostics to Linear
-        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
@@ -187,7 +185,9 @@ jobs:
                 },
                 body: JSON.stringify({ query, variables })
               });
-              return res.json();
+              const json = await res.json();
+              console.log("🔍 Linear API response:", JSON.stringify(json, null, 2));
+              return json;
             }
 
             const searchQuery = `query Issues($filter: IssueFilter) { issues(filter: $filter, first: 1) { nodes { id url title } } }`;
@@ -199,11 +199,17 @@ jobs:
               const updateMutation = `mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) { issueUpdate(id: $id, input: $input) { success issue { id url } } }`;
               const updateVars = { id: issueId, input: { description: fullDescription, teamId, labelIds: labels } };
               const updated = await runQuery(updateMutation, updateVars);
+              if (!updated?.data?.issueUpdate?.success) {
+                throw new Error("❌ Failed to update Linear issue");
+              }
               fs.appendFileSync('report.md', `\n\n🔄 Updated Linear issue: ${updated?.data?.issueUpdate?.issue?.url || 'n/a'}`);
             } else {
               const createMutation = `mutation IssueCreate($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id url } } }`;
               const createVars = { input: { title, description: fullDescription, teamId, labelIds: labels } };
               const created = await runQuery(createMutation, createVars);
+              if (!created?.data?.issueCreate?.success) {
+                throw new Error("❌ Failed to create Linear issue");
+              }
               fs.appendFileSync('report.md', `\n\n🆕 Created Linear issue: ${created?.data?.issueCreate?.issue?.url || 'n/a'}`);
             }
 
