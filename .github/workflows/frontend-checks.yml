@@ -77,6 +77,7 @@ jobs:
 
       - name: Run Playwright E2E tests
         if: ${{ matrix.task == 'test-e2e' }}
+        shell: bash {0}   # remove -e so the block won’t exit early
         run: |
           pnpm exec playwright install --with-deps || true
           (pnpm exec playwright test 2>&1 | tee playwright-output.txt) || true
