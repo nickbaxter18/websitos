@@ -84,10 +84,8 @@ jobs:
           echo "${PIPESTATUS[0]}" > exit-code.txt || true
           (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
 
-          # Run converter, fallback if it fails
           node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || true
 
-          # Ensure playwright-report.json exists and is non-empty
           if [ ! -s playwright-report.json ]; then
             echo '{"workflow":"frontend-checks","job":"test-e2e","status":"failure","errors":[{"message":"No report generated"}],"warnings":[],"notices":[]}' > playwright-report.json
           fi
@@ -100,16 +98,13 @@ jobs:
           mv playwright-report.json summaries/ || true
           mv coverage/e2e/coverage-summary.json summaries/playwright-coverage-report.json || true
 
-          # Collect raw logs inside summaries too
           cp playwright-output.txt summaries/playwright-output.txt || true
           cp exit-code.txt summaries/exit-code.txt || true
 
-          # Dummy fallback if somehow missing
           if [ ! -s summaries/playwright-report.json ]; then
             echo '{"workflow":"frontend-checks","job":"test-e2e","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"dummy fallback created"}]}' > summaries/playwright-report.json
           fi
 
-          # Metadata summary file for easier debugging
           echo '{"artifact":"frontend-partial-test-e2e","files":["playwright-report.json","playwright-output.txt","exit-code.txt","playwright-coverage-report.json"]}' > summaries/e2e-meta.json
 
           echo "📂 Contents of summaries before upload (with sizes):"
@@ -146,9 +141,30 @@ jobs:
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
-          find downloaded -type f -name "*-report.json" -exec cp {} summaries/ \;
-          echo "📂 Collected summaries:" 
+          echo "📥 Checking downloaded artifacts:"
+          ls -R downloaded || true
+
+          for f in $(find downloaded -type f -iname "*-report.json"); do
+            echo "📥 Found report: $f"
+            cp "$f" summaries/
+          done
+
+          # Explicitly check and copy playwright-report.json if it exists
+          cp downloaded/**/playwright-report.json summaries/ 2>/dev/null || echo "⚠️ No playwright-report.json found in artifacts"
+
+          # Ensure critical reports exist (fallback if missing)
+          for required in playwright-report.json eslint-report.json prettier-report.json tsc-report.json jest-report.json; do
+            if [ ! -f summaries/$required ]; then
+              echo "⚠️ Missing $required in summaries/"
+              echo '{"workflow":"frontend-checks","job":"missing","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"'$required' missing from artifact collection"}]}' > summaries/$required
+            fi
+          done
+
+          echo "📂 Collected summaries (with sizes):"
           ls -lah summaries || true
+
+          # Metadata summary
+          ls -lah summaries > summaries/frontend-meta.txt
 
       - name: Upload combined frontend summaries
         if: always()
