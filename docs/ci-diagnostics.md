@@ -21,7 +21,7 @@ The CI Diagnostics system aggregates results from all CI jobs into a single stru
    - Frontend, Backend, and Coverage workflows run tools, call converters, and collect JSON artifacts into a `summaries/` folder.
    - Each workflow uploads its packaged summaries as uniquely named artifacts:
      - `frontend-summaries`
-     - `backend-summaries-pytest`, `backend-summaries-mypy`, `backend-summaries-flake8`, `backend-summaries-black`
+     - `backend-summaries`
      - `coverage-summaries-frontend`, `coverage-summaries-backend`, `coverage-summaries-backend-node`, `coverage-summaries-e2e`
    - Artifacts are retained for **2 days**.
 

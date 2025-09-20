@@ -27,49 +27,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Try downloading frontend summaries
-        id: frontend
-        continue-on-error: true
+      - name: Download frontend summaries
         uses: actions/download-artifact@v4
         with:
           name: frontend-summaries
           path: ./summaries/frontend
 
-      - name: Try downloading backend summaries
-        id: backend
-        continue-on-error: true
+      - name: Download backend summaries
         uses: actions/download-artifact@v4
         with:
           name: backend-summaries
           path: ./summaries/backend
 
-      - name: Try downloading coverage summaries (frontend)
-        id: cov_frontend
-        continue-on-error: true
+      - name: Download coverage summaries (frontend)
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-frontend
           path: ./summaries/coverage/frontend
 
-      - name: Try downloading coverage summaries (backend)
-        id: cov_backend
-        continue-on-error: true
+      - name: Download coverage summaries (backend)
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-backend
           path: ./summaries/coverage/backend
 
-      - name: Try downloading coverage summaries (backend-node)
-        id: cov_backend_node
-        continue-on-error: true
+      - name: Download coverage summaries (backend-node)
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-backend-node
           path: ./summaries/coverage/backend-node
 
-      - name: Try downloading coverage summaries (e2e)
-        id: cov_e2e
-        continue-on-error: true
+      - name: Download coverage summaries (e2e)
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries-e2e
