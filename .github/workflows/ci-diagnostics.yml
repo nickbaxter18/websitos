@@ -87,7 +87,7 @@ jobs:
           console.log("📂 Found report files:", files);
 
           const requiredReports = [
-            "playwright-report.json",
+            "playwright-e2e-report.json",
             "eslint-report.json",
             "prettier-report.json",
             "tsc-report.json",
@@ -95,13 +95,20 @@ jobs:
           ];
 
           requiredReports.forEach(r => {
-            if (!files.find(f => f.toLowerCase().endsWith(r))) {
+            const match = files.find(f => f.toLowerCase().endsWith(r));
+            if (!match) {
               console.warn(`⚠️ Missing ${r} in collected reports`);
-              report += `\n⚠️ Missing ${r}`;
-              const dummy = { workflow: "frontend-checks", job: r.replace(".json",""), status: "neutral", errors: [], warnings: [], notices: [{ message: `${r} missing from diagnostics aggregation` }] };
+              report += `\n⚠️ Missing ${r} — dummy injected.`;
+              const dummy = { workflow: "frontend-checks", job: r.replace(".json",""), status: "neutral", errors: [], warnings: [], notices: [{ message: `${r} missing from diagnostics aggregation — dummy injected` }] };
               const outPath = `./summaries/${r}`;
               fs.writeFileSync(outPath, JSON.stringify(dummy, null, 2));
               files.push(outPath);
+            } else {
+              const size = fs.statSync(match).size;
+              if (size < 200) {
+                console.warn(`⚠️ ${r} exists but looks suspiciously small (${size} bytes)`);
+                report += `\n⚠️ ${r} exists but may be dummy (${size} bytes).`;
+              }
             }
           });
 
@@ -157,67 +164,3 @@ jobs:
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
           console.log(report);
           '
-
-      - name: Debug diagnostics before posting
-        run: |
-          echo "📂 Diagnostics files:"
-          ls -lh || true
-          echo "📋 report.md preview:"
-          head -n 50 report.md || true
-          echo "📊 diagnostics-meta.json:"
-          cat diagnostics-meta.json || true
-
-      - name: Post diagnostics check
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const sha = context.payload.workflow_run?.head_sha || context.sha;
-
-            let summary = '⚠️ Diagnostics report missing.';
-            if (fs.existsSync('report.md')) {
-              summary = fs.readFileSync('report.md', 'utf-8').slice(0, 60000);
-            }
-
-            let conclusion = "success";
-            if (fs.existsSync('diagnostics-meta.json')) {
-              const meta = JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8'));
-              if (meta.totalErrors > 0) conclusion = "failure";
-              else if (meta.totalWarnings > 0) conclusion = "neutral";
-            }
-
-            console.log("📋 Posting Diagnostics Check for SHA:", sha);
-
-            await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: "CI Diagnostics (Central)",
-              head_sha: sha,
-              status: "completed",
-              conclusion,
-              output: {
-                title: "CI Diagnostics Report",
-                summary
-              }
-            });
-
-      - name: Post PR comment with diagnostics
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            let summary = '⚠️ Diagnostics report missing.';
-            if (fs.existsSync('report.md')) {
-              summary = fs.readFileSync('report.md', 'utf-8').slice(0, 60000);
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## ⚠️ CI Diagnostics Report\n\n${summary}`
-            });
