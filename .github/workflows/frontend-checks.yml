@@ -83,7 +83,32 @@ jobs:
           node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json playwright-coverage-report.json || echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-coverage-report.json
           mkdir -p summaries && mv playwright-coverage-report.json summaries/
 
-      - name: Upload frontend summaries
+      - name: Upload partial summaries (per job)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  package-and-upload:
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all frontend job artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded
+
+      - name: Collect frontend summaries
+        run: |
+          mkdir -p summaries
+          cp -r downloaded/**/summaries/* summaries/ || true
+
+      - name: Upload combined frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -92,6 +117,6 @@ jobs:
           retention-days: 2
 
   call-diagnostics:
-    needs: checks
+    needs: package-and-upload
     uses: ./.github/workflows/ci-diagnostics.yml
     secrets: inherit

@@ -39,29 +39,11 @@ jobs:
           name: backend-summaries
           path: ./summaries/backend
 
-      - name: Download coverage summaries (frontend)
+      - name: Download coverage summaries
         uses: actions/download-artifact@v4
         with:
-          name: coverage-summaries-frontend
-          path: ./summaries/coverage/frontend
-
-      - name: Download coverage summaries (backend)
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries-backend
-          path: ./summaries/coverage/backend
-
-      - name: Download coverage summaries (backend-node)
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries-backend-node
-          path: ./summaries/coverage/backend-node
-
-      - name: Download coverage summaries (e2e)
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries-e2e
-          path: ./summaries/coverage/e2e
+          name: coverage-summaries
+          path: ./summaries/coverage
 
       - name: Aggregate summaries into report
         run: |
@@ -82,10 +64,7 @@ jobs:
           const expected = [
             "frontend-summaries",
             "backend-summaries",
-            "coverage-summaries-frontend",
-            "coverage-summaries-backend",
-            "coverage-summaries-backend-node",
-            "coverage-summaries-e2e"
+            "coverage-summaries"
           ];
 
           const present = new Set(files.map(f => path.basename(f)));

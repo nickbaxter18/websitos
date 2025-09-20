@@ -62,7 +62,32 @@ jobs:
           python Scripts/convert_black.py black-output.txt black-report.json || echo '{"workflow":"backend-checks","job":"black","status":"success","errors":[],"warnings":[],"notices":[]}' > black-report.json
           mkdir -p summaries && mv black-report.json summaries/
 
-      - name: Upload backend summaries
+      - name: Upload partial summaries (per job)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  package-and-upload:
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all backend job artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded
+
+      - name: Collect backend summaries
+        run: |
+          mkdir -p summaries
+          cp -r downloaded/**/summaries/* summaries/ || true
+
+      - name: Upload combined backend summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -71,6 +96,6 @@ jobs:
           retention-days: 2
 
   call-diagnostics:
-    needs: checks
+    needs: package-and-upload
     uses: ./.github/workflows/ci-diagnostics.yml
     secrets: inherit
