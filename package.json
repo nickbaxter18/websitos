@@ -102,8 +102,16 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": "eslint --fix",
-    "*.{json,css,html,md,yml,yaml}": "prettier --write"
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,html,md,yml,yaml,mdx}": [
+      "prettier --write"
+    ],
+    "*.py": [
+      "black"
+    ]
   },
   "directories": {
     "doc": "docs",
