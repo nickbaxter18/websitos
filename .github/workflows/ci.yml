@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: [lint, prettier, type-check, test-unit, test-e2e]
+        task: [lint, prettier, type-check, test-unit, playwright-e2e]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,38 +41,57 @@ jobs:
       - name: Run ESLint
         if: ${{ matrix.task == 'lint' }}
         run: |
-          pnpm exec eslint src v2 ops --format json --output-file eslint-output.json || true
-          node Scripts/convert-eslint.js eslint-output.json eslint-report.json || echo '{"workflow":"frontend-checks","job":"lint","status":"success","errors":[],"warnings":[],"notices":[]}' > eslint-report.json
+          (pnpm exec eslint src v2 ops --format json --output-file eslint-output.json) || true
+          node Scripts/convert-eslint.cjs eslint-output.json eslint-report.json || echo '{"workflow":"frontend-checks","job":"lint","status":"failure","errors":[{"message":"ESLint converter failed"}],"warnings":[],"notices":[]}' > eslint-report.json
           mkdir -p summaries && mv eslint-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Prettier
         if: ${{ matrix.task == 'prettier' }}
         run: |
-          pnpm exec prettier --check . > prettier-output.txt 2>&1 || true
-          node Scripts/convert-prettier.js prettier-output.txt prettier-report.json || echo '{"workflow":"frontend-checks","job":"prettier","status":"success","errors":[],"warnings":[],"notices":[]}' > prettier-report.json
+          (pnpm exec prettier --check . > prettier-output.txt 2>&1) || true
+          node Scripts/convert-prettier.cjs prettier-output.txt prettier-report.json || echo '{"workflow":"frontend-checks","job":"prettier","status":"failure","errors":[{"message":"Prettier converter failed"}],"warnings":[],"notices":[]}' > prettier-report.json
           mkdir -p summaries && mv prettier-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run TypeScript type-check
         if: ${{ matrix.task == 'type-check' }}
         run: |
-          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-output.txt 2>&1 || true
-          node Scripts/convert-tsc.js tsc-output.txt tsc-report.json || echo '{"workflow":"frontend-checks","job":"tsc","status":"success","errors":[],"warnings":[],"notices":[]}' > tsc-report.json
+          (pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-output.txt 2>&1) || true
+          node Scripts/convert-tsc.cjs tsc-output.txt tsc-report.json || echo '{"workflow":"frontend-checks","job":"tsc","status":"failure","errors":[{"message":"TSC converter failed"}],"warnings":[],"notices":[]}' > tsc-report.json
           mkdir -p summaries && mv tsc-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Jest unit tests
         if: ${{ matrix.task == 'test-unit' }}
         run: |
-          pnpm exec jest --coverage --json --outputFile=jest-output.json || true
-          node Scripts/convert-jest.js jest-output.json jest-report.json || echo '{"workflow":"frontend-checks","job":"jest-unit","status":"success","errors":[],"warnings":[],"notices":[]}' > jest-report.json
+          (pnpm exec jest --coverage --json --outputFile=jest-output.json) || true
+          node Scripts/convert-jest.cjs jest-output.json jest-report.json || echo '{"workflow":"frontend-checks","job":"jest-unit","status":"failure","errors":[{"message":"Jest converter failed"}],"warnings":[],"notices":[]}' > jest-report.json
           mkdir -p summaries && mv jest-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Playwright E2E tests
-        if: ${{ matrix.task == 'test-e2e' }}
+        if: ${{ matrix.task == 'playwright-e2e' }}
         run: |
-          pnpm exec playwright install --with-deps
-          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || true
-          node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json playwright-coverage-report.json || echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-coverage-report.json
-          mkdir -p summaries && mv playwright-coverage-report.json summaries/
+          pnpm exec playwright install --with-deps || true
+          (pnpm exec playwright test 2>&1 | tee playwright-output.txt) || true
+          echo "${PIPESTATUS[0]}" > exit-code.txt || true
+          (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
+
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-e2e-report.json || true
+
+          if [ ! -s playwright-e2e-report.json ]; then
+            echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"failure","errors":[{"message":"Converter crashed or no output"}],"warnings":[],"notices":[]}' > playwright-e2e-report.json
+          fi
+
+          mkdir -p summaries
+          mv playwright-e2e-report.json summaries/ || true
+          mv coverage/e2e/coverage-summary.json summaries/playwright-coverage-report.json || true
+
+          cp playwright-output.txt summaries/playwright-output.txt || true
+          cp exit-code.txt summaries/exit-code.txt || true
+
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Upload partial frontend summaries
         if: always()
@@ -93,6 +112,7 @@ jobs:
           mkdir -p summaries
           find downloaded -name "*-report.json" -exec cp {} summaries/ \;
           echo "📂 Collected frontend files:" && ls -R summaries
+          sha256sum summaries/* > summaries/checksums.txt || true
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
@@ -120,30 +140,34 @@ jobs:
       - name: Run Pytest
         if: ${{ matrix.task == 'pytest' }}
         run: |
-          pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json || true
-          python Scripts/convert_pytest.py pytest-output.json pytest-report.json || echo '{"workflow":"backend-checks","job":"pytest","status":"success","errors":[],"warnings":[],"notices":[]}' > pytest-report.json
+          (pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json) || true
+          node Scripts/convert-pytest.cjs pytest-output.txt pytest-output.json pytest-report.json || echo '{"workflow":"backend-checks","job":"pytest","status":"failure","errors":[{"message":"Pytest converter failed"}],"warnings":[],"notices":[]}' > pytest-report.json
           mkdir -p summaries && mv pytest-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Mypy
         if: ${{ matrix.task == 'mypy' }}
         run: |
-          mypy . > mypy-output.txt 2>&1 || true
-          python Scripts/convert_mypy.py mypy-output.txt mypy-report.json || echo '{"workflow":"backend-checks","job":"mypy","status":"success","errors":[],"warnings":[],"notices":[]}' > mypy-report.json
+          (mypy . > mypy-output.txt 2>&1) || true
+          node Scripts/convert-mypy.cjs mypy-output.txt mypy-report.json || echo '{"workflow":"backend-checks","job":"mypy","status":"failure","errors":[{"message":"Mypy converter failed"}],"warnings":[],"notices":[]}' > mypy-report.json
           mkdir -p summaries && mv mypy-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Flake8
         if: ${{ matrix.task == 'flake8' }}
         run: |
-          flake8 . > flake8-output.txt 2>&1 || true
-          python Scripts/convert_flake8.py flake8-output.txt flake8-report.json || echo '{"workflow":"backend-checks","job":"flake8","status":"success","errors":[],"warnings":[],"notices":[]}' > flake8-report.json
+          (flake8 . > flake8-output.txt 2>&1) || true
+          node Scripts/convert-flake8.cjs flake8-output.txt flake8-report.json || echo '{"workflow":"backend-checks","job":"flake8","status":"failure","errors":[{"message":"Flake8 converter failed"}],"warnings":[],"notices":[]}' > flake8-report.json
           mkdir -p summaries && mv flake8-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Black
         if: ${{ matrix.task == 'black' }}
         run: |
-          black --check . > black-output.txt 2>&1 || true
-          python Scripts/convert_black.py black-output.txt black-report.json || echo '{"workflow":"backend-checks","job":"black","status":"success","errors":[],"warnings":[],"notices":[]}' > black-report.json
+          (black --check . > black-output.txt 2>&1) || true
+          node Scripts/convert-black.cjs black-output.txt black-report.json || echo '{"workflow":"backend-checks","job":"black","status":"failure","errors":[{"message":"Black converter failed"}],"warnings":[],"notices":[]}' > black-report.json
           mkdir -p summaries && mv black-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Upload partial backend summaries
         if: always()
@@ -164,6 +188,7 @@ jobs:
           mkdir -p summaries
           find downloaded -name "*-report.json" -exec cp {} summaries/ \;
           echo "📂 Collected backend files:" && ls -R summaries
+          sha256sum summaries/* > summaries/checksums.txt || true
       - uses: actions/upload-artifact@v4
         with:
           name: backend-summaries
@@ -200,35 +225,37 @@ jobs:
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary || true
-          node Scripts/convert-jest-coverage.js coverage/frontend/coverage-summary.json frontend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"frontend","status":"success","errors":[],"warnings":[],"notices":[]}' > frontend-coverage-report.json
+          (pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary) || true
+          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"frontend","status":"failure","errors":[{"message":"Jest coverage converter failed"}],"warnings":[],"notices":[]}' > frontend-coverage-report.json
           mkdir -p summaries && mv frontend-coverage-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         run: |
-          pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json || true
-          python Scripts/convert_cobertura.py coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-cobertura-report.json
-          python Scripts/convert_pytest_coverage.py coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-coverage-report.json
+          (pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json) || true
+          node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"failure","errors":[{"message":"Cobertura converter failed"}],"warnings":[],"notices":[]}' > backend-cobertura-report.json
+          node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"failure","errors":[{"message":"Pytest coverage converter failed"}],"warnings":[],"notices":[]}' > backend-coverage-report.json
           mkdir -p summaries && mv backend-cobertura-report.json backend-coverage-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
-          cd backend
-          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage || true
-          cd ..
-          node Scripts/convert-jest-coverage.js backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
+          (cd backend && pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage) || true
+          node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"failure","errors":[{"message":"Backend-node coverage converter failed"}],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
           mkdir -p summaries && mv backend-node-coverage-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |
           pnpm exec playwright install --with-deps || true
-          pnpm exec playwright test || true
-          npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
-          node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > e2e-coverage-report.json
+          (pnpm exec playwright test) || true
+          (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
+          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"failure","errors":[{"message":"Playwright coverage converter failed"}],"warnings":[],"notices":[]}' > e2e-coverage-report.json
           mkdir -p summaries && mv e2e-coverage-report.json summaries/
+          sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Upload partial coverage summaries
         if: always()
@@ -249,6 +276,7 @@ jobs:
           mkdir -p summaries
           find downloaded -name "*-report.json" -exec cp {} summaries/ \;
           echo "📂 Collected coverage files:" && ls -R summaries
+          sha256sum summaries/* > summaries/checksums.txt || true
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-summaries

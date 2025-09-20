@@ -15,8 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Removed e2e to avoid duplication; handled in frontend-checks.yml
-        task: [frontend, backend, backend-node]
+        task: [frontend, backend, backend-node, e2e]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,7 +27,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Setup pnpm
-        if: ${{ matrix.task == 'frontend' || matrix.task == 'backend-node' }}
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'backend-node' || matrix.task == 'e2e' }}
         uses: pnpm/action-setup@v2
         with:
           version: 10
@@ -43,28 +42,44 @@ jobs:
         if: ${{ matrix.task == 'frontend' }}
         continue-on-error: true
         run: |
-          pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary || true
-          node Scripts/convert-jest-coverage.js coverage/frontend/coverage-summary.json frontend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"frontend","status":"success","errors":[],"warnings":[],"notices":[]}' > frontend-coverage-report.json
+          (pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary) || true
+          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"frontend","status":"failure","errors":[{"message":"Jest coverage converter failed"}],"warnings":[],"notices":[]}' > frontend-coverage-report.json
           mkdir -p summaries && mv frontend-coverage-report.json summaries/
+          echo "📂 Checksums for coverage reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         continue-on-error: true
         run: |
-          pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json || true
-          python Scripts/convert_cobertura.py coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-cobertura-report.json
-          python Scripts/convert_pytest_coverage.py coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-coverage-report.json
+          (pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json) || true
+          node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"failure","errors":[{"message":"Cobertura converter failed"}],"warnings":[],"notices":[]}' > backend-cobertura-report.json
+          node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"failure","errors":[{"message":"Pytest coverage converter failed"}],"warnings":[],"notices":[]}' > backend-coverage-report.json
           mkdir -p summaries && mv backend-cobertura-report.json backend-coverage-report.json summaries/
+          echo "📂 Checksums for coverage reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         continue-on-error: true
         run: |
-          cd backend
-          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage || true
-          cd ..
-          node Scripts/convert-jest-coverage.js backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"success","errors":[],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
+          (cd backend && pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage) || true
+          node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json || echo '{"workflow":"coverage-checks","job":"backend-node","status":"failure","errors":[{"message":"Backend-node coverage converter failed"}],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
           mkdir -p summaries && mv backend-node-coverage-report.json summaries/
+          echo "📂 Checksums for coverage reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
+
+      - name: Run e2e coverage (Playwright)
+        if: ${{ matrix.task == 'e2e' }}
+        continue-on-error: true
+        run: |
+          pnpm exec playwright install --with-deps || true
+          (pnpm exec playwright test) || true
+          (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
+          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"failure","errors":[{"message":"Playwright coverage converter failed"}],"warnings":[],"notices":[]}' > e2e-coverage-report.json
+          mkdir -p summaries && mv e2e-coverage-report.json summaries/
+          echo "📂 Checksums for coverage reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Upload partial coverage summaries
         if: always()
@@ -72,6 +87,16 @@ jobs:
         with:
           name: coverage-partial-${{ matrix.task }}
           path: summaries/
+          retention-days: 2
+
+      - name: Upload raw coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-raw-${{ matrix.task }}
+          path: |
+            coverage/**/*.xml
+            coverage/**/*.json
           retention-days: 2
 
   package-and-upload:
@@ -89,7 +114,10 @@ jobs:
       - name: Collect coverage summaries
         run: |
           mkdir -p summaries
+          echo "📥 Collected coverage artifacts:" > summaries/checksums.txt
+          find downloaded -type f -printf "%p (%s bytes)\n" || true
           find downloaded -name "*-report.json" -exec cp {} summaries/ \;
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Upload combined coverage summaries
         if: always()

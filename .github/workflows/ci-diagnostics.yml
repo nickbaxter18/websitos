@@ -61,6 +61,8 @@ jobs:
 
           const dir = "./summaries";
           let report = "## ⚠️ CI Diagnostics Report\n";
+          let bannerWarnings = [];
+          let conclusion = "success";
 
           let files = [];
           try {
@@ -78,10 +80,10 @@ jobs:
               });
               return results;
             };
-
             files = walk(dir);
           } catch (e) {
             report += "\n⚠️ No summaries directory found.";
+            conclusion = "neutral";
           }
 
           console.log("📂 Found report files:", files);
@@ -91,15 +93,25 @@ jobs:
             "eslint-report.json",
             "prettier-report.json",
             "tsc-report.json",
-            "jest-report.json"
+            "jest-report.json",
+            "mypy-report.json",
+            "black-report.json",
+            "flake8-report.json",
+            "pytest-report.json",
+            "backend-cobertura-report.json",
+            "backend-coverage-report.json",
+            "backend-node-coverage-report.json",
+            "e2e-coverage-report.json"
           ];
 
           requiredReports.forEach(r => {
             const match = files.find(f => f.toLowerCase().endsWith(r));
             if (!match) {
               console.warn(`⚠️ Missing ${r} in collected reports`);
+              bannerWarnings.push(`⚠️ Missing ${r}`);
+              conclusion = "neutral";
               report += `\n⚠️ Missing ${r} — dummy injected.`;
-              const dummy = { workflow: "frontend-checks", job: r.replace(".json",""), status: "neutral", errors: [], warnings: [], notices: [{ message: `${r} missing from diagnostics aggregation — dummy injected` }] };
+              const dummy = { workflow: "diagnostics", job: r.replace(".json",""), status: "neutral", errors: [], warnings: [], notices: [{ message: `${r} missing from diagnostics aggregation — dummy injected` }] };
               const outPath = `./summaries/${r}`;
               fs.writeFileSync(outPath, JSON.stringify(dummy, null, 2));
               files.push(outPath);
@@ -107,6 +119,8 @@ jobs:
               const size = fs.statSync(match).size;
               if (size < 200) {
                 console.warn(`⚠️ ${r} exists but looks suspiciously small (${size} bytes)`);
+                bannerWarnings.push(`⚠️ ${r} looks suspiciously small (${size} bytes)`);
+                conclusion = "neutral";
                 report += `\n⚠️ ${r} exists but may be dummy (${size} bytes).`;
               }
             }
@@ -116,7 +130,12 @@ jobs:
 
           if (!files.length) {
             report += "\n⚠️ No summary reports found (some jobs may have been skipped).";
+            conclusion = "neutral";
           } else {
+            if (bannerWarnings.length > 0) {
+              report = `⚠️ WARNING: Some reports were dummies or suspicious.\n` + report;
+            }
+
             report += "\n### 📊 Summary Table\n";
             report += "| Workflow/Job | Errors | Warnings |\n";
             report += "|--------------|--------|----------|\n";
@@ -160,7 +179,40 @@ jobs:
             }
           }
 
+          // Artifact manifest
+          let manifest = [];
+          try {
+            const walkAll = (dirPath) => {
+              let results = [];
+              const list = fs.readdirSync(dirPath);
+              list.forEach((file) => {
+                const filePath = path.join(dirPath, file);
+                const stat = fs.statSync(filePath);
+                if (stat && stat.isDirectory()) {
+                  results = results.concat(walkAll(filePath));
+                } else {
+                  results.push(filePath);
+                }
+              });
+              return results;
+            };
+            manifest = walkAll(dir);
+          } catch {}
+          if (manifest.length > 0) {
+            fs.writeFileSync("all-artifacts.txt", manifest.join("\n"));
+            report += "\n### 📦 Artifact Manifest\n";
+            manifest.forEach(m => {
+              report += `- ${m}\n`;
+            });
+          }
+
+          if (totalErrors > 0) conclusion = "failure";
+          else if (totalWarnings > 0 && conclusion === "success") conclusion = "neutral";
+
           fs.writeFileSync("report.md", report);
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
           console.log(report);
+
+          const { Octokit } = require("@octokit/rest");
+          const github = new Octokit({ auth: process.env.GITHUB_TOKEN });
           '

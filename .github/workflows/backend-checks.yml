@@ -34,41 +34,43 @@ jobs:
         if: ${{ matrix.task == 'pytest' }}
         continue-on-error: true
         run: |
-          pytest --maxfail=1 --disable-warnings -q \
-            --json-report --json-report-file=pytest-output.json \
-            2>&1 | tee pytest-output.txt
+          (pytest --maxfail=1 --disable-warnings -q \
+            --json-report --json-report-file=pytest-output.json 2>&1 | tee pytest-output.txt) || true
           echo $? > exit-code.txt
-          node Scripts/convert-pytest.cjs pytest-output.txt pytest-output.json pytest-report.json \
-            || echo '{"workflow":"backend-checks","job":"pytest","status":"success","errors":[],"warnings":[],"notices":[]}' > pytest-report.json
-          echo "📂 Dumping pytest-report.json for debug"
-          cat pytest-report.json || true
+          node Scripts/convert-pytest.cjs pytest-output.txt pytest-output.json pytest-report.json || echo '{"workflow":"backend-checks","job":"pytest","status":"failure","errors":[{"message":"Pytest converter failed"}],"warnings":[],"notices":[]}' > pytest-report.json
           mkdir -p summaries && mv pytest-report.json summaries/
+          echo "📂 Checksums for reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Run Mypy
         if: ${{ matrix.task == 'mypy' }}
         continue-on-error: true
         run: |
-          mypy . > mypy-output.txt 2>&1 || true
-          python Scripts/convert_mypy.py mypy-output.txt mypy-report.json || echo '{"workflow":"backend-checks","job":"mypy","status":"success","errors":[],"warnings":[],"notices":[]}' > mypy-report.json
+          (mypy . > mypy-output.txt 2>&1) || true
+          node Scripts/convert-mypy.cjs mypy-output.txt mypy-report.json || echo '{"workflow":"backend-checks","job":"mypy","status":"failure","errors":[{"message":"Mypy converter failed"}],"warnings":[],"notices":[]}' > mypy-report.json
           mkdir -p summaries && mv mypy-report.json summaries/
+          echo "📂 Checksums for reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Run Flake8
         if: ${{ matrix.task == 'flake8' }}
         continue-on-error: true
         run: |
-          flake8 . > flake8-output.txt 2>&1 || true
-          node Scripts/convert-flake8.cjs flake8-output.txt flake8-report.json || echo '{"workflow":"backend-checks","job":"flake8","status":"success","errors":[],"warnings":[],"notices":[]}' > flake8-report.json
-          echo "📂 Dumping flake8-report.json for debug"
-          cat flake8-report.json || true
+          (flake8 . > flake8-output.txt 2>&1) || true
+          node Scripts/convert-flake8.cjs flake8-output.txt flake8-report.json || echo '{"workflow":"backend-checks","job":"flake8","status":"failure","errors":[{"message":"Flake8 converter failed"}],"warnings":[],"notices":[]}' > flake8-report.json
           mkdir -p summaries && mv flake8-report.json summaries/
+          echo "📂 Checksums for reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Run Black
         if: ${{ matrix.task == 'black' }}
         continue-on-error: true
         run: |
-          black --check . > black-output.txt 2>&1 || true
-          python Scripts/convert_black.py black-output.txt black-report.json || echo '{"workflow":"backend-checks","job":"black","status":"success","errors":[],"warnings":[],"notices":[]}' > black-report.json
+          (black --check . > black-output.txt 2>&1) || true
+          node Scripts/convert-black.cjs black-output.txt black-report.json || echo '{"workflow":"backend-checks","job":"black","status":"failure","errors":[{"message":"Black converter failed"}],"warnings":[],"notices":[]}' > black-report.json
           mkdir -p summaries && mv black-report.json summaries/
+          echo "📂 Checksums for reports:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Upload partial summaries (per job)
         if: always()
@@ -76,6 +78,16 @@ jobs:
         with:
           name: backend-partial-${{ matrix.task }}
           path: summaries/
+          retention-days: 2
+
+      - name: Upload raw backend logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-raw-${{ matrix.task }}
+          path: |
+            *.txt
+            *.log
           retention-days: 2
 
   package-and-upload:
@@ -93,7 +105,11 @@ jobs:
       - name: Collect backend summaries
         run: |
           mkdir -p summaries
+          echo "📥 Checking downloaded artifacts:"
+          find downloaded -type f -printf "%p (%s bytes)\n" || true
           find downloaded -name "*-report.json" -exec cp {} summaries/ \;
+          echo "📂 Collected backend summaries with checksums:" > summaries/checksums.txt
+          sha256sum summaries/* >> summaries/checksums.txt || true
 
       - name: Upload combined backend summaries
         if: always()
