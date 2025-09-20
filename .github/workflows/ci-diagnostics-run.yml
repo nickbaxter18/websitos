@@ -1,0 +1,39 @@
+name: CI Diagnostics Run
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  diagnostics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download frontend summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-summaries
+          path: ./summaries/frontend
+
+      - name: Download backend summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-summaries
+          path: ./summaries/backend
+
+      - name: Download coverage summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-summaries
+          path: ./summaries/coverage
+
+      - name: Run CI Diagnostics reusable workflow
+        uses: ./.github/workflows/ci-diagnostics.yml
+        secrets: inherit

@@ -115,8 +115,3 @@ jobs:
           name: frontend-summaries
           path: summaries/
           retention-days: 2
-
-  call-diagnostics:
-    needs: package-and-upload
-    uses: ./.github/workflows/ci-diagnostics.yml
-    secrets: inherit
