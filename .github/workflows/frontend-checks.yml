@@ -80,20 +80,22 @@ jobs:
         shell: bash {0}
         run: |
           pnpm exec playwright install --with-deps || true
-          # Run tests and capture output
           (pnpm exec playwright test 2>&1 | tee playwright-output.txt) || true
-          # Capture the exit code of Playwright correctly
           echo "${PIPESTATUS[0]}" > exit-code.txt || true
-          # Try to generate coverage report (may fail if no .nyc_output)
           (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
-          # Run converter after logs and coverage are ready
+          # Run converter with guaranteed fallback
           node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json \
-            || echo '{"workflow":"frontend-checks","job":"test-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
+            || echo '{"workflow":"frontend-checks","job":"test-e2e","status":"failure","errors":[{"message":"Converter failed or produced no output"}],"warnings":[],"notices":[]}' > playwright-report.json
           echo "📂 Dumping playwright-report.json for debug"
           cat playwright-report.json || true
-          mkdir -p summaries && mv playwright-report.json summaries/
-          # Move raw logs + exit code for artifact upload
-          mkdir -p raw-logs && mv playwright-output.txt exit-code.txt raw-logs/
+          mkdir -p summaries
+          mv playwright-report.json summaries/ || true
+          mv coverage/e2e/coverage-summary.json summaries/playwright-coverage-report.json || true
+          # Collect raw logs too
+          mkdir -p raw-logs
+          mv playwright-output.txt exit-code.txt raw-logs/ || true
+          echo "📂 Contents of summaries before upload:"
+          ls -R summaries || true
 
       - name: Upload frontend summaries
         if: always()
@@ -126,7 +128,9 @@ jobs:
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
-          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
+          find downloaded -type f -name "*-report.json" -exec cp {} summaries/ \;
+          echo "📂 Collected summaries:" 
+          ls -R summaries || true
 
       - name: Upload combined frontend summaries
         if: always()
