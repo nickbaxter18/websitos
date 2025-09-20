@@ -40,6 +40,8 @@ jobs:
           echo $? > exit-code.txt
           node Scripts/convert-pytest.cjs pytest-output.txt pytest-output.json pytest-report.json \
             || echo '{"workflow":"backend-checks","job":"pytest","status":"success","errors":[],"warnings":[],"notices":[]}' > pytest-report.json
+          echo "📂 Dumping pytest-report.json for debug"
+          cat pytest-report.json || true
           mkdir -p summaries && mv pytest-report.json summaries/
 
       - name: Run Mypy
@@ -56,6 +58,8 @@ jobs:
         run: |
           flake8 . > flake8-output.txt 2>&1 || true
           node Scripts/convert-flake8.cjs flake8-output.txt flake8-report.json || echo '{"workflow":"backend-checks","job":"flake8","status":"success","errors":[],"warnings":[],"notices":[]}' > flake8-report.json
+          echo "📂 Dumping flake8-report.json for debug"
+          cat flake8-report.json || true
           mkdir -p summaries && mv flake8-report.json summaries/
 
       - name: Run Black
