@@ -14,57 +14,5 @@ permissions:
 jobs:
   diagnostics:
     name: CI Diagnostics (Central)
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download frontend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-summaries
-          path: ./summaries/frontend
-
-      - name: Download backend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-summaries
-          path: ./summaries/backend
-
-      - name: Download coverage summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries
-          path: ./summaries/coverage
-
-      - name: Run CI Diagnostics reusable workflow
-        uses: ./.github/workflows/ci-diagnostics.yml
-        secrets: inherit
-
-      - name: Post central diagnostics check
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
-            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0 };
-
-            let conclusion = "success";
-            if (meta.totalErrors > 0) conclusion = "failure";
-            else if (meta.totalWarnings > 0) conclusion = "neutral";
-
-            await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: "CI Diagnostics (Central)",
-              head_sha: context.payload.workflow_run.head_sha,
-              status: "completed",
-              conclusion,
-              output: {
-                title: "Central CI Diagnostics Report",
-                summary
-              }
-            });
+    uses: ./.github/workflows/ci-diagnostics.yml
+    secrets: inherit
