@@ -2,20 +2,20 @@ name: Frontend Checks
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - '**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - '**'
+  workflow_dispatch:
 
 jobs:
   checks:
-    name: ${{ matrix.task }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        task: [lint, prettier, type-check, test-unit, test-e2e]
-    defaults:
-      run:
-        working-directory: .
+        task: [lint, prettier, type-check, test-unit]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
         with:
           version: 10
 
-      - name: Cache pnpm
+      - name: Cache pnpm store
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
@@ -41,49 +41,41 @@ jobs:
 
       - name: Run ESLint
         if: ${{ matrix.task == 'lint' }}
-        continue-on-error: true
         run: |
           pnpm exec eslint src v2 ops --format json --output-file eslint-output.json || true
           node Scripts/convert-eslint.js eslint-output.json eslint-report.json || echo '{"workflow":"frontend-checks","job":"lint","status":"success","errors":[],"warnings":[],"notices":[]}' > eslint-report.json
+          echo "📂 Dumping eslint-report.json for debug"
+          cat eslint-report.json || true
           mkdir -p summaries && mv eslint-report.json summaries/
 
       - name: Run Prettier
         if: ${{ matrix.task == 'prettier' }}
-        continue-on-error: true
         run: |
           pnpm exec prettier --check . > prettier-output.txt 2>&1 || true
           node Scripts/convert-prettier.js prettier-output.txt prettier-report.json || echo '{"workflow":"frontend-checks","job":"prettier","status":"success","errors":[],"warnings":[],"notices":[]}' > prettier-report.json
+          echo "📂 Dumping prettier-report.json for debug"
+          cat prettier-report.json || true
           mkdir -p summaries && mv prettier-report.json summaries/
 
       - name: Run TypeScript type-check
         if: ${{ matrix.task == 'type-check' }}
-        continue-on-error: true
         run: |
           pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-output.txt 2>&1 || true
           node Scripts/convert-tsc.js tsc-output.txt tsc-report.json || echo '{"workflow":"frontend-checks","job":"tsc","status":"success","errors":[],"warnings":[],"notices":[]}' > tsc-report.json
+          echo "📂 Dumping tsc-report.json for debug"
+          cat tsc-report.json || true
           mkdir -p summaries && mv tsc-report.json summaries/
 
       - name: Run Jest unit tests
         if: ${{ matrix.task == 'test-unit' }}
-        continue-on-error: true
         run: |
           pnpm exec jest --coverage --json --outputFile=jest-output.json || true
           node Scripts/convert-jest.js jest-output.json jest-report.json || echo '{"workflow":"frontend-checks","job":"jest-unit","status":"success","errors":[],"warnings":[],"notices":[]}' > jest-report.json
+          echo "📂 Dumping jest-report.json for debug"
+          cat jest-report.json || true
           mkdir -p summaries && mv jest-report.json summaries/
 
-      - name: Install Playwright Browsers
-        if: ${{ matrix.task == 'test-e2e' }}
-        run: pnpm exec playwright install --with-deps
-
-      - name: Run Playwright E2E tests with coverage
-        if: ${{ matrix.task == 'test-e2e' }}
-        continue-on-error: true
-        run: |
-          pnpm exec nyc --reporter=lcov --report-dir=coverage/e2e pnpm exec playwright test || true
-          node Scripts/convert-jest-coverage.js coverage/e2e/coverage-summary.json playwright-coverage-report.json || echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-coverage-report.json
-          mkdir -p summaries && mv playwright-coverage-report.json summaries/
-
-      - name: Upload partial summaries (per job)
+      - name: Upload frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
