@@ -73,7 +73,7 @@ jobs:
           pnpm exec playwright test 2>&1 | tee playwright-output.txt
           echo $? > exit-code.txt
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
-          node Scripts/convert-playwright.js playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-report.json || echo '{"workflow":"coverage-checks","job":"e2e","status":"success","errors":[],"warnings":[],"notices":[]}' > playwright-report.json
           echo "📂 Dumping playwright-report.json for debug"
           cat playwright-report.json || true
           mkdir -p summaries && mv playwright-report.json summaries/

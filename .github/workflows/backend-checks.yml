@@ -38,7 +38,7 @@ jobs:
             --json-report --json-report-file=pytest-output.json \
             2>&1 | tee pytest-output.txt
           echo $? > exit-code.txt
-          node Scripts/convert-pytest.js pytest-output.txt pytest-output.json pytest-report.json \
+          node Scripts/convert-pytest.cjs pytest-output.txt pytest-output.json pytest-report.json \
             || echo '{"workflow":"backend-checks","job":"pytest","status":"success","errors":[],"warnings":[],"notices":[]}' > pytest-report.json
           mkdir -p summaries && mv pytest-report.json summaries/
 
@@ -55,7 +55,7 @@ jobs:
         continue-on-error: true
         run: |
           flake8 . > flake8-output.txt 2>&1 || true
-          python Scripts/convert_flake8.py flake8-output.txt flake8-report.json || echo '{"workflow":"backend-checks","job":"flake8","status":"success","errors":[],"warnings":[],"notices":[]}' > flake8-report.json
+          node Scripts/convert-flake8.cjs flake8-output.txt flake8-report.json || echo '{"workflow":"backend-checks","job":"flake8","status":"success","errors":[],"warnings":[],"notices":[]}' > flake8-report.json
           mkdir -p summaries && mv flake8-report.json summaries/
 
       - name: Run Black
