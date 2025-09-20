@@ -45,6 +45,11 @@ jobs:
           name: coverage-summaries
           path: ./summaries/coverage
 
+      - name: Debug list summaries
+        run: |
+          echo "📂 Listing summaries directory contents"
+          ls -R ./summaries || true
+
       - name: Aggregate summaries into report
         run: |
           node -e '
@@ -60,6 +65,8 @@ jobs:
           } catch (e) {
             report += "\n⚠️ No summaries directory found.";
           }
+
+          console.log("📂 Found report files:", files);
 
           const expected = ["frontend-summaries","backend-summaries","coverage-summaries"];
 
