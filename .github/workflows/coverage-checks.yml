@@ -146,7 +146,8 @@ jobs:
           mkdir -p summaries
           echo "📥 Collected coverage artifacts:" > summaries/artifact-manifest.txt
           find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
+          find downloaded -name "*report.json" -exec cp {} summaries/ \;
+          find downloaded -name "*cobertura-report.json" -exec cp {} summaries/ \;
           sha256sum summaries/* >> summaries/artifact-manifest.txt
 
       - name: Upload combined coverage summaries
