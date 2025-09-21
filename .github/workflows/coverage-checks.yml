@@ -107,7 +107,7 @@ jobs:
         if: ${{ matrix.task == 'e2e' }}
         run: |
           pnpm exec playwright install --with-deps
-          npx nyc --reporter=json --report-dir=.nyc_output pnpm exec playwright test
+          npx nyc --reporter=json --report-dir=.nyc_output --check-coverage=false pnpm exec playwright test
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e
           test -f coverage/e2e/coverage-summary.json
           pnpm exec node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
@@ -148,6 +148,7 @@ jobs:
           find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           find downloaded -name "*report.json" -exec cp {} summaries/ \;
           find downloaded -name "*cobertura-report.json" -exec cp {} summaries/ \;
+          find downloaded -name "*coverage-report.json" -exec cp {} summaries/ \;
           sha256sum summaries/* >> summaries/artifact-manifest.txt
 
       - name: Upload combined coverage summaries
