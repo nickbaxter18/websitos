@@ -53,7 +53,12 @@ jobs:
         working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          pip install -r ../requirements.txt
+
+      - name: Install e2e dependencies
+        if: ${{ matrix.task == 'e2e' }}
+        working-directory: e2e
+        run: pnpm install || true
 
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
@@ -96,16 +101,17 @@ jobs:
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
+        working-directory: e2e
         run: |
           pnpm exec playwright install --with-deps
           pnpm exec playwright test
-          npx nyc report --reporter=json-summary --report-dir=coverage/e2e
-          test -f coverage/e2e/coverage-summary.json
-          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
-          mkdir -p summaries
-          mv e2e-coverage-report.json summaries/
-          mv coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
-          sha256sum summaries/* > summaries/checksums.txt
+          npx nyc report --reporter=json-summary --report-dir=coverage
+          test -f coverage/coverage-summary.json
+          node ../Scripts/convert-jest-coverage.cjs coverage/coverage-summary.json e2e-coverage-report.json 0
+          mkdir -p ../summaries
+          mv e2e-coverage-report.json ../summaries/
+          mv coverage/coverage-summary.json ../summaries/coverage-e2e-raw.log
+          sha256sum ../summaries/* > ../summaries/checksums.txt
 
       - name: Generate Artifact Manifest
         run: |
