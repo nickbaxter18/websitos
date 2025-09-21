@@ -59,10 +59,11 @@ jobs:
           pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary --coverageDirectory=coverage/frontend
           test -s $FRONTEND_COVERAGE_JSON
           pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $FRONTEND_COVERAGE_JSON frontend-coverage-report.json 0
+          test -s frontend-coverage-report.json
           mkdir -p summaries
           cp frontend-coverage-report.json summaries/ || true
           cp $FRONTEND_COVERAGE_JSON summaries/coverage-frontend-raw.log || true
-          ls -R summaries/
+          ls -lh summaries/
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
@@ -75,12 +76,14 @@ jobs:
           test -s $BACKEND_COVERAGE_JSON
           pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $BACKEND_COVERAGE_XML backend-cobertura-report.json 0
           pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $BACKEND_COVERAGE_JSON backend-coverage-report.json 0
+          test -s backend-cobertura-report.json
+          test -s backend-coverage-report.json
           mkdir -p ../summaries
           cp backend-cobertura-report.json ../summaries/ || true
           cp backend-coverage-report.json ../summaries/ || true
           cp $BACKEND_COVERAGE_XML ../summaries/coverage-backend-raw.xml || true
           cp $BACKEND_COVERAGE_JSON ../summaries/coverage-backend-raw.log || true
-          ls -R ../summaries/
+          ls -lh ../summaries/
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
@@ -88,10 +91,11 @@ jobs:
           pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=backend/coverage
           test -s $BACKEND_NODE_COVERAGE_JSON
           pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $BACKEND_NODE_COVERAGE_JSON backend-node-coverage-report.json 0
+          test -s backend-node-coverage-report.json
           mkdir -p summaries
           cp backend-node-coverage-report.json summaries/ || true
           cp $BACKEND_NODE_COVERAGE_JSON summaries/coverage-backend-node-raw.log || true
-          ls -R summaries/
+          ls -lh summaries/
 
       - name: Build frontend for E2E
         if: ${{ matrix.task == 'e2e' }}
@@ -118,10 +122,11 @@ jobs:
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e
           test -s $E2E_COVERAGE_JSON
           pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $E2E_COVERAGE_JSON e2e-coverage-report.json 0
+          test -s e2e-coverage-report.json
           mkdir -p summaries
           cp e2e-coverage-report.json summaries/ || true
           cp $E2E_COVERAGE_JSON summaries/coverage-e2e-raw.log || true
-          ls -R summaries/
+          ls -lh summaries/
 
       - name: Generate Artifact Manifest
         run: |
@@ -134,7 +139,7 @@ jobs:
         with:
           name: coverage-partial-${{ matrix.task }}
           path: summaries/
-          retention-days: 7
+          retention-days: 14
 
   package-and-upload:
     runs-on: ubuntu-latest
@@ -153,8 +158,8 @@ jobs:
           mkdir -p summaries
           echo "📥 Collected coverage artifacts:" > summaries/artifact-manifest.txt
           find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          cp $(find downloaded -name "*report.json" -o -name "*coverage-report.json" -o -name "*cobertura-report.json" -o -name "coverage-summary.json" -o -name "coverage.xml") summaries/ || true
-          ls -R summaries/
+          cp $(find downloaded -type f ! -empty) summaries/ || true
+          ls -lh summaries/
           sha256sum summaries/* >> summaries/artifact-manifest.txt
 
       - name: Upload combined coverage summaries
@@ -163,4 +168,4 @@ jobs:
         with:
           name: coverage-summaries
           path: summaries/
-          retention-days: 7
+          retention-days: 14
