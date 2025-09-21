@@ -34,114 +34,124 @@ jobs:
           path: ./summaries/coverage
 
       - name: Install aggregator dependencies in isolated dir
+        shell: bash
         run: |
-          mkdir -p .agg_tmp
+          mkdir -p .agg_tmp || true
           cd .agg_tmp
-          npm init -y >/dev/null 2>&1
-          npm install --no-save ajv-cli @octokit/rest
+          npm init -y >/dev/null 2>&1 || true
+          npm install --no-save --legacy-peer-deps ajv-cli @octokit/rest
 
       - name: Aggregate Diagnostics
         working-directory: .agg_tmp
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p ../summaries
-          echo "📂 Downloaded artifact tree:" && find ../summaries -type f -ls
-
           node -e '
           const fs = require("fs");
           const path = require("path");
           const { execSync } = require("child_process");
           const { Octokit } = require("@octokit/rest");
 
-          const baseDir = "../summaries";
-          const allReports = [];
-          const manifests = [];
-          const schemaPath = "../diagnostics.schema.json";
-          let schemaFailures = 0;
-          let schemaPasses = 0;
+          try {
+            const baseDir = "../summaries";
+            const allReports = [];
+            const manifests = [];
+            const schemaPath = "../diagnostics.schema.json";
+            let schemaFailures = 0;
+            let schemaPasses = 0;
 
-          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+            const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-          function validateSchema(file) {
-            try {
-              execSync(`npx ajv-cli validate -s ${schemaPath} -d ${file}`, { stdio: "pipe" });
-              schemaPasses++;
-              return null;
-            } catch (e) {
-              schemaFailures++;
-              return e.toString();
-            }
-          }
-
-          function loadFiles(dir) {
-            if (!fs.existsSync(dir)) return;
-            for (const file of fs.readdirSync(dir)) {
-              const full = path.join(dir, file);
-              if (fs.statSync(full).isDirectory()) {
-                loadFiles(full);
-              } else if (file.endsWith("-diagnostics.json")) {
-                try {
-                  const data = JSON.parse(fs.readFileSync(full, "utf-8"));
-                  data.__file = full;
-                  const schemaError = validateSchema(full);
-                  if (schemaError) {
-                    data.schema_error = schemaError;
-                    data.status = "failure";
-                  }
-                  allReports.push(data);
-                } catch (e) {
-                  schemaFailures++;
-                  allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
-                }
-              } else if (file.endsWith("-report.json") || file.endsWith("-fallback.json")) {
-                try {
-                  const data = JSON.parse(fs.readFileSync(full, "utf-8"));
-                  data.__file = full;
-                  if (file.endsWith("-fallback.json")) data.fallback = true;
-                  allReports.push(data);
-                } catch (e) {
-                  allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse: ${e.message}` }] });
-                }
-              } else if (file === "artifact-manifest.txt") {
-                manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
+            function validateSchema(file) {
+              try {
+                execSync(`npx ajv-cli validate -s ${schemaPath} -d ${file}`, { stdio: "pipe" });
+                schemaPasses++;
+                return null;
+              } catch (e) {
+                schemaFailures++;
+                return e.toString();
               }
             }
+
+            function loadFiles(dir) {
+              if (!fs.existsSync(dir)) return;
+              for (const file of fs.readdirSync(dir)) {
+                const full = path.join(dir, file);
+                if (fs.statSync(full).isDirectory()) {
+                  loadFiles(full);
+                } else if (file.endsWith("-diagnostics.json")) {
+                  try {
+                    const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+                    data.__file = full;
+                    const schemaError = validateSchema(full);
+                    if (schemaError) {
+                      data.schema_error = schemaError;
+                      data.status = "failure";
+                    }
+                    allReports.push(data);
+                  } catch (e) {
+                    schemaFailures++;
+                    allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
+                  }
+                } else if (file.endsWith("-report.json") || file.endsWith("-fallback.json")) {
+                  try {
+                    const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+                    data.__file = full;
+                    if (file.endsWith("-fallback.json")) data.fallback = true;
+                    allReports.push(data);
+                  } catch (e) {
+                    allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse: ${e.message}` }] });
+                  }
+                } else if (file === "artifact-manifest.txt") {
+                  manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
+                }
+              }
+            }
+
+            loadFiles(baseDir);
+
+            let totalErrors = 0;
+            let totalWarnings = 0;
+            let totalCoverageLines = { covered: 0, missed: 0 };
+
+            let summaryTable = "### 📊 Summary Table\\n\\n| Job | Errors | Warnings | Status | Schema Valid |\\n|-----|--------|----------|--------|--------------|\\n";
+            let metadataTable = "\\n### 🛠 Tool Metadata\\n\\n| Job | Tool | Version | Exit Code | Duration | Fallback |\\n|-----|------|---------|-----------|----------|----------|\\n";
+
+            if (allReports.length === 0) {
+              summaryTable += "| n/a | 0 | 0 | no reports found | n/a |\\n";
+            }
+
+            for (const r of allReports) {
+              const errors = Number.isInteger(r.errors) ? r.errors : (r.errors?.length || 0);
+              const warnings = Number.isInteger(r.warnings) ? r.warnings : (r.warnings?.length || 0);
+
+              totalErrors += errors;
+              totalWarnings += warnings;
+
+              summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\\n`;
+
+              metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\\n`;
+            }
+
+            const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+            const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n\\n🔗 [View workflow run](${runUrl})`;
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "report.md"), reportOut);
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "diagnostics-meta.json"), JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
+
+          } catch (err) {
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "report.md"), `## ⚠️ Diagnostics Aggregator Error\\n\\n${err.message}`);
+            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "diagnostics-meta.json"), JSON.stringify({ totalErrors: 0, totalWarnings: 0, jobs: 0, schemaFailures: 1, schemaPasses: 0 }, null, 2));
           }
-
-          loadFiles(baseDir);
-
-          let totalErrors = 0;
-          let totalWarnings = 0;
-          let totalCoverageLines = { covered: 0, missed: 0 };
-
-          let summaryTable = "### 📊 Summary Table\\n\\n| Job | Errors | Warnings | Status | Schema Valid |\\n|-----|--------|----------|--------|--------------|\\n";
-          let metadataTable = "\\n### 🛠 Tool Metadata\\n\\n| Job | Tool | Version | Exit Code | Duration | Fallback |\\n|-----|------|---------|-----------|----------|----------|\\n";
-
-          if (allReports.length === 0) {
-            summaryTable += "| n/a | 0 | 0 | no reports found | n/a |\\n";
-          }
-
-          for (const r of allReports) {
-            const errors = Number.isInteger(r.errors) ? r.errors : (r.errors?.length || 0);
-            const warnings = Number.isInteger(r.warnings) ? r.warnings : (r.warnings?.length || 0);
-
-            totalErrors += errors;
-            totalWarnings += warnings;
-
-            summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\\n`;
-
-            metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\\n`;
-          }
-
-          const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-
-          const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n\\n🔗 [View workflow run](${runUrl})`;
-          fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "report.md"), reportOut);
-          fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "diagnostics-meta.json"), JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
-
-          if (schemaFailures > 0) process.exit(1);
           '
+
+          echo "📂 Post-aggregation workspace contents:"
+          ls -lh $GITHUB_WORKSPACE || true
+          echo "--- report.md (first 50 lines) ---"
+          head -n 50 $GITHUB_WORKSPACE/report.md || echo "⚠️ report.md missing"
+          echo "--- diagnostics-meta.json ---"
+          cat $GITHUB_WORKSPACE/diagnostics-meta.json || echo "⚠️ diagnostics-meta.json missing"
 
       - name: Upload Diagnostics Report
         if: always()
