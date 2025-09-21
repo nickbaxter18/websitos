@@ -100,7 +100,7 @@
     "vite": "7.1.5",
     "vite-plugin-istanbul": "5.0.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "xmldom": "^0.8.10"
+    "xmldom": "^0.6.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
