@@ -53,8 +53,8 @@ jobs:
           test -f coverage/frontend/coverage-summary.json
           pnpm exec node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json 0
           mkdir -p summaries
-          mv frontend-coverage-report.json summaries/
-          mv coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log
+          cp frontend-coverage-report.json summaries/
+          cp coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log
           sha256sum summaries/* > summaries/checksums.txt
 
       - name: Run backend coverage (Pytest)
@@ -71,8 +71,8 @@ jobs:
           mkdir -p ../summaries
           cp $GITHUB_WORKSPACE/backend-cobertura-report.json ../summaries/
           cp $GITHUB_WORKSPACE/backend-coverage-report.json ../summaries/
-          mv coverage/coverage.xml ../summaries/coverage-backend-raw.xml
-          mv coverage/coverage-summary.json ../summaries/coverage-backend-raw.log
+          cp coverage/coverage.xml ../summaries/coverage-backend-raw.xml
+          cp coverage/coverage-summary.json ../summaries/coverage-backend-raw.log
           sha256sum ../summaries/* > ../summaries/checksums.txt
 
       - name: Run backend-node coverage (Jest)
@@ -82,8 +82,8 @@ jobs:
           test -f backend/coverage/coverage-summary.json
           pnpm exec node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json 0
           mkdir -p summaries
-          mv backend-node-coverage-report.json summaries/
-          mv backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
+          cp backend-node-coverage-report.json summaries/
+          cp backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
           sha256sum summaries/* > summaries/checksums.txt
 
       - name: Build frontend for E2E
@@ -112,8 +112,8 @@ jobs:
           test -f coverage/e2e/coverage-summary.json
           pnpm exec node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
           mkdir -p summaries
-          mv e2e-coverage-report.json summaries/
-          mv coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
+          cp e2e-coverage-report.json summaries/
+          cp coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
           sha256sum summaries/* > summaries/checksums.txt
 
       - name: Generate Artifact Manifest
