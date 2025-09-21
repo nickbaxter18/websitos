@@ -29,6 +29,8 @@ jobs:
           const path = require("path");
           const baseDir = "summaries";
           const allReports = [];
+          const manifests = [];
+
           function loadFiles(dir) {
             if (!fs.existsSync(dir)) return;
             for (const file of fs.readdirSync(dir)) {
@@ -43,19 +45,34 @@ jobs:
                 } catch (e) {
                   allReports.push({ workflow: "diagnostics", job: file, status: "failure", errors: [{ message: `Failed to parse: ${e.message}` }], warnings: [], notices: [] });
                 }
+              } else if (file.endsWith("artifact-manifest.txt")) {
+                manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
               }
             }
           }
+
           loadFiles(baseDir);
+
           let totalErrors = 0, totalWarnings = 0;
           allReports.forEach(r => {
             totalErrors += r.errors?.length || 0;
             totalWarnings += r.warnings?.length || 0;
           });
+
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          const summary = allReports.length === 0 ? "⚠️ No reports found" :
+          let summary = allReports.length === 0 ? "⚠️ No reports found" :
             allReports.map(r => `${r.workflow}/${r.job}: ${r.status} (E:${r.errors?.length||0} W:${r.warnings?.length||0})`).join("\n");
-          fs.writeFileSync("report.md", `## ⚠️ CI Diagnostics Report\n\n${summary}\n\n🔗 [View run](${runUrl})`);
+
+          let manifestSection = "\n### 📦 Artifact Manifests\n";
+          if (manifests.length > 0) {
+            manifests.forEach(m => {
+              manifestSection += `\n**${m.path}:**\n\n\u0060\u0060\u0060\n${m.content}\n\u0060\u0060\u0060\n`;
+            });
+          } else {
+            manifestSection += "\n_No artifact manifests found._\n";
+          }
+
+          fs.writeFileSync("report.md", `## ⚠️ CI Diagnostics Report\n\n${summary}\n\n🔗 [View run](${runUrl})${manifestSection}`);
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, reports: allReports.length }, null, 2));
           '
 
