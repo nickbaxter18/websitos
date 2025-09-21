@@ -38,8 +38,6 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
 
-      # (frontend job steps unchanged)
-
       - name: Upload partial frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -49,6 +47,7 @@ jobs:
           retention-days: 2
 
   package-frontend:
+    if: always()
     runs-on: ubuntu-latest
     needs: frontend-checks
     timeout-minutes: 5
@@ -62,19 +61,12 @@ jobs:
           path: ./downloaded
           merge-multiple: true
 
-      - name: Debug downloaded artifacts
-        run: |
-          echo "📂 Downloaded artifacts for frontend packaging:"
-          find downloaded || true
-
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
           find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
-          find downloaded -type f -iname "artifact-manifest.txt" -exec cp {} summaries/ \; || true
+          touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
-          echo "📦 Packaged frontend summaries:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
 
       - name: Upload combined frontend summaries
         if: always()
@@ -84,9 +76,6 @@ jobs:
           path: summaries/
           retention-days: 2
 
-  # ---------------------------
-  # Backend Jobs
-  # ---------------------------
   backend-checks:
     runs-on: ubuntu-latest
     strategy:
@@ -102,8 +91,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest-json-report flake8 mypy black
 
-      # (backend job steps unchanged)
-
       - name: Upload partial backend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -113,33 +100,24 @@ jobs:
           retention-days: 2
 
   package-backend:
+    if: always()
     runs-on: ubuntu-latest
     needs: backend-checks
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-
       - name: Download all backend job artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: backend-partial-*
           path: ./downloaded
           merge-multiple: true
-
-      - name: Debug downloaded artifacts
-        run: |
-          echo "📂 Downloaded artifacts for backend packaging:"
-          find downloaded || true
-
       - name: Collect backend summaries
         run: |
           mkdir -p summaries
           find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
-          find downloaded -type f -iname "artifact-manifest.txt" -exec cp {} summaries/ \; || true
+          touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
-          echo "📦 Packaged backend summaries:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-
       - name: Upload combined backend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -148,15 +126,12 @@ jobs:
           path: summaries/
           retention-days: 2
 
-  # ---------------------------
-  # Coverage Jobs
-  # ---------------------------
   coverage-checks:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        task: [frontend, backend, backend-node, e2e]
+    matrix:
+      task: [frontend, backend, backend-node, e2e]
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -175,8 +150,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      # (coverage job steps unchanged)
-
       - name: Upload partial coverage summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -186,33 +159,24 @@ jobs:
           retention-days: 2
 
   package-coverage:
+    if: always()
     runs-on: ubuntu-latest
     needs: coverage-checks
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-
       - name: Download all coverage job artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: coverage-partial-*
           path: ./downloaded
           merge-multiple: true
-
-      - name: Debug downloaded artifacts
-        run: |
-          echo "📂 Downloaded artifacts for coverage packaging:"
-          find downloaded || true
-
       - name: Collect coverage summaries
         run: |
           mkdir -p summaries
           find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
-          find downloaded -type f -iname "artifact-manifest.txt" -exec cp {} summaries/ \; || true
+          touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
-          echo "📦 Packaged coverage summaries:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-
       - name: Upload combined coverage summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -221,11 +185,8 @@ jobs:
           path: summaries/
           retention-days: 2
 
-  # ---------------------------
-  # Central Diagnostics
-  # ---------------------------
   diagnostics:
     if: always()
     needs: [package-frontend, package-backend, package-coverage]
-    uses: ./.github/workflows/ci-diagnostics.yml@main
+    uses: ./.github/workflows/ci-diagnostics.yml
     secrets: inherit

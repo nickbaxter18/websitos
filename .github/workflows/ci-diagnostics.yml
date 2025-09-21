@@ -2,15 +2,14 @@ name: CI Diagnostics
 
 on:
   workflow_call:
+    secrets:
+      diagnostics_token:
+        required: true
 
 permissions:
   checks: write
   contents: read
   actions: read
-
-concurrency:
-  group: ci-diagnostics-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   run-diagnostics:
@@ -18,8 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Debug summaries before aggregation
         run: |
@@ -29,15 +27,11 @@ jobs:
       - name: Aggregate Diagnostics
         run: |
           mkdir -p summaries
-
           node -e '
           const fs = require("fs");
           const path = require("path");
-
           const baseDir = "summaries";
           const allReports = [];
-          const manifests = [];
-
           function loadFiles(dir) {
             if (!fs.existsSync(dir)) return;
             for (const file of fs.readdirSync(dir)) {
@@ -52,62 +46,20 @@ jobs:
                 } catch (e) {
                   allReports.push({ workflow: "diagnostics", job: file, status: "failure", errors: [{ message: `Failed to parse: ${e.message}` }], warnings: [], notices: [] });
                 }
-              } else if (file === "artifact-manifest.txt") {
-                manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
               }
             }
           }
-
           loadFiles(baseDir);
-
-          // Sort reports for consistent output
-          allReports.sort((a, b) => `${a.workflow}/${a.job}`.localeCompare(`${b.workflow}/${b.job}`));
-
-          let totalErrors = 0;
-          let totalWarnings = 0;
-
-          let summaryTable = "### 📊 Summary Table\n\n| Workflow/Job | Errors | Warnings | Status |\n|--------------|--------|----------|--------|\n";
-          let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Exit Code | File Size | SHA256 | Timestamp |\n|-----|-----------|-----------|--------|-----------|\n";
-
-          if (allReports.length === 0) {
-            summaryTable += "| n/a | 0 | 0 | no reports found |\n";
-          }
-
-          for (const r of allReports) {
+          let totalErrors = 0, totalWarnings = 0;
+          allReports.forEach(r => {
             totalErrors += r.errors?.length || 0;
             totalWarnings += r.warnings?.length || 0;
-
-            summaryTable += `| ${r.workflow}/${r.job} | ${r.errors?.length || 0} | ${r.warnings?.length || 0} | ${r.status || "?"} |\n`;
-
-            const exitNotice = (r.notices || []).find(n => n.message.includes("exit code"));
-            const sizeNotice = (r.notices || []).find(n => n.message.includes("Input size"));
-            const checksumNotice = (r.notices || []).find(n => n.message.includes("sha256"));
-            const timestampNotice = (r.notices || []).find(n => n.message.includes("Timestamp"));
-
-            metadataTable += `| ${r.workflow}/${r.job} | ${exitNotice ? exitNotice.message.split(": ")[1] : "?"} | ${sizeNotice ? sizeNotice.message.split(",")[0].split(": ")[1] : "?"} | ${checksumNotice ? checksumNotice.message.split("sha256: ")[1] : "?"} | ${timestampNotice ? timestampNotice.message.split(": ")[1] : "?"} |\n`;
-          }
-
-          let manifestSection = "\n### 📦 Artifact Manifests\n";
-          if (manifests.length > 0) {
-            manifests.forEach(m => {
-              manifestSection += `\n**${m.path}:**\n\n\`\`\`\n${m.content}\n\`\`\`\n`;
-            });
-          } else {
-            manifestSection += "\n_No artifact manifests found._\n";
-          }
-
-          let conclusion = "success";
-          if (allReports.length === 0) conclusion = "neutral"; // special case: no reports
-          else if (totalErrors > 0) conclusion = "failure";
-          else if (totalWarnings > 0) conclusion = "neutral";
-
+          });
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-
-          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${manifestSection}\n\n🔗 [View workflow run](${runUrl})`;
-          fs.writeFileSync("report.md", reportOut);
+          const summary = allReports.length === 0 ? "⚠️ No reports found" :
+            allReports.map(r => `${r.workflow}/${r.job}: ${r.status} (E:${r.errors?.length||0} W:${r.warnings?.length||0})`).join("\n");
+          fs.writeFileSync("report.md", `## ⚠️ CI Diagnostics Report\n\n${summary}\n\n🔗 [View run](${runUrl})`);
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, reports: allReports.length }, null, 2));
-
-          console.log(`✅ Diagnostics complete: ${totalErrors} errors, ${totalWarnings} warnings, ${allReports.length} reports`);
           '
 
       - name: Upload Diagnostics Report
@@ -123,17 +75,15 @@ jobs:
         if: always()
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.diagnostics_token }}
           script: |
             const fs = require('fs');
             const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
             const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0, reports: 0 };
-
             let conclusion = "success";
             if (meta.reports === 0) conclusion = "neutral";
             else if (meta.totalErrors > 0) conclusion = "failure";
             else if (meta.totalWarnings > 0) conclusion = "neutral";
-
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
