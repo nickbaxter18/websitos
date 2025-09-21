@@ -69,8 +69,8 @@ jobs:
           pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $GITHUB_WORKSPACE/backend/coverage/coverage.xml backend-cobertura-report.json 0
           pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $GITHUB_WORKSPACE/backend/coverage/coverage-summary.json backend-coverage-report.json 0
           mkdir -p ../summaries
-          mv backend-cobertura-report.json ../summaries/
-          mv backend-coverage-report.json ../summaries/
+          mv $GITHUB_WORKSPACE/backend-cobertura-report.json ../summaries/
+          mv $GITHUB_WORKSPACE/backend-coverage-report.json ../summaries/
           mv coverage/coverage.xml ../summaries/coverage-backend-raw.xml
           mv coverage/coverage-summary.json ../summaries/coverage-backend-raw.log
           sha256sum ../summaries/* > ../summaries/checksums.txt
