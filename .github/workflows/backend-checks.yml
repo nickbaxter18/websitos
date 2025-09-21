@@ -43,7 +43,6 @@ jobs:
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Pytest..."
           pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json || true
           pytest_exit=$?
           end=$(date +%s)
@@ -51,6 +50,7 @@ jobs:
 
           sha256=$(sha256sum pytest-output.json | awk '{print $1}' || echo "")
           deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(jq '.summary.failed' pytest-output.json 2>/dev/null || echo 0)
           warnings=$(jq '.summary.warnings' pytest-output.json 2>/dev/null || echo 0)
@@ -90,18 +90,11 @@ jobs:
           }
           EOF
 
-          cp pytest-output.json summaries/pytest-output.json || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/backend-pytest-diagnostics.json | jq .
-
       - name: Run Mypy
         if: ${{ matrix.task == 'mypy' }}
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Mypy..."
           mypy . --show-column-numbers --show-error-codes --no-pretty > mypy-output.txt 2>&1 || true
           mypy_exit=$?
           end=$(date +%s)
@@ -109,6 +102,7 @@ jobs:
 
           sha256=$(sha256sum mypy-output.txt | awk '{print $1}' || echo "")
           deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(grep -c "error:" mypy-output.txt || echo 0)
           warnings=$(grep -c "note:" mypy-output.txt || echo 0)
@@ -148,18 +142,11 @@ jobs:
           }
           EOF
 
-          cp mypy-output.txt summaries/mypy-output.txt || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/backend-mypy-diagnostics.json | jq .
-
       - name: Run Flake8
         if: ${{ matrix.task == 'flake8' }}
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Flake8..."
           flake8 --format=json --output-file=flake8-output.json || true
           flake8_exit=$?
           end=$(date +%s)
@@ -167,6 +154,7 @@ jobs:
 
           sha256=$(sha256sum flake8-output.json | awk '{print $1}' || echo "")
           deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(jq 'map(. | length) | add' flake8-output.json 2>/dev/null || echo 0)
           warnings=0
@@ -206,18 +194,11 @@ jobs:
           }
           EOF
 
-          cp flake8-output.json summaries/flake8-output.json || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/backend-flake8-diagnostics.json | jq .
-
       - name: Run Black
         if: ${{ matrix.task == 'black' }}
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Black..."
           black --check . > black-output.txt 2>&1 || true
           black_exit=$?
           end=$(date +%s)
@@ -225,6 +206,7 @@ jobs:
 
           sha256=$(sha256sum black-output.txt | awk '{print $1}' || echo "")
           deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(grep -c "would reformat" black-output.txt || echo 0)
           warnings=0
@@ -263,9 +245,3 @@ jobs:
             }
           }
           EOF
-
-          cp black-output.txt summaries/black-output.txt || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/backend-black-diagnostics.json | jq .

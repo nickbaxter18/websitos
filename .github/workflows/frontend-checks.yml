@@ -52,7 +52,6 @@ jobs:
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running ESLint..."
           pnpm exec eslint src v2 ops --format json -o eslint-output.json || true
           eslint_exit=$?
           end=$(date +%s)
@@ -60,6 +59,7 @@ jobs:
 
           sha256=$(sha256sum eslint-output.json | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(jq '[.[] | .messages[] | select(.severity==2)] | length' eslint-output.json 2>/dev/null || echo 0)
           warnings=$(jq '[.[] | .messages[] | select(.severity==1)] | length' eslint-output.json 2>/dev/null || echo 0)
@@ -99,18 +99,11 @@ jobs:
           }
           EOF
 
-          cp eslint-output.json summaries/eslint-output.json || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/frontend-eslint-diagnostics.json | jq .
-
       - name: Run Prettier
         if: ${{ matrix.task == 'prettier' }}
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Prettier check..."
           pnpm exec prettier --check "**/*.{js,ts,tsx,json,css,md}" > prettier-output.txt 2>&1 || true
           prettier_exit=$?
           end=$(date +%s)
@@ -118,6 +111,7 @@ jobs:
 
           sha256=$(sha256sum prettier-output.txt | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(grep -c "Code style issues found" prettier-output.txt || echo 0)
           warnings=0
@@ -157,18 +151,11 @@ jobs:
           }
           EOF
 
-          cp prettier-output.txt summaries/prettier-output.txt || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/frontend-prettier-diagnostics.json | jq .
-
       - name: Run TypeScript type-check
         if: ${{ matrix.task == 'type-check' }}
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running TypeScript type-check..."
           pnpm exec tsc --noEmit > tsc-output.txt 2>&1 || true
           tsc_exit=$?
           end=$(date +%s)
@@ -176,6 +163,7 @@ jobs:
 
           sha256=$(sha256sum tsc-output.txt | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(grep -c "error TS" tsc-output.txt || echo 0)
           warnings=$(grep -c "warning TS" tsc-output.txt || echo 0)
@@ -215,18 +203,11 @@ jobs:
           }
           EOF
 
-          cp tsc-output.txt summaries/tsc-output.txt || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/frontend-tsc-diagnostics.json | jq .
-
       - name: Run Jest unit tests
         if: ${{ matrix.task == 'test-unit' }}
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Jest unit tests..."
           pnpm exec jest --json --outputFile=jest-output.json || true
           jest_exit=$?
           end=$(date +%s)
@@ -234,6 +215,7 @@ jobs:
 
           sha256=$(sha256sum jest-output.json | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(jq '.numFailedTests' jest-output.json 2>/dev/null || echo 0)
           warnings=0
@@ -273,18 +255,11 @@ jobs:
           }
           EOF
 
-          cp jest-output.json summaries/jest-output.json || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/frontend-jest-diagnostics.json | jq .
-
       - name: Run Playwright E2E
         if: ${{ matrix.task == 'playwright-e2e' }}
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Playwright E2E tests..."
           pnpm exec playwright install --with-deps
           pnpm exec playwright test --reporter=json > playwright-output.json || true
           pw_exit=$?
@@ -293,6 +268,7 @@ jobs:
 
           sha256=$(sha256sum playwright-output.json | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           errors=$(jq '.suites[].specs[] | map(select(.ok==false)) | length' playwright-output.json 2>/dev/null || echo 0)
           warnings=0
@@ -331,9 +307,3 @@ jobs:
             }
           }
           EOF
-
-          cp playwright-output.json summaries/playwright-output.json || true
-
-          echo "📂 Summaries:"
-          ls -lh summaries/
-          cat summaries/frontend-playwright-diagnostics.json | jq .
