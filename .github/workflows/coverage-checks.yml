@@ -86,6 +86,10 @@ jobs:
           mv backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
           sha256sum summaries/* > summaries/checksums.txt
 
+      - name: Build frontend for E2E
+        if: ${{ matrix.task == 'e2e' }}
+        run: pnpm exec vite build
+
       - name: Start preview server
         if: ${{ matrix.task == 'e2e' }}
         run: |
