@@ -15,9 +15,6 @@ permissions:
   actions: read
 
 jobs:
-  # ---------------------------
-  # Frontend Jobs
-  # ---------------------------
   frontend-checks:
     runs-on: ubuntu-latest
     strategy:
@@ -37,7 +34,6 @@ jobs:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-
       - name: Upload partial frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -53,21 +49,18 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-
       - name: Download all frontend job artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: frontend-partial-*
           path: ./downloaded
           merge-multiple: true
-
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
           find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
           touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
-
       - name: Upload combined frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -90,7 +83,6 @@ jobs:
       - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest-json-report flake8 mypy black
-
       - name: Upload partial backend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -130,8 +122,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-    matrix:
-      task: [frontend, backend, backend-node, e2e]
+      matrix:
+        task: [frontend, backend, backend-node, e2e]
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -149,7 +141,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Upload partial coverage summaries
         if: always()
         uses: actions/upload-artifact@v4
