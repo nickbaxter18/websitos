@@ -227,35 +227,5 @@ jobs:
   diagnostics:
     if: always()
     needs: [package-frontend, package-backend, package-coverage]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download frontend partials
-        uses: actions/download-artifact@v4
-        with:
-          pattern: frontend-partial-*
-          path: ./summaries/frontend
-          merge-multiple: true
-
-      - name: Download backend partials
-        uses: actions/download-artifact@v4
-        with:
-          pattern: backend-partial-*
-          path: ./summaries/backend
-          merge-multiple: true
-
-      - name: Download coverage partials
-        uses: actions/download-artifact@v4
-        with:
-          pattern: coverage-partial-*
-          path: ./summaries/coverage
-          merge-multiple: true
-
-      - name: Debug downloaded artifacts
-        run: |
-          echo "📂 Listing summaries directory contents"
-          find summaries -type f -maxdepth 3 || true
-
-      - name: Run Diagnostics Workflow
-        uses: ./.github/workflows/ci-diagnostics.yml
+    uses: ./.github/workflows/ci-diagnostics.yml@main
+    secrets: inherit
