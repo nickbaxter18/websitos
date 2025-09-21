@@ -92,7 +92,14 @@ jobs:
         if: ${{ matrix.task == 'e2e' }}
         run: |
           pnpm exec vite preview --port=5173 &
-          sleep 5
+          for i in {1..10}; do
+            if curl -sSf http://localhost:5173 >/dev/null; then
+              echo "Preview server is up";
+              break;
+            fi;
+            echo "Waiting for preview server...";
+            sleep 3;
+          done
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
