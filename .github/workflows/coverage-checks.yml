@@ -66,8 +66,8 @@ jobs:
             --cov-report=json:coverage/coverage-summary.json
           test -f coverage/coverage.xml
           test -f coverage/coverage-summary.json
-          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs coverage/coverage.xml backend-cobertura-report.json 0
-          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs coverage/coverage-summary.json backend-coverage-report.json 0
+          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $GITHUB_WORKSPACE/backend/coverage/coverage.xml backend-cobertura-report.json 0
+          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $GITHUB_WORKSPACE/backend/coverage/coverage-summary.json backend-coverage-report.json 0
           mkdir -p ../summaries
           mv backend-cobertura-report.json backend-coverage-report.json ../summaries/
           mv coverage/coverage.xml ../summaries/coverage-backend-raw.xml
