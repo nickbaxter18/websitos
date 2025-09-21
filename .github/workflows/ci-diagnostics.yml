@@ -33,9 +33,12 @@ jobs:
           name: coverage-summaries
           path: ./summaries/coverage
 
-      - name: Install aggregator dependencies
+      - name: Install aggregator dependencies in isolated dir
         run: |
-          npm install --no-save ajv-cli @octokit/rest
+          mkdir -p .agg_tmp
+          cd .agg_tmp
+          npm init -y >/dev/null 2>&1
+          npm install ajv-cli @octokit/rest
 
       - name: Aggregate Diagnostics
         env:
@@ -44,16 +47,17 @@ jobs:
           mkdir -p summaries
           echo "📂 Downloaded artifact tree:" && find summaries -type f -ls
 
+          cd .agg_tmp
           node -e '
           const fs = require("fs");
           const path = require("path");
           const { execSync } = require("child_process");
           const { Octokit } = require("@octokit/rest");
 
-          const baseDir = "summaries";
+          const baseDir = "../summaries";
           const allReports = [];
           const manifests = [];
-          const schemaPath = "diagnostics.schema.json";
+          const schemaPath = "../diagnostics.schema.json";
           let schemaFailures = 0;
           let schemaPasses = 0;
 
@@ -133,8 +137,8 @@ jobs:
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
           const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n\\n🔗 [View workflow run](${runUrl})`;
-          fs.writeFileSync("report.md", reportOut);
-          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
+          fs.writeFileSync("../report.md", reportOut);
+          fs.writeFileSync("../diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
 
           if (schemaFailures > 0) process.exit(1);
           '
