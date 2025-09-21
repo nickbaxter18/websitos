@@ -38,48 +38,61 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install frontend dependencies
+        if: ${{ matrix.task == 'frontend' }}
+        working-directory: frontend
+        run: pnpm install
+
+      - name: Install backend-node dependencies
+        if: ${{ matrix.task == 'backend-node' }}
+        working-directory: backend
+        run: pnpm install
+
       - name: Install backend test dependencies
         if: ${{ matrix.task == 'backend' }}
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements-dev.txt
-          pip install pytest pytest-cov
+          pip install -r requirements-dev.txt
 
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
+        working-directory: frontend
         run: |
           pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary
-          test -f coverage/frontend/coverage-summary.json
-          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json 0
-          mkdir -p summaries
-          mv frontend-coverage-report.json summaries/
-          mv coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log
-          sha256sum summaries/* > summaries/checksums.txt
+          test -f coverage/coverage-summary.json
+          node ../Scripts/convert-jest-coverage.cjs coverage/coverage-summary.json frontend-coverage-report.json 0
+          mkdir -p ../summaries
+          mv frontend-coverage-report.json ../summaries/
+          mv coverage/coverage-summary.json ../summaries/coverage-frontend-raw.log
+          sha256sum ../summaries/* > ../summaries/checksums.txt
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
+        working-directory: backend
         run: |
-          pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json
-          test -f coverage/backend/coverage.xml
-          test -f coverage/backend/coverage-summary.json
-          node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json 0
-          node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json 0
-          mkdir -p summaries
-          mv backend-cobertura-report.json backend-coverage-report.json summaries/
-          mv coverage/backend/coverage.xml summaries/coverage-backend-raw.xml
-          mv coverage/backend/coverage-summary.json summaries/coverage-backend-raw.log
-          sha256sum summaries/* > summaries/checksums.txt
+          pytest tests --maxfail=1 --disable-warnings -q --cov=. --cov-branch --cov-report=xml:coverage/coverage.xml --cov-report=json:coverage/coverage-summary.json
+          test -f coverage/coverage.xml
+          test -f coverage/coverage-summary.json
+          node ../Scripts/convert-cobertura.cjs coverage/coverage.xml backend-cobertura-report.json 0
+          node ../Scripts/convert-pytest-coverage.cjs coverage/coverage-summary.json backend-coverage-report.json 0
+          mkdir -p ../summaries
+          mv backend-cobertura-report.json backend-coverage-report.json ../summaries/
+          mv coverage/coverage.xml ../summaries/coverage-backend-raw.xml
+          mv coverage/coverage-summary.json ../summaries/coverage-backend-raw.log
+          sha256sum ../summaries/* > ../summaries/checksums.txt
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
+        working-directory: backend
         run: |
-          cd backend && pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage
-          test -f backend/coverage/coverage-summary.json
-          node ../Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json 0
-          mkdir -p summaries
-          mv backend-node-coverage-report.json summaries/
-          mv backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
-          sha256sum summaries/* > summaries/checksums.txt
+          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage
+          test -f coverage/coverage-summary.json
+          node ../Scripts/convert-jest-coverage.cjs coverage/coverage-summary.json backend-node-coverage-report.json 0
+          mkdir -p ../summaries
+          mv backend-node-coverage-report.json ../summaries/
+          mv coverage/coverage-summary.json ../summaries/coverage-backend-node-raw.log
+          sha256sum ../summaries/* > ../summaries/checksums.txt
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
