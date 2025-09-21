@@ -85,7 +85,7 @@ jobs:
         with:
           name: frontend-partial-${{ matrix.task }}
           path: summaries/
-          retention-days: 2
+          retention-days: 7
 
   package-frontend:
     if: always()
@@ -102,7 +102,7 @@ jobs:
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
-          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          find downloaded -type f -exec cp {} summaries/ \; || true
           sha256sum summaries/* > summaries/checksums.txt || true
           date +%s > summaries/timestamp.txt
       - name: Upload combined frontend summaries
@@ -111,6 +111,7 @@ jobs:
         with:
           name: frontend-summaries
           path: summaries/
+          retention-days: 7
 
   # ---------------------------
   # Backend Checks
@@ -168,7 +169,7 @@ jobs:
         with:
           name: backend-partial-${{ matrix.task }}
           path: summaries/
-          retention-days: 2
+          retention-days: 7
 
   package-backend:
     if: always()
@@ -185,7 +186,7 @@ jobs:
       - name: Collect backend summaries
         run: |
           mkdir -p summaries
-          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          find downloaded -type f -exec cp {} summaries/ \; || true
           sha256sum summaries/* > summaries/checksums.txt || true
           date +%s > summaries/timestamp.txt
       - name: Upload combined backend summaries
@@ -194,6 +195,7 @@ jobs:
         with:
           name: backend-summaries
           path: summaries/
+          retention-days: 7
 
   # ---------------------------
   # Coverage Checks
@@ -229,6 +231,11 @@ jobs:
           node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json || true
           mkdir -p summaries
           mv frontend-coverage-report.json summaries/
+      - name: Debug coverage files (frontend)
+        if: always()
+        run: |
+          echo "📂 Checking coverage directory for frontend"
+          ls -R coverage || echo "⚠️ No coverage directory found"
 
       - name: Run Backend Coverage
         if: ${{ matrix.task == 'backend' }}
@@ -239,6 +246,11 @@ jobs:
           mkdir -p summaries
           mv backend-cobertura-report.json summaries/
           mv backend-coverage-report.json summaries/
+      - name: Debug coverage files (backend)
+        if: always()
+        run: |
+          echo "📂 Checking coverage directory for backend"
+          ls -R coverage || echo "⚠️ No coverage directory found"
 
       - name: Run Backend-Node Coverage
         if: ${{ matrix.task == 'backend-node' }}
@@ -249,6 +261,11 @@ jobs:
           node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json || true
           mkdir -p summaries
           mv backend-node-coverage-report.json summaries/
+      - name: Debug coverage files (backend-node)
+        if: always()
+        run: |
+          echo "📂 Checking coverage directory for backend-node"
+          ls -R backend/coverage || echo "⚠️ No backend/coverage directory found"
 
       - name: Run E2E Coverage
         if: ${{ matrix.task == 'e2e' }}
@@ -259,6 +276,11 @@ jobs:
           node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json || true
           mkdir -p summaries
           mv e2e-coverage-report.json summaries/
+      - name: Debug coverage files (e2e)
+        if: always()
+        run: |
+          echo "📂 Checking coverage directory for e2e"
+          ls -R coverage/e2e || echo "⚠️ No coverage/e2e directory found"
 
       - name: Upload partial coverage summaries
         if: always()
@@ -266,7 +288,7 @@ jobs:
         with:
           name: coverage-partial-${{ matrix.task }}
           path: summaries/
-          retention-days: 2
+          retention-days: 7
 
   package-coverage:
     if: always()
@@ -283,7 +305,7 @@ jobs:
       - name: Collect coverage summaries
         run: |
           mkdir -p summaries
-          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          find downloaded -type f -exec cp {} summaries/ \; || true
           sha256sum summaries/* > summaries/checksums.txt || true
           date +%s > summaries/timestamp.txt
       - name: Upload combined coverage summaries
@@ -292,6 +314,7 @@ jobs:
         with:
           name: coverage-summaries
           path: summaries/
+          retention-days: 7
 
   # ---------------------------
   # Central Diagnostics
