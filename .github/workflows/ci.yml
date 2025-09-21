@@ -191,5 +191,3 @@ jobs:
   diagnostics:
     needs: [package-frontend, package-backend, package-coverage]
     uses: ./.github/workflows/ci-diagnostics.yml
-    secrets:
-      github_token: ${{ secrets.GITHUB_TOKEN }}
