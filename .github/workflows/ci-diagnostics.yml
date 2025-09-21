@@ -8,30 +8,23 @@ permissions:
   contents: read
   actions: read
 
+concurrency:
+  group: ci-diagnostics-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run-diagnostics:
+    if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download frontend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-summaries
-          path: ./summaries/frontend
-
-      - name: Download backend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-summaries
-          path: ./summaries/backend
-
-      - name: Download coverage summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries
-          path: ./summaries/coverage
+      - name: Debug summaries before aggregation
+        run: |
+          echo "📂 Summaries directory contents before aggregation"
+          find summaries || true
 
       - name: Aggregate Diagnostics
         run: |
@@ -104,14 +97,17 @@ jobs:
           }
 
           let conclusion = "success";
-          if (totalErrors > 0) conclusion = "failure";
+          if (allReports.length === 0) conclusion = "neutral"; // special case: no reports
+          else if (totalErrors > 0) conclusion = "failure";
           else if (totalWarnings > 0) conclusion = "neutral";
 
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
           const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${manifestSection}\n\n🔗 [View workflow run](${runUrl})`;
           fs.writeFileSync("report.md", reportOut);
-          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
+          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, reports: allReports.length }, null, 2));
+
+          console.log(`✅ Diagnostics complete: ${totalErrors} errors, ${totalWarnings} warnings, ${allReports.length} reports`);
           '
 
       - name: Upload Diagnostics Report
@@ -131,10 +127,11 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
-            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0 };
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0, reports: 0 };
 
             let conclusion = "success";
-            if (meta.totalErrors > 0) conclusion = "failure";
+            if (meta.reports === 0) conclusion = "neutral";
+            else if (meta.totalErrors > 0) conclusion = "failure";
             else if (meta.totalWarnings > 0) conclusion = "neutral";
 
             await github.rest.checks.create({
