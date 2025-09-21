@@ -54,7 +54,7 @@ jobs:
         run: |
           pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary --coverageDirectory=coverage/frontend
           test -f coverage/frontend/coverage-summary.json
-          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json 0
+          pnpm exec node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json 0
           mkdir -p summaries
           mv frontend-coverage-report.json summaries/
           mv coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log
@@ -69,8 +69,8 @@ jobs:
             --cov-report=json:coverage/backend/coverage-summary.json
           test -f coverage/backend/coverage.xml
           test -f coverage/backend/coverage-summary.json
-          node ../Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json 0
-          node ../Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json 0
+          pnpm exec node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json 0
+          pnpm exec node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json 0
           mkdir -p ../summaries
           mv backend-cobertura-report.json backend-coverage-report.json ../summaries/
           mv coverage/backend/coverage.xml ../summaries/coverage-backend-raw.xml
@@ -82,7 +82,7 @@ jobs:
         run: |
           pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=backend/coverage
           test -f backend/coverage/coverage-summary.json
-          node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json 0
+          pnpm exec node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json 0
           mkdir -p summaries
           mv backend-node-coverage-report.json summaries/
           mv backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
@@ -95,7 +95,7 @@ jobs:
           pnpm exec playwright test
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e
           test -f coverage/e2e/coverage-summary.json
-          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
+          pnpm exec node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
           mkdir -p summaries
           mv e2e-coverage-report.json summaries/
           mv coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
