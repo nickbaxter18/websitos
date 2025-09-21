@@ -6,6 +6,11 @@ on:
       github_token:
         required: true
 
+permissions:
+  checks: write
+  contents: read
+  actions: read
+
 jobs:
   run-diagnostics:
     runs-on: ubuntu-latest
@@ -65,11 +70,18 @@ jobs:
 
           loadFiles(baseDir);
 
+          // Sort reports for consistent output
+          allReports.sort((a, b) => `${a.workflow}/${a.job}`.localeCompare(`${b.workflow}/${b.job}`));
+
           let totalErrors = 0;
           let totalWarnings = 0;
 
           let summaryTable = "### 📊 Summary Table\n\n| Workflow/Job | Errors | Warnings | Status |\n|--------------|--------|----------|--------|\n";
           let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Exit Code | File Size | SHA256 | Timestamp |\n|-----|-----------|-----------|--------|-----------|\n";
+
+          if (allReports.length === 0) {
+            summaryTable += "| n/a | 0 | 0 | no reports found |\n";
+          }
 
           for (const r of allReports) {
             totalErrors += r.errors?.length || 0;
@@ -98,7 +110,9 @@ jobs:
           if (totalErrors > 0) conclusion = "failure";
           else if (totalWarnings > 0) conclusion = "neutral";
 
-          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${manifestSection}`;
+          const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${manifestSection}\n\n🔗 [View workflow run](${runUrl})`;
           fs.writeFileSync("report.md", reportOut);
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
           '
@@ -129,8 +143,8 @@ jobs:
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: "CI Diagnostics (Central)",
-              head_sha: context.payload.workflow_run.head_sha,
+              name: `CI Diagnostics (${context.ref} @ ${context.sha.slice(0,7)})`,
+              head_sha: context.sha,
               status: "completed",
               conclusion,
               output: {
