@@ -38,61 +38,58 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install backend test dependencies
+        if: ${{ matrix.task == 'backend' }}
+        run: pip install -r backend/requirements-dev.txt
+
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
-        continue-on-error: true
         run: |
-          (pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary) || true
-          echo $? > exit-code.txt
-          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json exit-code.txt || echo '{"workflow":"coverage-checks","job":"frontend","status":"failure","errors":[{"message":"Jest coverage converter failed"}],"warnings":[],"notices":[]}' > frontend-coverage-report.json
+          pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary
+          test -f coverage/frontend/coverage-summary.json
+          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json 0
           mkdir -p summaries
           mv frontend-coverage-report.json summaries/
-          mv coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log || true
-          mv exit-code.txt summaries/coverage-frontend-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
+          mv coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log
+          sha256sum summaries/* > summaries/checksums.txt
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
-        continue-on-error: true
         run: |
-          (pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json) || true
-          echo $? > exit-code.txt
-          node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json exit-code.txt || echo '{"workflow":"coverage-checks","job":"backend-cobertura","status":"failure","errors":[{"message":"Cobertura converter failed"}],"warnings":[],"notices":[]}' > backend-cobertura-report.json
-          node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json exit-code.txt || echo '{"workflow":"coverage-checks","job":"backend-coverage","status":"failure","errors":[{"message":"Pytest coverage converter failed"}],"warnings":[],"notices":[]}' > backend-coverage-report.json
+          pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json
+          test -f coverage/backend/coverage.xml
+          test -f coverage/backend/coverage-summary.json
+          node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json 0
+          node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json 0
           mkdir -p summaries
           mv backend-cobertura-report.json backend-coverage-report.json summaries/
-          mv coverage/backend/coverage.xml summaries/coverage-backend-raw.xml || true
-          mv coverage/backend/coverage-summary.json summaries/coverage-backend-raw.log || true
-          mv exit-code.txt summaries/coverage-backend-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
+          mv coverage/backend/coverage.xml summaries/coverage-backend-raw.xml
+          mv coverage/backend/coverage-summary.json summaries/coverage-backend-raw.log
+          sha256sum summaries/* > summaries/checksums.txt
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
-        continue-on-error: true
         run: |
-          (cd backend && pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage) || true
-          echo $? > exit-code.txt
-          node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json exit-code.txt || echo '{"workflow":"coverage-checks","job":"backend-node","status":"failure","errors":[{"message":"Backend-node coverage converter failed"}],"warnings":[],"notices":[]}' > backend-node-coverage-report.json
+          cd backend && pnpm jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage
+          test -f backend/coverage/coverage-summary.json
+          node ../Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json 0
           mkdir -p summaries
           mv backend-node-coverage-report.json summaries/
-          mv backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log || true
-          mv exit-code.txt summaries/coverage-backend-node-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
+          mv backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
+          sha256sum summaries/* > summaries/checksums.txt
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
-        continue-on-error: true
         run: |
-          pnpm exec playwright install --with-deps || true
-          (pnpm exec playwright test) || true
-          echo $? > exit-code.txt
-          (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
-          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json exit-code.txt || echo '{"workflow":"coverage-checks","job":"e2e","status":"failure","errors":[{"message":"Playwright coverage converter failed"}],"warnings":[],"notices":[]}' > e2e-coverage-report.json
+          pnpm exec playwright install --with-deps
+          pnpm exec playwright test
+          npx nyc report --reporter=json-summary --report-dir=coverage/e2e
+          test -f coverage/e2e/coverage-summary.json
+          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
           mkdir -p summaries
           mv e2e-coverage-report.json summaries/
-          mv coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log || true
-          mv exit-code.txt summaries/coverage-e2e-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
+          mv coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
+          sha256sum summaries/* > summaries/checksums.txt
 
       - name: Generate Artifact Manifest
         run: |
@@ -125,7 +122,7 @@ jobs:
           echo "📥 Collected coverage artifacts:" > summaries/artifact-manifest.txt
           find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           find downloaded -name "*-report.json" -exec cp {} summaries/ \;
-          sha256sum summaries/* >> summaries/artifact-manifest.txt || true
+          sha256sum summaries/* >> summaries/artifact-manifest.txt
 
       - name: Upload combined coverage summaries
         if: always()
