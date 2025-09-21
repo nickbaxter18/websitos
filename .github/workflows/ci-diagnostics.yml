@@ -35,8 +35,7 @@ jobs:
 
       - name: Install aggregator dependencies
         run: |
-          npm init -y >/dev/null 2>&1 || true
-          npm install ajv-cli @octokit/rest
+          npm install --no-save ajv-cli @octokit/rest
 
       - name: Aggregate Diagnostics
         env:
