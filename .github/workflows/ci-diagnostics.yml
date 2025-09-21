@@ -94,15 +94,36 @@ jobs:
           }
 
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          let summaryTable = "### 📊 Summary Table\\n\\n| File | Errors | Warnings | Status | SHA256 |\\n|------|--------|----------|--------|--------|\\n";
+
+          let totalErrors = 0;
+          let totalWarnings = 0;
+
+          let summaryTable = "### 📊 Summary Table\n\n| Workflow/Job | Errors | Warnings | Status | SHA256 | File |\n|--------------|--------|----------|--------|--------|------|\n";
 
           for (const r of allReports) {
-            summaryTable += `| ${r.__file || r.file || "?"} | ${r.errors?.length || 0} | ${r.warnings?.length || 0} | ${r.status || "?"} | ${r.sha256 || "?"} |\\n`;
+            const wf = r.workflow || "?";
+            const job = r.job || "?";
+            const file = r.__file || r.file || "?";
+            const errors = r.errors?.length || 0;
+            const warnings = r.warnings?.length || 0;
+            const status = r.status || "?";
+            const sha = r.sha256 || "?";
+
+            totalErrors += errors;
+            totalWarnings += warnings;
+
+            summaryTable += `| ${wf}/${job} | ${errors} | ${warnings} | ${status} | ${sha} | ${file} |\n`;
           }
 
-          const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n\\n🔗 [View workflow run](${runUrl})`;
+          let conclusion = "success";
+          if (totalErrors > 0) conclusion = "failure";
+          else if (totalWarnings > 0) conclusion = "neutral";
+
+          const totals = `\n### Totals\n- Reports: ${allReports.length}\n- Files: ${fileCount}\n- Errors: ${totalErrors}\n- Warnings: ${totalWarnings}\n`;
+
+          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${totals}\n\n🔗 [View workflow run](${runUrl})`;
           fs.writeFileSync("report.md", reportOut);
-          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ reports: allReports.length, files: fileCount }, null, 2));
+          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ reports: allReports.length, files: fileCount, totalErrors, totalWarnings }, null, 2));
           '
 
       - name: Debug Report After Aggregation
@@ -123,6 +144,7 @@ jobs:
           path: |
             report.md
             diagnostics-meta.json
+          retention-days: 7
 
       - name: Upload Raw Summaries Dump
         if: always()
@@ -130,6 +152,7 @@ jobs:
         with:
           name: diagnostics-raw-dump
           path: summaries/
+          retention-days: 7
 
       - name: Post Diagnostics as Check
         if: always()
@@ -139,9 +162,13 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
-            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { reports: 0, files: 0 };
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { reports: 0, files: 0, totalErrors: 0, totalWarnings: 0 };
+
             let conclusion = "success";
-            if (meta.reports === 0) conclusion = "neutral";
+            if (meta.totalErrors > 0) conclusion = "failure";
+            else if (meta.totalWarnings > 0) conclusion = "neutral";
+            else if (meta.reports === 0) conclusion = "neutral";
+
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
