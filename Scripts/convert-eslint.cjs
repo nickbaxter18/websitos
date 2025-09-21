@@ -1,15 +1,13 @@
 #!/usr/bin/env node
+
 const fs = require("fs");
+const crypto = require("crypto");
 
-if (process.argv.length < 4) {
-  console.error("Usage: node convert-eslint.js <input> <output>");
-  process.exit(1);
-}
+const inputFile = process.argv[2];
+const outputFile = process.argv[3];
+const exitCodeFile = process.argv[4] || null;
 
-const [inputFile, outputFile] = process.argv.slice(2);
-const raw = JSON.parse(fs.readFileSync(inputFile, "utf-8"));
-
-const summary = {
+let report = {
   workflow: "frontend-checks",
   job: "lint",
   status: "success",
@@ -18,25 +16,60 @@ const summary = {
   notices: []
 };
 
-raw.forEach(result => {
-  result.messages.forEach(msg => {
-    const entry = {
-      file: result.filePath.replace(process.cwd() + "/", ""),
-      line: msg.line,
-      column: msg.column,
-      message: msg.message,
-      rule: msg.ruleId || "unknown",
-      severity: msg.severity === 2 ? "error" : "warning",
-      suggestion: msg.fix ? "Autofix available with eslint --fix" : null
-    };
-    if (msg.severity === 2) {
-      summary.errors.push(entry);
-      summary.status = "failure";
-    } else {
-      summary.warnings.push(entry);
-    }
-  });
-});
+try {
+  if (!fs.existsSync(inputFile) || fs.statSync(inputFile).size === 0) {
+    report.status = "failure";
+    report.errors.push({
+      file: inputFile || "?",
+      message: "ESLint input file missing or empty",
+      rule: "eslint",
+      severity: "error"
+    });
+  } else {
+    const raw = fs.readFileSync(inputFile, "utf-8");
+    const data = JSON.parse(raw);
 
-fs.writeFileSync(outputFile, JSON.stringify(summary, null, 2));
-console.log(`✅ ESLint summary written to ${outputFile}`);
+    if (Array.isArray(data) && data.length > 0) {
+      data.forEach((file) => {
+        if (file.messages && file.messages.length > 0) {
+          report.status = "failure";
+          file.messages.forEach((m) => {
+            const entry = {
+              file: file.filePath || "?",
+              line: m.line || "?",
+              message: m.message || "",
+              rule: m.ruleId || "eslint",
+              severity: m.severity === 2 ? "error" : "warning"
+            };
+            if (m.fix) entry.suggestion = "Auto-fix available";
+            report[m.severity === 2 ? "errors" : "warnings"].push(entry);
+          });
+        }
+      });
+    }
+  }
+
+  // Add metadata
+  if (fs.existsSync(inputFile)) {
+    const size = fs.statSync(inputFile).size;
+    const checksum = crypto.createHash("sha256").update(fs.readFileSync(inputFile)).digest("hex");
+    report.notices.push({ message: `Input size: ${size} bytes, sha256: ${checksum}` });
+  }
+  if (exitCodeFile && fs.existsSync(exitCodeFile)) {
+    const code = fs.readFileSync(exitCodeFile, "utf-8").trim();
+    report.notices.push({ message: `ESLint exit code: ${code}` });
+  }
+
+  // Add timestamp
+  report.notices.push({ message: `Timestamp: ${new Date().toISOString()}` });
+} catch (e) {
+  report.status = "failure";
+  report.errors.push({
+    file: "converter",
+    message: `ESLint converter crashed: ${e.message}`,
+    rule: "runtime",
+    severity: "error"
+  });
+}
+
+fs.writeFileSync(outputFile, JSON.stringify(report, null, 2));

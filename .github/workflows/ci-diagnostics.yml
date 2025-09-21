@@ -2,217 +2,137 @@ name: CI Diagnostics
 
 on:
   workflow_call:
-    secrets:
-      LINEAR_API_KEY:
-        required: true
-      LINEAR_TEAM_ID:
-        required: true
-  workflow_dispatch:
-
-permissions:
-  checks: write
-  contents: read
-  actions: read
+    secrets: inherit
 
 jobs:
-  diagnostics:
-    name: Run CI Diagnostics (Central)
+  run-diagnostics:
     runs-on: ubuntu-latest
-    if: always()
-    env:
-      LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
-      LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Download frontend summaries
-        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: frontend-summaries
           path: ./summaries/frontend
 
       - name: Download backend summaries
-        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: backend-summaries
           path: ./summaries/backend
 
       - name: Download coverage summaries
-        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: coverage-summaries
           path: ./summaries/coverage
 
-      - name: Debug list summaries
+      - name: Aggregate Diagnostics
         run: |
-          echo "📂 Listing summaries directory contents"
-          ls -R ./summaries || true
+          mkdir -p summaries
 
-      - name: Aggregate summaries into report
-        run: |
           node -e '
           const fs = require("fs");
           const path = require("path");
 
-          const dir = "./summaries";
-          let report = "## ⚠️ CI Diagnostics Report\n";
-          let bannerWarnings = [];
-          let conclusion = "success";
+          const baseDir = "summaries";
+          const allReports = [];
+          const manifests = [];
 
-          let files = [];
-          try {
-            const walk = (dirPath) => {
-              let results = [];
-              const list = fs.readdirSync(dirPath);
-              list.forEach((file) => {
-                const filePath = path.join(dirPath, file);
-                const stat = fs.statSync(filePath);
-                if (stat && stat.isDirectory()) {
-                  results = results.concat(walk(filePath));
-                } else if (file.toLowerCase().endsWith("-report.json")) {
-                  results.push(filePath);
+          function loadFiles(dir) {
+            if (!fs.existsSync(dir)) return;
+            for (const file of fs.readdirSync(dir)) {
+              const full = path.join(dir, file);
+              if (fs.statSync(full).isDirectory()) {
+                loadFiles(full);
+              } else if (file.endsWith("-report.json")) {
+                try {
+                  const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+                  data.__file = full;
+                  allReports.push(data);
+                } catch (e) {
+                  allReports.push({ workflow: "diagnostics", job: file, status: "failure", errors: [{ message: `Failed to parse: ${e.message}` }], warnings: [], notices: [] });
                 }
-              });
-              return results;
-            };
-            files = walk(dir);
-          } catch (e) {
-            report += "\n⚠️ No summaries directory found.";
-            conclusion = "neutral";
-          }
-
-          console.log("📂 Found report files:", files);
-
-          const requiredReports = [
-            "playwright-e2e-report.json",
-            "eslint-report.json",
-            "prettier-report.json",
-            "tsc-report.json",
-            "jest-report.json",
-            "mypy-report.json",
-            "black-report.json",
-            "flake8-report.json",
-            "pytest-report.json",
-            "backend-cobertura-report.json",
-            "backend-coverage-report.json",
-            "backend-node-coverage-report.json",
-            "e2e-coverage-report.json"
-          ];
-
-          requiredReports.forEach(r => {
-            const match = files.find(f => f.toLowerCase().endsWith(r));
-            if (!match) {
-              console.warn(`⚠️ Missing ${r} in collected reports`);
-              bannerWarnings.push(`⚠️ Missing ${r}`);
-              conclusion = "neutral";
-              report += `\n⚠️ Missing ${r} — dummy injected.`;
-              const dummy = { workflow: "diagnostics", job: r.replace(".json",""), status: "neutral", errors: [], warnings: [], notices: [{ message: `${r} missing from diagnostics aggregation — dummy injected` }] };
-              const outPath = `./summaries/${r}`;
-              fs.writeFileSync(outPath, JSON.stringify(dummy, null, 2));
-              files.push(outPath);
-            } else {
-              const size = fs.statSync(match).size;
-              if (size < 200) {
-                console.warn(`⚠️ ${r} exists but looks suspiciously small (${size} bytes)`);
-                bannerWarnings.push(`⚠️ ${r} looks suspiciously small (${size} bytes)`);
-                conclusion = "neutral";
-                report += `\n⚠️ ${r} exists but may be dummy (${size} bytes).`;
-              }
-            }
-          });
-
-          let totalErrors = 0, totalWarnings = 0;
-
-          if (!files.length) {
-            report += "\n⚠️ No summary reports found (some jobs may have been skipped).";
-            conclusion = "neutral";
-          } else {
-            if (bannerWarnings.length > 0) {
-              report = `⚠️ WARNING: Some reports were dummies or suspicious.\n` + report;
-            }
-
-            report += "\n### 📊 Summary Table\n";
-            report += "| Workflow/Job | Errors | Warnings |\n";
-            report += "|--------------|--------|----------|\n";
-
-            for (const file of files) {
-              const raw = JSON.parse(fs.readFileSync(file, "utf-8"));
-              totalErrors += raw.errors.length;
-              totalWarnings += raw.warnings.length;
-
-              report += `| ${raw.workflow}/${raw.job} | ${raw.errors.length} | ${raw.warnings.length} |\n`;
-            }
-
-            report += "\n---\n";
-
-            for (const file of files) {
-              const raw = JSON.parse(fs.readFileSync(file, "utf-8"));
-              report += `\n### ${raw.workflow} / ${raw.job}\n`;
-              report += `Status: ${raw.status}\n`;
-              if (raw.errors.length) {
-                report += "\n❌ Errors:\n";
-                raw.errors.forEach(e => {
-                  report += `- ${e.file||"?"}:${e.line||"?"} ${e.message} (rule: ${e.rule||"?"}) [${e.severity||"error"}]\n`;
-                  if (e.suggestion) report += `  💡 Suggestion: ${e.suggestion}\n`;
-                  if (e.details) report += `  🔍 Details: ${e.details}\n`;
-                });
-              }
-              if (raw.warnings.length) {
-                report += "\n⚠️ Warnings:\n";
-                raw.warnings.forEach(w => {
-                  report += `- ${w.file||"?"}:${w.line||"?"} ${w.message} (rule: ${w.rule||"?"}) [${w.severity||"warning"}]\n`;
-                  if (w.suggestion) report += `  💡 Suggestion: ${w.suggestion}\n`;
-                  if (w.details) report += `  🔍 Details: ${w.details}\n`;
-                });
-              }
-              if (raw.notices.length) {
-                report += "\nℹ️ Notices:\n";
-                raw.notices.forEach(n => {
-                  report += `- ${n.file||"?"}:${n.line||"?"} ${n.message}\n`;
-                });
+              } else if (file === "artifact-manifest.txt") {
+                manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
               }
             }
           }
 
-          // Artifact manifest
-          let manifest = [];
-          try {
-            const walkAll = (dirPath) => {
-              let results = [];
-              const list = fs.readdirSync(dirPath);
-              list.forEach((file) => {
-                const filePath = path.join(dirPath, file);
-                const stat = fs.statSync(filePath);
-                if (stat && stat.isDirectory()) {
-                  results = results.concat(walkAll(filePath));
-                } else {
-                  results.push(filePath);
-                }
-              });
-              return results;
-            };
-            manifest = walkAll(dir);
-          } catch {}
-          if (manifest.length > 0) {
-            fs.writeFileSync("all-artifacts.txt", manifest.join("\n"));
-            report += "\n### 📦 Artifact Manifest\n";
-            manifest.forEach(m => {
-              report += `- ${m}\n`;
+          loadFiles(baseDir);
+
+          let totalErrors = 0;
+          let totalWarnings = 0;
+
+          let summaryTable = "### 📊 Summary Table\n\n| Workflow/Job | Errors | Warnings | Status |\n|--------------|--------|----------|--------|\n";
+          let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Exit Code | File Size | SHA256 | Timestamp |\n|-----|-----------|-----------|--------|-----------|\n";
+
+          for (const r of allReports) {
+            totalErrors += r.errors?.length || 0;
+            totalWarnings += r.warnings?.length || 0;
+
+            summaryTable += `| ${r.workflow}/${r.job} | ${r.errors?.length || 0} | ${r.warnings?.length || 0} | ${r.status || "?"} |\n`;
+
+            const exitNotice = (r.notices || []).find(n => n.message.includes("exit code"));
+            const sizeNotice = (r.notices || []).find(n => n.message.includes("Input size"));
+            const checksumNotice = (r.notices || []).find(n => n.message.includes("sha256"));
+            const timestampNotice = (r.notices || []).find(n => n.message.includes("Timestamp"));
+
+            metadataTable += `| ${r.workflow}/${r.job} | ${exitNotice ? exitNotice.message.split(": ")[1] : "?"} | ${sizeNotice ? sizeNotice.message.split(",")[0].split(": ")[1] : "?"} | ${checksumNotice ? checksumNotice.message.split("sha256: ")[1] : "?"} | ${timestampNotice ? timestampNotice.message.split(": ")[1] : "?"} |\n`;
+          }
+
+          let manifestSection = "\n### 📦 Artifact Manifests\n";
+          if (manifests.length > 0) {
+            manifests.forEach(m => {
+              manifestSection += `\n**${m.path}:**\n\n\`\`\`\n${m.content}\n\`\`\`\n`;
             });
+          } else {
+            manifestSection += "\n_No artifact manifests found._\n";
           }
 
+          let conclusion = "success";
           if (totalErrors > 0) conclusion = "failure";
-          else if (totalWarnings > 0 && conclusion === "success") conclusion = "neutral";
+          else if (totalWarnings > 0) conclusion = "neutral";
 
-          fs.writeFileSync("report.md", report);
+          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${manifestSection}`;
+          fs.writeFileSync("report.md", reportOut);
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
-          console.log(report);
-
-          const { Octokit } = require("@octokit/rest");
-          const github = new Octokit({ auth: process.env.GITHUB_TOKEN });
           '
+
+      - name: Upload Diagnostics Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-report
+          path: |
+            report.md
+            diagnostics-meta.json
+
+      - name: Post Diagnostics as Check
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0 };
+
+            let conclusion = "success";
+            if (meta.totalErrors > 0) conclusion = "failure";
+            else if (meta.totalWarnings > 0) conclusion = "neutral";
+
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: "CI Diagnostics (Central)",
+              head_sha: context.payload.workflow_run.head_sha,
+              status: "completed",
+              conclusion,
+              output: {
+                title: "Central CI Diagnostics Report",
+                summary
+              }
+            });

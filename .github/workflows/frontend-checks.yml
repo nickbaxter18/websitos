@@ -43,33 +43,48 @@ jobs:
         if: ${{ matrix.task == 'lint' }}
         run: |
           (pnpm exec eslint src v2 ops --format json --output-file eslint-output.json) || true
-          node Scripts/convert-eslint.cjs eslint-output.json eslint-report.json || echo '{"workflow":"frontend-checks","job":"lint","status":"failure","errors":[{"message":"ESLint converter failed"}],"warnings":[],"notices":[]}' > eslint-report.json
-          mkdir -p summaries && mv eslint-report.json summaries/
+          echo $? > exit-code.txt
+          node Scripts/convert-eslint.cjs eslint-output.json eslint-report.json exit-code.txt || echo '{"workflow":"frontend-checks","job":"lint","status":"failure","errors":[{"message":"ESLint converter failed"}],"warnings":[],"notices":[]}' > eslint-report.json
+          mkdir -p summaries
+          mv eslint-report.json summaries/
+          mv eslint-output.json summaries/frontend-lint-raw.log || true
+          mv exit-code.txt summaries/frontend-lint-exit-code.txt || true
           sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Prettier
         if: ${{ matrix.task == 'prettier' }}
         run: |
           (pnpm exec prettier --check . > prettier-output.txt 2>&1) || true
-          node Scripts/convert-prettier.cjs prettier-output.txt prettier-report.json || echo '{"workflow":"frontend-checks","job":"prettier","status":"failure","errors":[{"message":"Prettier converter failed"}],"warnings":[],"notices":[]}' > prettier-report.json
-          mkdir -p summaries && mv prettier-report.json summaries/
+          echo $? > exit-code.txt
+          node Scripts/convert-prettier.cjs prettier-output.txt prettier-report.json exit-code.txt || echo '{"workflow":"frontend-checks","job":"prettier","status":"failure","errors":[{"message":"Prettier converter failed"}],"warnings":[],"notices":[]}' > prettier-report.json
+          mkdir -p summaries
+          mv prettier-report.json summaries/
+          mv prettier-output.txt summaries/frontend-prettier-raw.log || true
+          mv exit-code.txt summaries/frontend-prettier-exit-code.txt || true
           sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run TypeScript type-check
         if: ${{ matrix.task == 'type-check' }}
         run: |
           (pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-output.txt 2>&1) || true
-          node Scripts/convert-tsc.cjs tsc-output.txt tsc-report.json || echo '{"workflow":"frontend-checks","job":"tsc","status":"failure","errors":[{"message":"TSC converter failed"}],"warnings":[],"notices":[]}' > tsc-report.json
-          mkdir -p summaries && mv tsc-report.json summaries/
+          echo $? > exit-code.txt
+          node Scripts/convert-tsc.cjs tsc-output.txt tsc-report.json exit-code.txt || echo '{"workflow":"frontend-checks","job":"tsc","status":"failure","errors":[{"message":"TSC converter failed"}],"warnings":[],"notices":[]}' > tsc-report.json
+          mkdir -p summaries
+          mv tsc-report.json summaries/
+          mv tsc-output.txt summaries/frontend-tsc-raw.log || true
+          mv exit-code.txt summaries/frontend-tsc-exit-code.txt || true
           sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Jest unit tests
         if: ${{ matrix.task == 'test-unit' }}
         run: |
           (pnpm exec jest --coverage --json --outputFile=jest-output.json) || true
-          node Scripts/convert-jest.cjs jest-output.json jest-report.json || echo '{"workflow":"frontend-checks","job":"jest-unit","status":"failure","errors":[{"message":"Jest converter failed"}],"warnings":[],"notices":[]}' > jest-report.json
-          mkdir -p summaries && mv jest-report.json summaries/
-          cp jest-output.json summaries/jest-raw-output.json || true
+          echo $? > exit-code.txt
+          node Scripts/convert-jest.cjs jest-output.json jest-report.json exit-code.txt || echo '{"workflow":"frontend-checks","job":"jest-unit","status":"failure","errors":[{"message":"Jest converter failed"}],"warnings":[],"notices":[]}' > jest-report.json
+          mkdir -p summaries
+          mv jest-report.json summaries/
+          mv jest-output.json summaries/frontend-jest-raw.log || true
+          mv exit-code.txt summaries/frontend-jest-exit-code.txt || true
           sha256sum summaries/* > summaries/checksums.txt || true
 
       - name: Run Playwright E2E tests
@@ -77,10 +92,10 @@ jobs:
         run: |
           pnpm exec playwright install --with-deps || true
           (pnpm exec playwright test 2>&1 | tee playwright-output.txt) || true
-          echo "${PIPESTATUS[0]}" > exit-code.txt || true
+          echo $? > exit-code.txt
           (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
 
-          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-e2e-report.json || true
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-e2e-report.json exit-code.txt || true
 
           if [ ! -s playwright-e2e-report.json ]; then
             echo '{"workflow":"frontend-checks","job":"playwright-e2e","status":"failure","errors":[{"message":"Converter crashed or no output"}],"warnings":[],"notices":[]}' > playwright-e2e-report.json
@@ -88,12 +103,17 @@ jobs:
 
           mkdir -p summaries
           mv playwright-e2e-report.json summaries/ || true
-          mv coverage/e2e/coverage-summary.json summaries/playwright-coverage-report.json || true
+          mv coverage/e2e/coverage-summary.json summaries/frontend-playwright-coverage-raw.json || true
 
-          cp playwright-output.txt summaries/playwright-output.txt || true
-          cp exit-code.txt summaries/exit-code.txt || true
+          mv playwright-output.txt summaries/frontend-playwright-raw.log || true
+          mv exit-code.txt summaries/frontend-playwright-exit-code.txt || true
 
           sha256sum summaries/* > summaries/checksums.txt || true
+
+      - name: Generate Artifact Manifest
+        run: |
+          echo "📦 Artifact manifest for frontend-${{ matrix.task }}" > summaries/artifact-manifest.txt
+          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
 
       - name: Upload frontend summaries
         if: always()
@@ -126,8 +146,8 @@ jobs:
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
-          echo "📥 Checking downloaded artifacts:"
-          find downloaded -type f -printf "%p (%s bytes)\n" || true
+          echo "📥 Checking downloaded artifacts:" > summaries/artifact-manifest.txt
+          find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
 
           for f in $(find downloaded -type f -iname "*-report.json"); do
             echo "📥 Found report: $f"

@@ -1,15 +1,13 @@
 #!/usr/bin/env node
+
 const fs = require("fs");
+const crypto = require("crypto");
 
-if (process.argv.length < 4) {
-  console.error("Usage: node convert-prettier.js <input> <output>");
-  process.exit(1);
-}
+const inputFile = process.argv[2];
+const outputFile = process.argv[3];
+const exitCodeFile = process.argv[4] || null;
 
-const [inputFile, outputFile] = process.argv.slice(2);
-const raw = fs.readFileSync(inputFile, "utf-8").trim().split("\n");
-
-const summary = {
+let report = {
   workflow: "frontend-checks",
   job: "prettier",
   status: "success",
@@ -18,22 +16,63 @@ const summary = {
   notices: []
 };
 
-raw.forEach(line => {
-  if (!line || line.includes("All matched files use Prettier code style")) return;
+try {
+  if (!fs.existsSync(inputFile) || fs.statSync(inputFile).size === 0) {
+    report.status = "failure";
+    report.errors.push({
+      file: inputFile || "?",
+      message: "Prettier input file missing or empty",
+      rule: "prettier",
+      severity: "error"
+    });
+  } else {
+    const content = fs.readFileSync(inputFile, "utf-8");
+    const lines = content.split("\n");
 
-  const entry = {
-    file: line.trim(),
-    line: null,
-    column: null,
-    message: "File does not match Prettier formatting",
-    rule: "prettier",
-    severity: "warning", // always warning, not error
-    suggestion: "Run `npx prettier --write <file>`"
-  };
+    lines.forEach((line, idx) => {
+      if (line.includes("code style issues found")) {
+        report.status = "failure";
+        report.errors.push({
+          file: "?",
+          line: idx + 1,
+          message: line.trim(),
+          rule: "prettier",
+          severity: "error"
+        });
+      } else if (line.includes("formatted")) {
+        report.status = "failure";
+        report.warnings.push({
+          file: "?",
+          line: idx + 1,
+          message: line.trim(),
+          rule: "prettier",
+          severity: "warning"
+        });
+      }
+    });
+  }
 
-  summary.warnings.push(entry);
-  summary.status = "failure";
-});
+  // Add metadata
+  if (fs.existsSync(inputFile)) {
+    const size = fs.statSync(inputFile).size;
+    const checksum = crypto.createHash("sha256").update(fs.readFileSync(inputFile)).digest("hex");
+    report.notices.push({ message: `Input size: ${size} bytes, sha256: ${checksum}` });
+  }
+  if (exitCodeFile && fs.existsSync(exitCodeFile)) {
+    const code = fs.readFileSync(exitCodeFile, "utf-8").trim();
+    report.notices.push({ message: `Prettier exit code: ${code}` });
+  }
 
-fs.writeFileSync(outputFile, JSON.stringify(summary, null, 2));
-console.log(`✅ Prettier summary written to ${outputFile}`);
+  // Add timestamp
+  report.notices.push({ message: `Timestamp: ${new Date().toISOString()}` });
+} catch (e) {
+  report.status = "failure";
+  report.errors.push({
+    file: "converter",
+    message: `Prettier converter crashed: ${e.message}`,
+    rule: "runtime",
+    severity: "error"
+  });
+}
+
+fs.writeFileSync(outputFile, JSON.stringify(report, null, 2));
