@@ -15,162 +15,61 @@ permissions:
   actions: read
 
 jobs:
-  # (frontend-checks, backend-checks, coverage-checks jobs unchanged)
-
-  package-frontend:
-    if: always()
+  frontend-checks:
     runs-on: ubuntu-latest
-    needs: frontend-checks
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Download all frontend job artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: frontend-partial-*
-          path: ./downloaded
-          merge-multiple: true
-      - name: Debug downloaded artifacts
+      - name: Debug Environment Info (Frontend)
         run: |
-          echo "📂 Downloaded artifacts for frontend packaging:"
-          ls -lhR downloaded || true
-      - name: Collect frontend summaries
-        run: |
-          mkdir -p summaries
-          find downloaded -type f -exec cp {} summaries/ \; || true
-          touch summaries/placeholder.txt
-          sha256sum summaries/* > summaries/checksums.txt || true
-          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
-          echo "📦 Packaged frontend summaries:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          echo "📂 Final summaries before upload:"
-          ls -lh summaries || true
-          echo "📑 File hashes before upload:"
-          find summaries -type f -exec sha256sum {} \; || true
-      - name: Ensure placeholder if no reports
-        run: |
-          mkdir -p summaries
-          if [ -z "$(find summaries -name '*-report.json')" ]; then
-            echo '{"workflow":"${{ github.job }}","job":"placeholder","status":"no data","errors":[],"warnings":[],"notices":[]}' > summaries/placeholder-report.json
-          fi
-      - name: Upload raw summaries dump
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: raw-${{ github.job }}-summaries
-          path: summaries/
-          retention-days: 2
-      - name: Upload combined frontend summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-summaries
-          path: summaries/
-          retention-days: 2
+          echo "=== FRONTEND ENV DEBUG ==="
+          node -v || true
+          npm -v || true
+          pnpm -v || true
+          python3 --version || true
+          pip3 list || true
+          echo "Workspace files:" 
+          ls -R || true
 
-  package-backend:
-    if: always()
+  backend-checks:
     runs-on: ubuntu-latest
-    needs: backend-checks
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Download all backend job artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: backend-partial-*
-          path: ./downloaded
-          merge-multiple: true
-      - name: Debug downloaded artifacts
+      - name: Debug Environment Info (Backend)
         run: |
-          echo "📂 Downloaded artifacts for backend packaging:"
-          ls -lhR downloaded || true
-      - name: Collect backend summaries
-        run: |
-          mkdir -p summaries
-          find downloaded -type f -exec cp {} summaries/ \; || true
-          touch summaries/placeholder.txt
-          sha256sum summaries/* > summaries/checksums.txt || true
-          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
-          echo "📦 Packaged backend summaries:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          echo "📂 Final summaries before upload:"
-          ls -lh summaries || true
-          echo "📑 File hashes before upload:"
-          find summaries -type f -exec sha256sum {} \; || true
-      - name: Ensure placeholder if no reports
-        run: |
-          mkdir -p summaries
-          if [ -z "$(find summaries -name '*-report.json')" ]; then
-            echo '{"workflow":"${{ github.job }}","job":"placeholder","status":"no data","errors":[],"warnings":[],"notices":[]}' > summaries/placeholder-report.json
-          fi
-      - name: Upload raw summaries dump
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: raw-${{ github.job }}-summaries
-          path: summaries/
-          retention-days: 2
-      - name: Upload combined backend summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-summaries
-          path: summaries/
-          retention-days: 2
+          echo "=== BACKEND ENV DEBUG ==="
+          node -v || true
+          npm -v || true
+          pnpm -v || true
+          python3 --version || true
+          pip3 list || true
+          echo "Workspace files:" 
+          ls -R || true
 
-  package-coverage:
-    if: always()
+  coverage-checks:
     runs-on: ubuntu-latest
-    needs: coverage-checks
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Download all coverage job artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: coverage-partial-*
-          path: ./downloaded
-          merge-multiple: true
-      - name: Debug downloaded artifacts
+      - name: Debug Environment Info (Coverage)
         run: |
-          echo "📂 Downloaded artifacts for coverage packaging:"
-          ls -lhR downloaded || true
-      - name: Collect coverage summaries
-        run: |
-          mkdir -p summaries
-          find downloaded -type f -exec cp {} summaries/ \; || true
-          touch summaries/placeholder.txt
-          sha256sum summaries/* > summaries/checksums.txt || true
-          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
-          echo "📦 Packaged coverage summaries:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          echo "📂 Final summaries before upload:"
-          ls -lh summaries || true
-          echo "📑 File hashes before upload:"
-          find summaries -type f -exec sha256sum {} \; || true
-      - name: Ensure placeholder if no reports
-        run: |
-          mkdir -p summaries
-          if [ -z "$(find summaries -name '*-report.json')" ]; then
-            echo '{"workflow":"${{ github.job }}","job":"placeholder","status":"no data","errors":[],"warnings":[],"notices":[]}' > summaries/placeholder-report.json
-          fi
-      - name: Upload raw summaries dump
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: raw-${{ github.job }}-summaries
-          path: summaries/
-          retention-days: 2
-      - name: Upload combined coverage summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-summaries
-          path: summaries/
-          retention-days: 2
+          echo "=== COVERAGE ENV DEBUG ==="
+          node -v || true
+          npm -v || true
+          pnpm -v || true
+          python3 --version || true
+          pip3 list || true
+          echo "Workspace files:" 
+          ls -R || true
 
   diagnostics:
-    if: always()
-    needs: [package-frontend, package-backend, package-coverage]
-    uses: ./.github/workflows/ci-diagnostics.yml
+    runs-on: ubuntu-latest
+    needs: [frontend-checks, backend-checks, coverage-checks]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Debug Diagnostics Environment
+        run: |
+          echo "=== DIAGNOSTICS ENV DEBUG ==="
+          printenv | sort || true
+          echo "Workspace files before summaries check:" 
+          ls -R || true
+          echo "Summaries folder check:"
+          ls -R summaries || true
