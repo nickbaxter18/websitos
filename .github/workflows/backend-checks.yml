@@ -30,96 +30,242 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest-json-report flake8 mypy black
 
+      - name: Collect environment metadata
+        id: envinfo
+        run: |
+          echo "lockfile_sha=$(sha256sum requirements.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "cpu_count=$(nproc)" >> $GITHUB_OUTPUT
+          echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
+          echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
+
       - name: Run Pytest
         if: ${{ matrix.task == 'pytest' }}
-        continue-on-error: true
         run: |
-          (pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json 2>&1 | tee pytest-output.txt) || true
-          echo $? > exit-code.txt
-          node Scripts/convert-pytest.cjs pytest-output.txt pytest-report.json exit-code.txt || echo '{"workflow":"backend-checks","job":"pytest","status":"failure","errors":[{"message":"Pytest converter failed"}],"warnings":[],"notices":[]}' > pytest-report.json
           mkdir -p summaries
-          mv pytest-report.json summaries/
-          mv pytest-output.txt summaries/backend-pytest-raw.log || true
-          mv exit-code.txt summaries/backend-pytest-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
+          start=$(date +%s)
+          echo "▶️ Running Pytest..."
+          pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json || true
+          pytest_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          sha256=$(sha256sum pytest-output.json | awk '{print $1}' || echo "")
+          deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+
+          errors=$(jq '.summary.failed' pytest-output.json 2>/dev/null || echo 0)
+          warnings=$(jq '.summary.warnings' pytest-output.json 2>/dev/null || echo 0)
+
+          cat <<EOF > summaries/backend-pytest-diagnostics.json
+          {
+            "job": "backend-checks/pytest",
+            "exit_code": $pytest_exit,
+            "status": "$( [ "$pytest_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": $(jq '.tests | map({name: .nodeid, status: .outcome, message: .call.longreprtext})' pytest-output.json 2>/dev/null || echo []),
+            "annotations": [],
+            "tests": $(jq '.tests | map({name: .nodeid, status: .outcome, message: .call.longreprtext, duration: .duration})' pytest-output.json 2>/dev/null || echo []),
+            "coverage": {},
+            "artifacts": ["summaries/pytest-output.json"],
+            "metadata": {
+              "tool": "pytest",
+              "version": "$(pip show pytest | grep Version | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "pip": $deps
+            }
+          }
+          EOF
+
+          cp pytest-output.json summaries/pytest-output.json || true
+
+          echo "📂 Summaries:"
+          ls -lh summaries/
+          cat summaries/backend-pytest-diagnostics.json | jq .
 
       - name: Run Mypy
         if: ${{ matrix.task == 'mypy' }}
-        continue-on-error: true
         run: |
-          (mypy . > mypy-output.txt 2>&1) || true
-          echo $? > exit-code.txt
-          node Scripts/convert-mypy.cjs mypy-output.txt mypy-report.json exit-code.txt || echo '{"workflow":"backend-checks","job":"mypy","status":"failure","errors":[{"message":"Mypy converter failed"}],"warnings":[],"notices":[]}' > mypy-report.json
           mkdir -p summaries
-          mv mypy-report.json summaries/
-          mv mypy-output.txt summaries/backend-mypy-raw.log || true
-          mv exit-code.txt summaries/backend-mypy-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
+          start=$(date +%s)
+          echo "▶️ Running Mypy..."
+          mypy . --show-column-numbers --show-error-codes --no-pretty > mypy-output.txt 2>&1 || true
+          mypy_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          sha256=$(sha256sum mypy-output.txt | awk '{print $1}' || echo "")
+          deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+
+          errors=$(grep -c "error:" mypy-output.txt || echo 0)
+          warnings=$(grep -c "note:" mypy-output.txt || echo 0)
+
+          cat <<EOF > summaries/backend-mypy-diagnostics.json
+          {
+            "job": "backend-checks/mypy",
+            "exit_code": $mypy_exit,
+            "status": "$( [ "$mypy_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": [],
+            "annotations": [],
+            "tests": [],
+            "coverage": {},
+            "artifacts": ["summaries/mypy-output.txt"],
+            "metadata": {
+              "tool": "mypy",
+              "version": "$(pip show mypy | grep Version | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "pip": $deps
+            }
+          }
+          EOF
+
+          cp mypy-output.txt summaries/mypy-output.txt || true
+
+          echo "📂 Summaries:"
+          ls -lh summaries/
+          cat summaries/backend-mypy-diagnostics.json | jq .
 
       - name: Run Flake8
         if: ${{ matrix.task == 'flake8' }}
-        continue-on-error: true
         run: |
-          (flake8 . > flake8-output.txt 2>&1) || true
-          echo $? > exit-code.txt
-          node Scripts/convert-flake8.cjs flake8-output.txt flake8-report.json exit-code.txt || echo '{"workflow":"backend-checks","job":"flake8","status":"failure","errors":[{"message":"Flake8 converter failed"}],"warnings":[],"notices":[]}' > flake8-report.json
           mkdir -p summaries
-          mv flake8-report.json summaries/
-          mv flake8-output.txt summaries/backend-flake8-raw.log || true
-          mv exit-code.txt summaries/backend-flake8-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
+          start=$(date +%s)
+          echo "▶️ Running Flake8..."
+          flake8 --format=json --output-file=flake8-output.json || true
+          flake8_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          sha256=$(sha256sum flake8-output.json | awk '{print $1}' || echo "")
+          deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+
+          errors=$(jq 'map(. | length) | add' flake8-output.json 2>/dev/null || echo 0)
+          warnings=0
+
+          cat <<EOF > summaries/backend-flake8-diagnostics.json
+          {
+            "job": "backend-checks/flake8",
+            "exit_code": $flake8_exit,
+            "status": "$( [ "$flake8_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": $(jq 'to_entries | map({file: .key, messages: .value})' flake8-output.json 2>/dev/null || echo []),
+            "annotations": [],
+            "tests": [],
+            "coverage": {},
+            "artifacts": ["summaries/flake8-output.json"],
+            "metadata": {
+              "tool": "flake8",
+              "version": "$(pip show flake8 | grep Version | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "pip": $deps
+            }
+          }
+          EOF
+
+          cp flake8-output.json summaries/flake8-output.json || true
+
+          echo "📂 Summaries:"
+          ls -lh summaries/
+          cat summaries/backend-flake8-diagnostics.json | jq .
 
       - name: Run Black
         if: ${{ matrix.task == 'black' }}
-        continue-on-error: true
-        run: |
-          (black --check . > black-output.txt 2>&1) || true
-          echo $? > exit-code.txt
-          node Scripts/convert-black.cjs black-output.txt black-report.json exit-code.txt || echo '{"workflow":"backend-checks","job":"black","status":"failure","errors":[{"message":"Black converter failed"}],"warnings":[],"notices":[]}' > black-report.json
-          mkdir -p summaries
-          mv black-report.json summaries/
-          mv black-output.txt summaries/backend-black-raw.log || true
-          mv exit-code.txt summaries/backend-black-exit-code.txt || true
-          sha256sum summaries/* > summaries/checksums.txt || true
-
-      - name: Generate Artifact Manifest
-        run: |
-          echo "📦 Artifact manifest for backend-${{ matrix.task }}" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-
-      - name: Upload partial summaries (per job)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-partial-${{ matrix.task }}
-          path: summaries/
-          retention-days: 2
-
-  package-and-upload:
-    runs-on: ubuntu-latest
-    needs: checks
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download all backend job artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./downloaded
-
-      - name: Collect backend summaries
         run: |
           mkdir -p summaries
-          echo "📥 Checking downloaded artifacts:" > summaries/artifact-manifest.txt
-          find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          find downloaded -name "*-report.json" -exec cp {} summaries/ \;
-          echo "📂 Collected backend summaries with checksums:" >> summaries/artifact-manifest.txt
-          sha256sum summaries/* >> summaries/artifact-manifest.txt || true
+          start=$(date +%s)
+          echo "▶️ Running Black..."
+          black --check . > black-output.txt 2>&1 || true
+          black_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
 
-      - name: Upload combined backend summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-summaries
-          path: summaries/
-          retention-days: 2
+          sha256=$(sha256sum black-output.txt | awk '{print $1}' || echo "")
+          deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+
+          errors=$(grep -c "would reformat" black-output.txt || echo 0)
+          warnings=0
+
+          cat <<EOF > summaries/backend-black-diagnostics.json
+          {
+            "job": "backend-checks/black",
+            "exit_code": $black_exit,
+            "status": "$( [ "$black_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": [],
+            "annotations": [],
+            "tests": [],
+            "coverage": {},
+            "artifacts": ["summaries/black-output.txt"],
+            "metadata": {
+              "tool": "black",
+              "version": "$(pip show black | grep Version | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "pip": $deps
+            }
+          }
+          EOF
+
+          cp black-output.txt summaries/black-output.txt || true
+
+          echo "📂 Summaries:"
+          ls -lh summaries/
+          cat summaries/backend-black-diagnostics.json | jq .

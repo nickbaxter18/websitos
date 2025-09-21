@@ -53,135 +53,275 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r $GITHUB_WORKSPACE/requirements.txt
 
+      - name: Collect environment metadata
+        id: envinfo
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "lockfile_sha=$(sha256sum pnpm-lock.yaml | awk '{print $1}')" >> $GITHUB_OUTPUT
+          elif [ -f requirements.txt ]; then
+            echo "lockfile_sha=$(sha256sum requirements.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+          else
+            echo "lockfile_sha=unknown" >> $GITHUB_OUTPUT
+          fi
+          echo "cpu_count=$(nproc)" >> $GITHUB_OUTPUT
+          echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
+          echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
+
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary --coverageDirectory=coverage/frontend
-          ls -lh coverage/frontend || true
           mkdir -p summaries
+          start=$(date +%s)
+          echo "▶️ Running Jest with coverage..."
+          pnpm exec jest --config jest.config.cjs --coverage --all \
+            --coverageReporters=json-summary \
+            --coverageDirectory=coverage/frontend
+          jest_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          fallback=false
+          coverage_json="{}"
           if [ -s $FRONTEND_COVERAGE_JSON ]; then
-            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $FRONTEND_COVERAGE_JSON frontend-coverage-report.json 0 || echo "⚠️ Frontend converter failed"
+            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $FRONTEND_COVERAGE_JSON frontend-coverage-report.json 0 || echo "⚠️ Converter failed"
+            if [ ! -s frontend-coverage-report.json ]; then
+              fallback=true
+            fi
             cp frontend-coverage-report.json summaries/frontend-coverage-report.json || true
-            cp $FRONTEND_COVERAGE_JSON summaries/coverage-frontend-raw.log || true
+            cp $FRONTEND_COVERAGE_JSON summaries/coverage-frontend-raw.json || true
+            coverage_json=$(jq '{lines: {covered: .total.lines.covered, missed: (.total.lines.total - .total.lines.covered), pct: .total.lines.pct}, branches: {covered: .total.branches.covered, missed: (.total.branches.total - .total.branches.covered), pct: .total.branches.pct}}' $FRONTEND_COVERAGE_JSON 2>/dev/null || echo '{}')
           else
-            echo "⚠️ Frontend coverage missing, using fallback"
-            echo '{}' > summaries/frontend-fallback.json
+            echo '{}' > summaries/frontend-coverage-fallback.json
+            fallback=true
           fi
-          ls -lh summaries/
+
+          sha256=$(sha256sum $FRONTEND_COVERAGE_JSON | awk '{print $1}' || echo "")
+          deps=$(pnpm list --depth 0 --json || echo '[]')
+
+          cat <<EOF > summaries/frontend-diagnostics.json
+          {
+            "job": "coverage-checks/frontend",
+            "exit_code": $jest_exit,
+            "status": "$( [ "$jest_exit" -eq 0 ] && echo success || echo failure )",
+            "coverage": $coverage_json,
+            "artifacts": [
+              "$( [ "$fallback" = true ] && echo summaries/frontend-coverage-fallback.json || echo summaries/frontend-coverage-report.json )",
+              "summaries/coverage-frontend-raw.json"
+            ],
+            "metadata": {
+              "tool": "jest",
+              "version": "$(pnpm list jest | grep jest | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": $fallback
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "npm": $deps
+            }
+          }
+          EOF
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         working-directory: backend
         run: |
-          pytest tests --maxfail=1 --disable-warnings -q --cov=backend --cov-branch \
-            --cov-report=xml:$BACKEND_COVERAGE_XML \
-            --cov-report=json:$BACKEND_COVERAGE_JSON
-          ls -lh coverage || true
           mkdir -p ../summaries
+          start=$(date +%s)
+          pytest tests --maxfail=1 --disable-warnings -q \
+            --cov=backend --cov-branch \
+            --cov-report=xml:coverage/coverage.xml \
+            --cov-report=json:coverage/coverage-summary.json
+          pytest_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          fallback=false
+          coverage_json="{}"
           if [ -s $BACKEND_COVERAGE_XML ] && [ -s $BACKEND_COVERAGE_JSON ]; then
-            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $BACKEND_COVERAGE_XML backend-cobertura-report.json 0 || echo "⚠️ Backend Cobertura converter failed"
-            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $BACKEND_COVERAGE_JSON backend-coverage-report.json 0 || echo "⚠️ Backend JSON converter failed"
+            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $BACKEND_COVERAGE_XML backend-cobertura-report.json 0 || echo "⚠️ Cobertura converter failed"
+            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $BACKEND_COVERAGE_JSON backend-coverage-report.json 0 || echo "⚠️ Pytest coverage converter failed"
+            if [ ! -s backend-coverage-report.json ]; then
+              fallback=true
+            fi
             cp backend-cobertura-report.json ../summaries/backend-cobertura-report.json || true
             cp backend-coverage-report.json ../summaries/backend-coverage-report.json || true
             cp $BACKEND_COVERAGE_XML ../summaries/coverage-backend-raw.xml || true
-            cp $BACKEND_COVERAGE_JSON ../summaries/coverage-backend-raw.log || true
+            cp $BACKEND_COVERAGE_JSON ../summaries/coverage-backend-raw.json || true
+            coverage_json=$(jq '{lines: {covered: .total.lines.covered, missed: (.total.lines.total - .total.lines.covered), pct: .total.lines.pct}, branches: {covered: .total.branches.covered, missed: (.total.branches.total - .total.branches.covered), pct: .total.branches.pct}}' $BACKEND_COVERAGE_JSON 2>/dev/null || echo '{}')
           else
-            echo "⚠️ Backend coverage missing, using fallback"
-            echo '{}' > ../summaries/backend-fallback.json
+            echo '{}' > ../summaries/backend-coverage-fallback.json
+            fallback=true
           fi
-          ls -lh ../summaries/
+
+          sha256=$(sha256sum $BACKEND_COVERAGE_JSON | awk '{print $1}' || echo "")
+          deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+
+          cat <<EOF > ../summaries/backend-diagnostics.json
+          {
+            "job": "coverage-checks/backend",
+            "exit_code": $pytest_exit,
+            "status": "$( [ "$pytest_exit" -eq 0 ] && echo success || echo failure )",
+            "coverage": $coverage_json,
+            "artifacts": [
+              "$( [ "$fallback" = true ] && echo ../summaries/backend-coverage-fallback.json || echo ../summaries/backend-coverage-report.json )",
+              "../summaries/coverage-backend-raw.json",
+              "../summaries/coverage-backend-raw.xml"
+            ],
+            "metadata": {
+              "tool": "pytest",
+              "version": "$(pip show pytest | grep Version | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": $fallback
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "pip": $deps
+            }
+          }
+          EOF
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
-          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=backend/coverage
-          ls -lh backend/coverage || true
           mkdir -p summaries
+          start=$(date +%s)
+          pnpm exec jest --config jest.config.cjs --coverage \
+            --coverageReporters=json-summary \
+            --coverageDirectory=backend/coverage
+          jest_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          fallback=false
+          coverage_json="{}"
           if [ -s $BACKEND_NODE_COVERAGE_JSON ]; then
-            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $BACKEND_NODE_COVERAGE_JSON backend-node-coverage-report.json 0 || echo "⚠️ Backend-node converter failed"
+            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $BACKEND_NODE_COVERAGE_JSON backend-node-coverage-report.json 0 || echo "⚠️ Converter failed"
+            if [ ! -s backend-node-coverage-report.json ]; then
+              fallback=true
+            fi
             cp backend-node-coverage-report.json summaries/backend-node-coverage-report.json || true
-            cp $BACKEND_NODE_COVERAGE_JSON summaries/coverage-backend-node-raw.log || true
+            cp $BACKEND_NODE_COVERAGE_JSON summaries/coverage-backend-node-raw.json || true
+            coverage_json=$(jq '{lines: {covered: .total.lines.covered, missed: (.total.lines.total - .total.lines.covered), pct: .total.lines.pct}, branches: {covered: .total.branches.covered, missed: (.total.branches.total - .total.branches.covered), pct: .total.branches.pct}}' $BACKEND_NODE_COVERAGE_JSON 2>/dev/null || echo '{}')
           else
-            echo "⚠️ Backend-node coverage missing, using fallback"
-            echo '{}' > summaries/backend-node-fallback.json
+            echo '{}' > summaries/backend-node-coverage-fallback.json
+            fallback=true
           fi
-          ls -lh summaries/
 
-      - name: Build frontend for E2E
-        if: ${{ matrix.task == 'e2e' }}
-        run: pnpm exec vite build
+          sha256=$(sha256sum $BACKEND_NODE_COVERAGE_JSON | awk '{print $1}' || echo "")
+          deps=$(pnpm list --depth 0 --json || echo '[]')
 
-      - name: Start preview server
-        if: ${{ matrix.task == 'e2e' }}
-        run: |
-          pnpm exec vite preview --port=5173 &
-          for i in {1..10}; do
-            if curl -sSf http://localhost:5173 >/dev/null; then
-              echo "Preview server is up";
-              break;
-            fi;
-            echo "Waiting for preview server...";
-            sleep 3;
-          done
+          cat <<EOF > summaries/backend-node-diagnostics.json
+          {
+            "job": "coverage-checks/backend-node",
+            "exit_code": $jest_exit,
+            "status": "$( [ "$jest_exit" -eq 0 ] && echo success || echo failure )",
+            "coverage": $coverage_json,
+            "artifacts": [
+              "$( [ "$fallback" = true ] && echo summaries/backend-node-coverage-fallback.json || echo summaries/backend-node-coverage-report.json )",
+              "summaries/coverage-backend-node-raw.json"
+            ],
+            "metadata": {
+              "tool": "jest",
+              "version": "$(pnpm list jest | grep jest | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": $fallback
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "npm": $deps
+            }
+          }
+          EOF
 
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |
+          mkdir -p summaries
+          start=$(date +%s)
           pnpm exec playwright install --with-deps
           npx nyc --reporter=json --report-dir=.nyc_output --check-coverage=false pnpm exec playwright test
+          nyc_exit=$?
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e
-          ls -lh coverage/e2e || true
-          mkdir -p summaries
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          fallback=false
+          coverage_json="{}"
           if [ -s $E2E_COVERAGE_JSON ]; then
-            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $E2E_COVERAGE_JSON e2e-coverage-report.json 0 || echo "⚠️ E2E converter failed"
+            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $E2E_COVERAGE_JSON e2e-coverage-report.json 0 || echo "⚠️ Converter failed"
+            if [ ! -s e2e-coverage-report.json ]; then
+              fallback=true
+            fi
             cp e2e-coverage-report.json summaries/e2e-coverage-report.json || true
-            cp $E2E_COVERAGE_JSON summaries/coverage-e2e-raw.log || true
+            cp $E2E_COVERAGE_JSON summaries/coverage-e2e-raw.json || true
+            coverage_json=$(jq '{lines: {covered: .total.lines.covered, missed: (.total.lines.total - .total.lines.covered), pct: .total.lines.pct}, branches: {covered: .total.branches.covered, missed: (.total.branches.total - .total.branches.covered), pct: .total.branches.pct}}' $E2E_COVERAGE_JSON 2>/dev/null || echo '{}')
           else
-            echo "⚠️ E2E coverage missing, using fallback"
-            echo '{}' > summaries/e2e-fallback.json
+            echo '{}' > summaries/e2e-coverage-fallback.json
+            fallback=true
           fi
-          ls -lh summaries/
 
-      - name: Generate Artifact Manifest
-        run: |
-          echo "📦 Artifact manifest for coverage-${{ matrix.task }}" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
+          sha256=$(sha256sum $E2E_COVERAGE_JSON | awk '{print $1}' || echo "")
+          deps=$(pnpm list --depth 0 --json || echo '[]')
 
-      - name: Upload partial coverage summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-partial-${{ matrix.task }}
-          path: summaries/
-          retention-days: 14
-
-  package-and-upload:
-    runs-on: ubuntu-latest
-    needs: checks
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download all coverage job artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./downloaded
-
-      - name: Collect coverage summaries
-        run: |
-          mkdir -p summaries
-          echo "📥 Collected coverage artifacts:" > summaries/artifact-manifest.txt
-          find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          # Copy only real reports, fallback only if nothing else exists
-          cp $(find downloaded -type f -name "*-coverage-report.json" -o -name "*-cobertura-report.json" -o -name "*-report.json") summaries/ || true
-          cp $(find downloaded -type f -name "coverage-summary.json" -o -name "coverage.xml") summaries/ || true
-          ls -lh summaries/
-          sha256sum summaries/* >> summaries/artifact-manifest.txt
-
-      - name: Upload combined coverage summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-summaries
-          path: summaries/
-          retention-days: 14
+          cat <<EOF > summaries/e2e-diagnostics.json
+          {
+            "job": "coverage-checks/e2e",
+            "exit_code": $nyc_exit,
+            "status": "$( [ "$nyc_exit" -eq 0 ] && echo success || echo failure )",
+            "coverage": $coverage_json,
+            "artifacts": [
+              "$( [ "$fallback" = true ] && echo summaries/e2e-coverage-fallback.json || echo summaries/e2e-coverage-report.json )",
+              "summaries/coverage-e2e-raw.json"
+            ],
+            "metadata": {
+              "tool": "playwright+nyc",
+              "version": "$(pnpm list @playwright/test | grep @playwright/test | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": $fallback
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "npm": $deps
+            }
+          }
+          EOF

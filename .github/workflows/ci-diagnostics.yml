@@ -15,19 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile || true
-
       - name: Download frontend summaries
         uses: actions/download-artifact@v4
         with:
@@ -47,16 +34,76 @@ jobs:
           path: ./summaries/coverage
 
       - name: Aggregate Diagnostics
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p summaries
+          echo "📂 Downloaded artifact tree:" && find summaries -type f -ls
+
+          npm install -g ajv-cli jq @octokit/rest || true
 
           node -e '
           const fs = require("fs");
           const path = require("path");
+          const { execSync } = require("child_process");
+          const { Octokit } = require("@octokit/rest");
 
           const baseDir = "summaries";
           const allReports = [];
           const manifests = [];
+          const schemaPath = "diagnostics.schema.json";
+          let schemaFailures = 0;
+          let schemaPasses = 0;
+
+          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+          async function fetchAnnotations() {
+            try {
+              const runId = process.env.GITHUB_RUN_ID;
+              const repoParts = process.env.GITHUB_REPOSITORY.split("/");
+              const { data: jobs } = await octokit.actions.listJobsForWorkflowRun({
+                owner: repoParts[0],
+                repo: repoParts[1],
+                run_id: runId
+              });
+              for (const job of jobs.jobs) {
+                if (!job.check_run_url) continue;
+                const checkRunId = job.check_run_url.split("/").pop();
+                try {
+                  const { data: annotations } = await octokit.checks.listAnnotations({
+                    owner: repoParts[0],
+                    repo: repoParts[1],
+                    check_run_id: checkRunId
+                  });
+                  if (annotations?.length > 0) {
+                    const diagFile = path.join(baseDir, `${job.name.replace(/\s+/g, "-").toLowerCase()}-annotations.json`);
+                    fs.writeFileSync(diagFile, JSON.stringify(annotations, null, 2));
+                    allReports.push({
+                      job: job.name,
+                      errors: annotations.filter(a => a.annotation_level === "failure").length,
+                      warnings: annotations.filter(a => a.annotation_level === "warning").length,
+                      annotations
+                    });
+                  }
+                } catch (e) {
+                  console.error("⚠️ Failed to fetch annotations for job", job.name, e.message);
+                }
+              }
+            } catch (e) {
+              console.error("⚠️ Could not fetch annotations:", e.message);
+            }
+          }
+
+          function validateSchema(file) {
+            try {
+              execSync(`ajv validate -s ${schemaPath} -d ${file}`, { stdio: "pipe" });
+              schemaPasses++;
+              return null;
+            } catch (e) {
+              schemaFailures++;
+              return e.toString();
+            }
+          }
 
           function loadFiles(dir) {
             if (!fs.existsSync(dir)) return;
@@ -64,13 +111,28 @@ jobs:
               const full = path.join(dir, file);
               if (fs.statSync(full).isDirectory()) {
                 loadFiles(full);
-              } else if (file.endsWith("-report.json")) {
+              } else if (file.endsWith("-diagnostics.json")) {
                 try {
                   const data = JSON.parse(fs.readFileSync(full, "utf-8"));
                   data.__file = full;
+                  const schemaError = validateSchema(full);
+                  if (schemaError) {
+                    data.schema_error = schemaError;
+                    data.status = "failure";
+                  }
                   allReports.push(data);
                 } catch (e) {
-                  allReports.push({ workflow: "diagnostics", job: file, status: "failure", errors: [{ message: `Failed to parse: ${e.message}` }], warnings: [], notices: [] });
+                  schemaFailures++;
+                  allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
+                }
+              } else if (file.endsWith("-report.json") || file.endsWith("-fallback.json")) {
+                try {
+                  const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+                  data.__file = full;
+                  if (file.endsWith("-fallback.json")) data.fallback = true;
+                  allReports.push(data);
+                } catch (e) {
+                  allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse: ${e.message}` }] });
                 }
               } else if (file === "artifact-manifest.txt") {
                 manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
@@ -78,62 +140,65 @@ jobs:
             }
           }
 
-          loadFiles(baseDir);
+          (async () => {
+            await fetchAnnotations();
+            loadFiles(baseDir);
 
-          // Sort reports for consistent output
-          allReports.sort((a, b) => `${a.workflow}/${a.job}`.localeCompare(`${b.workflow}/${b.job}`));
+            let totalErrors = 0;
+            let totalWarnings = 0;
+            let totalCoverageLines = { covered: 0, missed: 0 };
 
-          let totalErrors = 0;
-          let totalWarnings = 0;
+            let summaryTable = "### 📊 Summary Table\\n\\n| Job | Errors | Warnings | Status | Schema Valid |\\n|-----|--------|----------|--------|--------------|\\n";
+            let metadataTable = "\\n### 🛠 Tool Metadata\\n\\n| Job | Tool | Version | Exit Code | Duration | Fallback |\\n|-----|------|---------|-----------|----------|----------|\\n";
 
-          let summaryTable = "### 📊 Summary Table\n\n| Workflow/Job | Errors | Warnings | Status |\n|--------------|--------|----------|--------|\n";
-          let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Exit Code | File Size | SHA256 | Timestamp |\n|-----|-----------|-----------|--------|-----------|\n";
+            let detailsSection = "\\n### ❌ Errors and ⚠️ Warnings by Job\\n";
+            let warningsSection = "\\n### ⚠️ Consolidated Warnings\\n";
+            let errorsSection = "\\n### ❌ Consolidated Errors\\n";
+            let failedTestsSection = "\\n### 🧨 Consolidated Test Failures\\n";
+            let testsSection = "\\n### 🧪 Test Results\\n";
+            let schemaSection = "\\n### 📐 Schema Validation Details\\n";
+            let coverageSection = "\\n### 📊 Coverage Summary\\n\\n| Job | Lines Covered | Lines Missed | Coverage % |\\n|-----|---------------|--------------|------------|\\n";
+            let artifactLinksSection = "\\n### 📂 Consolidated Artifacts\\n";
 
-          if (allReports.length === 0) {
-            summaryTable += "| n/a | 0 | 0 | no reports found |\n";
-          }
+            if (allReports.length === 0) {
+              summaryTable += "| n/a | 0 | 0 | no reports found | n/a |\\n";
+            }
 
-          for (const r of allReports) {
-            totalErrors += r.errors?.length || 0;
-            totalWarnings += r.warnings?.length || 0;
+            for (const r of allReports) {
+              const errors = Number.isInteger(r.errors) ? r.errors : (r.errors?.length || 0);
+              const warnings = Number.isInteger(r.warnings) ? r.warnings : (r.warnings?.length || 0);
 
-            summaryTable += `| ${r.workflow}/${r.job} | ${r.errors?.length || 0} | ${r.warnings?.length || 0} | ${r.status || "?"} |\n`;
+              totalErrors += errors;
+              totalWarnings += warnings;
 
-            const exitNotice = (r.notices || []).find(n => n.message.includes("exit code"));
-            const sizeNotice = (r.notices || []).find(n => n.message.includes("Input size"));
-            const checksumNotice = (r.notices || []).find(n => n.message.includes("sha256"));
-            const timestampNotice = (r.notices || []).find(n => n.message.includes("Timestamp"));
+              summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\\n`;
 
-            metadataTable += `| ${r.workflow}/${r.job} | ${exitNotice ? exitNotice.message.split(": ")[1] : "?"} | ${sizeNotice ? sizeNotice.message.split(",")[0].split(": ")[1] : "?"} | ${checksumNotice ? checksumNotice.message.split("sha256: ")[1] : "?"} | ${timestampNotice ? timestampNotice.message.split(": ")[1] : "?"} |\n`;
-          }
+              metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\\n`;
 
-          let manifestSection = "\n### 📦 Artifact Manifests\n";
-          if (manifests.length > 0) {
-            manifests.forEach(m => {
-              manifestSection += `\n**${m.path}:**\n\n\`\`\`\n${m.content}\n\`\`\`\n`;
-            });
-          } else {
-            manifestSection += "\n_No artifact manifests found._\n";
-          }
+              if (r.annotations && r.annotations.length > 0) {
+                detailsSection += `\\n**Annotations for ${r.job}:**\\n`;
+                r.annotations.forEach(a => {
+                  detailsSection += `- ${a.annotation_level}: ${a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
+                  if (a.annotation_level === "warning") {
+                    warningsSection += `- ${r.job}: ${a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
+                  }
+                  if (a.annotation_level === "failure") {
+                    errorsSection += `- ${r.job}: ${a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
+                    failedTestsSection += `- ${r.job}: ${a.title || a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
+                  }
+                });
+              }
+            }
 
-          let conclusion = "success";
-          if (totalErrors > 0) conclusion = "failure";
-          else if (totalWarnings > 0) conclusion = "neutral";
+            const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
-          const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n${coverageSection}\\n${schemaSection}\\n${detailsSection}\\n${warningsSection}\\n${errorsSection}\\n${failedTestsSection}\\n${testsSection}\\n${artifactLinksSection}\\n\\n🔗 [View workflow run](${runUrl})`;
+            fs.writeFileSync("report.md", reportOut);
+            fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
 
-          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${manifestSection}\n\n🔗 [View workflow run](${runUrl})`;
-          fs.writeFileSync("report.md", reportOut);
-          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings }, null, 2));
+            if (schemaFailures > 0) process.exit(1);
+          })();
           '
-
-      - name: Debug Diagnostics Report
-        if: always()
-        run: |
-          echo "📂 Summaries collected:"
-          ls -R summaries || true
-          echo "--- report.md ---"
-          cat report.md || true
 
       - name: Upload Diagnostics Report
         if: always()
@@ -152,10 +217,10 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
-            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0 };
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0, jobs: 0, schemaFailures: 0, schemaPasses: 0, coverage: { covered: 0, missed: 0 } };
 
             let conclusion = "success";
-            if (meta.totalErrors > 0) conclusion = "failure";
+            if (meta.schemaFailures > 0 || meta.totalErrors > 0) conclusion = "failure";
             else if (meta.totalWarnings > 0) conclusion = "neutral";
 
             await github.rest.checks.create({
