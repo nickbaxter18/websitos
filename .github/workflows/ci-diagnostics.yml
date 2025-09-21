@@ -16,10 +16,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download frontend summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-summaries
+          path: ./summaries/frontend
+
+      - name: Download backend summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-summaries
+          path: ./summaries/backend
+
+      - name: Download coverage summaries
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-summaries
+          path: ./summaries/coverage
+
       - name: Debug summaries before aggregation
         run: |
-          echo "📂 Summaries directory contents before aggregation"
-          find summaries || true
+          echo "📂 Available summaries before aggregation:"
+          ls -lhR summaries || true
 
       - name: Aggregate Diagnostics
         run: |
@@ -53,6 +71,10 @@ jobs:
 
           loadFiles(baseDir);
 
+          if (allReports.length === 0) {
+            allReports.push({ workflow: "diagnostics", job: "aggregate", status: "failure", errors: [{ message: "No reports found" }], warnings: [], notices: [] });
+          }
+
           let totalErrors = 0, totalWarnings = 0;
           allReports.forEach(r => {
             totalErrors += r.errors?.length || 0;
@@ -60,8 +82,11 @@ jobs:
           });
 
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          let summary = allReports.length === 0 ? "⚠️ No reports found" :
-            allReports.map(r => `${r.workflow}/${r.job}: ${r.status} (E:${r.errors?.length||0} W:${r.warnings?.length||0})`).join("\n");
+          let summaryTable = "### 📊 Summary Table\n\n| Workflow/Job | Errors | Warnings | Status |\n|--------------|--------|----------|--------|\n";
+
+          for (const r of allReports) {
+            summaryTable += `| ${r.workflow}/${r.job} | ${r.errors?.length || 0} | ${r.warnings?.length || 0} | ${r.status || "?"} |\n`;
+          }
 
           let manifestSection = "\n### 📦 Artifact Manifests\n";
           if (manifests.length > 0) {
@@ -72,9 +97,15 @@ jobs:
             manifestSection += "\n_No artifact manifests found._\n";
           }
 
-          fs.writeFileSync("report.md", `## ⚠️ CI Diagnostics Report\n\n${summary}\n\n🔗 [View run](${runUrl})${manifestSection}`);
+          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n\n🔗 [View workflow run](${runUrl})${manifestSection}`;
+          fs.writeFileSync("report.md", reportOut);
           fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, reports: allReports.length }, null, 2));
           '
+
+      - name: Debug report after aggregation
+        run: |
+          echo "📄 Report generated (first 40 lines):"
+          head -n 40 report.md || true
 
       - name: Upload Diagnostics Report
         if: always()
