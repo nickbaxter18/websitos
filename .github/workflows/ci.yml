@@ -15,61 +15,289 @@ permissions:
   actions: read
 
 jobs:
+  # ---------------------------
+  # Frontend Checks
+  # ---------------------------
   frontend-checks:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [lint, prettier, type-check, test-unit, playwright-e2e]
     steps:
       - uses: actions/checkout@v4
-      - name: Debug Environment Info (Frontend)
-        run: |
-          echo "=== FRONTEND ENV DEBUG ==="
-          node -v || true
-          npm -v || true
-          pnpm -v || true
-          python3 --version || true
-          pip3 list || true
-          echo "Workspace files:" 
-          ls -R || true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile
 
+      - name: Run ESLint
+        if: ${{ matrix.task == 'lint' }}
+        run: |
+          pnpm exec eslint src v2 ops --format json --output-file eslint-output.json || true
+          node Scripts/convert-eslint.cjs eslint-output.json eslint-report.json || true
+          mkdir -p summaries
+          mv eslint-report.json summaries/
+
+      - name: Run Prettier
+        if: ${{ matrix.task == 'prettier' }}
+        run: |
+          pnpm exec prettier --check . > prettier-output.txt 2>&1 || true
+          node Scripts/convert-prettier.cjs prettier-output.txt prettier-report.json || true
+          mkdir -p summaries
+          mv prettier-report.json summaries/
+
+      - name: Run TypeScript type-check
+        if: ${{ matrix.task == 'type-check' }}
+        run: |
+          pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-output.txt 2>&1 || true
+          node Scripts/convert-tsc.cjs tsc-output.txt tsc-report.json || true
+          mkdir -p summaries
+          mv tsc-report.json summaries/
+
+      - name: Run Jest unit tests
+        if: ${{ matrix.task == 'test-unit' }}
+        run: |
+          pnpm exec jest --coverage --json --outputFile=jest-output.json || true
+          node Scripts/convert-jest.cjs jest-output.json jest-report.json || true
+          mkdir -p summaries
+          mv jest-report.json summaries/
+
+      - name: Run Playwright E2E tests
+        if: ${{ matrix.task == 'playwright-e2e' }}
+        run: |
+          pnpm exec playwright install --with-deps || true
+          (pnpm exec playwright test 2>&1 | tee playwright-output.txt) || true
+          node Scripts/convert-playwright.cjs playwright-output.txt coverage/e2e/coverage-summary.json playwright-e2e-report.json || true
+          mkdir -p summaries
+          mv playwright-e2e-report.json summaries/
+
+      - name: Upload partial frontend summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  package-frontend:
+    if: always()
+    runs-on: ubuntu-latest
+    needs: frontend-checks
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all frontend job artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: frontend-partial-*
+          path: ./downloaded
+          merge-multiple: true
+      - name: Collect frontend summaries
+        run: |
+          mkdir -p summaries
+          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          sha256sum summaries/* > summaries/checksums.txt || true
+          date +%s > summaries/timestamp.txt
+      - name: Upload combined frontend summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-summaries
+          path: summaries/
+
+  # ---------------------------
+  # Backend Checks
+  # ---------------------------
   backend-checks:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [black, mypy, pytest, flake8]
     steps:
       - uses: actions/checkout@v4
-      - name: Debug Environment Info (Backend)
-        run: |
-          echo "=== BACKEND ENV DEBUG ==="
-          node -v || true
-          npm -v || true
-          pnpm -v || true
-          python3 --version || true
-          pip3 list || true
-          echo "Workspace files:" 
-          ls -R || true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest-json-report flake8 mypy black
 
+      - name: Run Black
+        if: ${{ matrix.task == 'black' }}
+        run: |
+          black --check . > black-output.txt 2>&1 || true
+          node Scripts/convert-black.cjs black-output.txt black-report.json || true
+          mkdir -p summaries
+          mv black-report.json summaries/
+
+      - name: Run Mypy
+        if: ${{ matrix.task == 'mypy' }}
+        run: |
+          mypy . > mypy-output.txt 2>&1 || true
+          node Scripts/convert-mypy.cjs mypy-output.txt mypy-report.json || true
+          mkdir -p summaries
+          mv mypy-report.json summaries/
+
+      - name: Run Pytest
+        if: ${{ matrix.task == 'pytest' }}
+        run: |
+          pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json || true
+          node Scripts/convert-pytest.cjs pytest-output.json pytest-report.json || true
+          mkdir -p summaries
+          mv pytest-report.json summaries/
+
+      - name: Run Flake8
+        if: ${{ matrix.task == 'flake8' }}
+        run: |
+          flake8 . > flake8-output.txt 2>&1 || true
+          node Scripts/convert-flake8.cjs flake8-output.txt flake8-report.json || true
+          mkdir -p summaries
+          mv flake8-report.json summaries/
+
+      - name: Upload partial backend summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  package-backend:
+    if: always()
+    runs-on: ubuntu-latest
+    needs: backend-checks
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all backend job artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: backend-partial-*
+          path: ./downloaded
+          merge-multiple: true
+      - name: Collect backend summaries
+        run: |
+          mkdir -p summaries
+          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          sha256sum summaries/* > summaries/checksums.txt || true
+          date +%s > summaries/timestamp.txt
+      - name: Upload combined backend summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-summaries
+          path: summaries/
+
+  # ---------------------------
+  # Coverage Checks
+  # ---------------------------
   coverage-checks:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [frontend, backend, backend-node, e2e]
     steps:
       - uses: actions/checkout@v4
-      - name: Debug Environment Info (Coverage)
-        run: |
-          echo "=== COVERAGE ENV DEBUG ==="
-          node -v || true
-          npm -v || true
-          pnpm -v || true
-          python3 --version || true
-          pip3 list || true
-          echo "Workspace files:" 
-          ls -R || true
+      - name: Setup Node.js
+        if: ${{ matrix.task != 'backend' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - name: Setup pnpm
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - name: Setup Python
+        if: ${{ matrix.task == 'backend' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-  diagnostics:
+      - name: Run Frontend Coverage
+        if: ${{ matrix.task == 'frontend' }}
+        run: |
+          pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary || true
+          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json || true
+          mkdir -p summaries
+          mv frontend-coverage-report.json summaries/
+
+      - name: Run Backend Coverage
+        if: ${{ matrix.task == 'backend' }}
+        run: |
+          pytest backend/tests --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json || true
+          node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json || true
+          node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json || true
+          mkdir -p summaries
+          mv backend-cobertura-report.json summaries/
+          mv backend-coverage-report.json summaries/
+
+      - name: Run Backend-Node Coverage
+        if: ${{ matrix.task == 'backend-node' }}
+        run: |
+          cd backend
+          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage || true
+          cd ..
+          node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json || true
+          mkdir -p summaries
+          mv backend-node-coverage-report.json summaries/
+
+      - name: Run E2E Coverage
+        if: ${{ matrix.task == 'e2e' }}
+        run: |
+          pnpm exec playwright install --with-deps || true
+          pnpm exec playwright test || true
+          npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
+          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json || true
+          mkdir -p summaries
+          mv e2e-coverage-report.json summaries/
+
+      - name: Upload partial coverage summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
+
+  package-coverage:
+    if: always()
     runs-on: ubuntu-latest
-    needs: [frontend-checks, backend-checks, coverage-checks]
+    needs: coverage-checks
     steps:
       - uses: actions/checkout@v4
-      - name: Debug Diagnostics Environment
+      - name: Download all coverage job artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-partial-*
+          path: ./downloaded
+          merge-multiple: true
+      - name: Collect coverage summaries
         run: |
-          echo "=== DIAGNOSTICS ENV DEBUG ==="
-          printenv | sort || true
-          echo "Workspace files before summaries check:" 
-          ls -R || true
-          echo "Summaries folder check:"
-          ls -R summaries || true
+          mkdir -p summaries
+          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          sha256sum summaries/* > summaries/checksums.txt || true
+          date +%s > summaries/timestamp.txt
+      - name: Upload combined coverage summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summaries
+          path: summaries/
+
+  # ---------------------------
+  # Central Diagnostics
+  # ---------------------------
+  diagnostics:
+    if: always()
+    needs: [package-frontend, package-backend, package-coverage]
+    uses: ./.github/workflows/ci-diagnostics.yml
+    secrets: inherit
