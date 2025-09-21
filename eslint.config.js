@@ -1,10 +1,12 @@
 import js from "@eslint/js";
-import tseslint from "typescript-eslint";
 
 export default [
   js.configs.recommended,
-  ...tseslint.configs.recommended,
   {
-    ignores: ["babel.config.js", "jest.config.js"],
+    ignores: [
+      ".github/scripts/aggregator.js",
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml",
+    ],
   },
 ];

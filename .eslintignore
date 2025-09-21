@@ -1,19 +1,12 @@
-# Ignore node modules
-node_modules/
+# Ignore GitHub Actions workflows and all YAML files
+*.yml
+*.yaml
+.github/workflows/*
 
-# Ignore build outputs
+# Ignore aggregator script (Node only, not for linting)
+.github/scripts/aggregator.js
+
+# Existing ignores (if any) should be preserved below
+node_modules/
 dist/
 build/
-
-# Ignore coverage data
-coverage/
-.coverage
-
-# Ignore Codecov config files
-codecov.yml
-codecov.yaml
-.github/codecov.yml
-
-# Ignore GitHub workflow files
-.github/workflows/*.yml
-.github/workflows/*.yaml
