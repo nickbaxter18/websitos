@@ -58,6 +58,7 @@ jobs:
         run: |
           pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary --coverageDirectory=coverage/frontend
           ls -lh coverage/frontend || true
+          mkdir -p summaries
           if [ -s $FRONTEND_COVERAGE_JSON ]; then
             pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $FRONTEND_COVERAGE_JSON frontend-coverage-report.json 0 || echo "⚠️ Frontend converter failed"
             cp frontend-coverage-report.json summaries/frontend-coverage-report.json || true
@@ -76,6 +77,7 @@ jobs:
             --cov-report=xml:$BACKEND_COVERAGE_XML \
             --cov-report=json:$BACKEND_COVERAGE_JSON
           ls -lh coverage || true
+          mkdir -p ../summaries
           if [ -s $BACKEND_COVERAGE_XML ] && [ -s $BACKEND_COVERAGE_JSON ]; then
             pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $BACKEND_COVERAGE_XML backend-cobertura-report.json 0 || echo "⚠️ Backend Cobertura converter failed"
             pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $BACKEND_COVERAGE_JSON backend-coverage-report.json 0 || echo "⚠️ Backend JSON converter failed"
@@ -94,6 +96,7 @@ jobs:
         run: |
           pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=backend/coverage
           ls -lh backend/coverage || true
+          mkdir -p summaries
           if [ -s $BACKEND_NODE_COVERAGE_JSON ]; then
             pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $BACKEND_NODE_COVERAGE_JSON backend-node-coverage-report.json 0 || echo "⚠️ Backend-node converter failed"
             cp backend-node-coverage-report.json summaries/backend-node-coverage-report.json || true
@@ -128,6 +131,7 @@ jobs:
           npx nyc --reporter=json --report-dir=.nyc_output --check-coverage=false pnpm exec playwright test
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e
           ls -lh coverage/e2e || true
+          mkdir -p summaries
           if [ -s $E2E_COVERAGE_JSON ]; then
             pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $E2E_COVERAGE_JSON e2e-coverage-report.json 0 || echo "⚠️ E2E converter failed"
             cp e2e-coverage-report.json summaries/e2e-coverage-report.json || true
