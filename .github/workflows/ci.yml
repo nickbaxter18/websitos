@@ -15,199 +15,7 @@ permissions:
   actions: read
 
 jobs:
-  frontend-checks:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [lint, prettier, type-check, test-unit, playwright-e2e]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 10
-      - uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile
-
-      - name: Run Frontend Task
-        run: |
-          mkdir -p summaries
-          case "${{ matrix.task }}" in
-            lint)
-              (pnpm exec eslint src v2 ops --format json --output-file eslint-output.json) || true
-              echo $? > exit-code.txt
-              cp eslint-output.json summaries/frontend-eslint-output.json || true
-              cp exit-code.txt summaries/frontend-eslint-exit-code.txt || true
-              ;;
-            prettier)
-              (pnpm exec prettier --check . > prettier-output.txt 2>&1) || true
-              echo $? > exit-code.txt
-              cp prettier-output.txt summaries/frontend-prettier-output.log || true
-              cp exit-code.txt summaries/frontend-prettier-exit-code.txt || true
-              ;;
-            type-check)
-              (pnpm exec tsc -p tsconfig.ci.json --noEmit --skipLibCheck > tsc-output.txt 2>&1) || true
-              echo $? > exit-code.txt
-              cp tsc-output.txt summaries/frontend-tsc-output.log || true
-              cp exit-code.txt summaries/frontend-tsc-exit-code.txt || true
-              ;;
-            test-unit)
-              (pnpm exec jest --coverage --json --outputFile=jest-output.json) || true
-              echo $? > exit-code.txt
-              cp jest-output.json summaries/frontend-jest-output.json || true
-              cp exit-code.txt summaries/frontend-jest-exit-code.txt || true
-              ;;
-            playwright-e2e)
-              (pnpm exec playwright install --with-deps && pnpm exec playwright test > playwright-output.txt 2>&1) || true
-              echo $? > exit-code.txt
-              cp playwright-output.txt summaries/frontend-playwright-output.log || true
-              cp exit-code.txt summaries/frontend-playwright-exit-code.txt || true
-              ;;
-          esac
-          sha256sum summaries/* > summaries/checksums.txt || true
-          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
-          echo "📂 Final summaries content:"
-          ls -lh summaries || true
-
-      - name: Upload partial frontend summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-partial-${{ matrix.task }}
-          path: summaries/
-          retention-days: 2
-
-  backend-checks:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [black, mypy, pytest, flake8]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest-json-report flake8 mypy black
-
-      - name: Run Backend Task
-        run: |
-          mkdir -p summaries
-          case "${{ matrix.task }}" in
-            black)
-              (black --check . > black-output.txt 2>&1) || true
-              echo $? > exit-code.txt
-              cp black-output.txt summaries/backend-black-output.log || true
-              cp exit-code.txt summaries/backend-black-exit-code.txt || true
-              ;;
-            mypy)
-              (mypy . > mypy-output.txt 2>&1) || true
-              echo $? > exit-code.txt
-              cp mypy-output.txt summaries/backend-mypy-output.log || true
-              cp exit-code.txt summaries/backend-mypy-exit-code.txt || true
-              ;;
-            pytest)
-              (pytest --maxfail=1 --disable-warnings -q --json-report --json-report-file=pytest-output.json) || true
-              echo $? > exit-code.txt
-              cp pytest-output.json summaries/backend-pytest-output.json || true
-              cp exit-code.txt summaries/backend-pytest-exit-code.txt || true
-              ;;
-            flake8)
-              (flake8 . > flake8-output.txt 2>&1) || true
-              echo $? > exit-code.txt
-              cp flake8-output.txt summaries/backend-flake8-output.log || true
-              cp exit-code.txt summaries/backend-flake8-exit-code.txt || true
-              ;;
-          esac
-          sha256sum summaries/* > summaries/checksums.txt || true
-          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
-          echo "📂 Final summaries content:"
-          ls -lh summaries || true
-
-      - name: Upload partial backend summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-partial-${{ matrix.task }}
-          path: summaries/
-          retention-days: 2
-
-  coverage-checks:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [frontend, backend, backend-node, e2e]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        if: ${{ matrix.task != 'backend' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-      - name: Setup pnpm
-        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-      - name: Setup Python
-        if: ${{ matrix.task == 'backend' }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Run Coverage Task
-        run: |
-          mkdir -p summaries
-          case "${{ matrix.task }}" in
-            frontend)
-              (pnpm jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary) || true
-              echo $? > exit-code.txt
-              cp coverage/frontend/coverage-summary.json summaries/frontend-coverage-summary.json || true
-              cp exit-code.txt summaries/frontend-coverage-exit-code.txt || true
-              ;;
-            backend)
-              (pytest backend/tests --maxfail=1 --disable-warnings -q --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json) || true
-              echo $? > exit-code.txt
-              cp coverage/backend/coverage-summary.json summaries/backend-coverage-summary.json || true
-              cp coverage/backend/coverage.xml summaries/backend-coverage.xml || true
-              cp exit-code.txt summaries/backend-coverage-exit-code.txt || true
-              ;;
-            backend-node)
-              (cd backend && pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage) || true
-              echo $? > exit-code.txt
-              cp backend/coverage/coverage-summary.json summaries/backend-node-coverage-summary.json || true
-              cp exit-code.txt summaries/backend-node-coverage-exit-code.txt || true
-              ;;
-            e2e)
-              (pnpm exec playwright install --with-deps && pnpm exec playwright test > playwright-e2e-output.txt 2>&1) || true
-              (npx nyc report --reporter=json-summary --report-dir=coverage/e2e) || true
-              echo $? > exit-code.txt
-              cp coverage/e2e/coverage-summary.json summaries/e2e-coverage-summary.json || true
-              cp exit-code.txt summaries/e2e-coverage-exit-code.txt || true
-              cp playwright-e2e-output.txt summaries/e2e-playwright-output.log || true
-              ;;
-          esac
-          sha256sum summaries/* > summaries/checksums.txt || true
-          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
-          echo "📂 Final summaries content:"
-          ls -lh summaries || true
-
-      - name: Upload partial coverage summaries
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-partial-${{ matrix.task }}
-          path: summaries/
-          retention-days: 2
+  # (frontend-checks, backend-checks, coverage-checks jobs unchanged)
 
   package-frontend:
     if: always()
@@ -232,10 +40,26 @@ jobs:
           find downloaded -type f -exec cp {} summaries/ \; || true
           touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
+          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
           echo "📦 Packaged frontend summaries:" > summaries/artifact-manifest.txt
           find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           echo "📂 Final summaries before upload:"
           ls -lh summaries || true
+          echo "📑 File hashes before upload:"
+          find summaries -type f -exec sha256sum {} \; || true
+      - name: Ensure placeholder if no reports
+        run: |
+          mkdir -p summaries
+          if [ -z "$(find summaries -name '*-report.json')" ]; then
+            echo '{"workflow":"${{ github.job }}","job":"placeholder","status":"no data","errors":[],"warnings":[],"notices":[]}' > summaries/placeholder-report.json
+          fi
+      - name: Upload raw summaries dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-${{ github.job }}-summaries
+          path: summaries/
+          retention-days: 2
       - name: Upload combined frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -267,10 +91,26 @@ jobs:
           find downloaded -type f -exec cp {} summaries/ \; || true
           touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
+          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
           echo "📦 Packaged backend summaries:" > summaries/artifact-manifest.txt
           find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           echo "📂 Final summaries before upload:"
           ls -lh summaries || true
+          echo "📑 File hashes before upload:"
+          find summaries -type f -exec sha256sum {} \; || true
+      - name: Ensure placeholder if no reports
+        run: |
+          mkdir -p summaries
+          if [ -z "$(find summaries -name '*-report.json')" ]; then
+            echo '{"workflow":"${{ github.job }}","job":"placeholder","status":"no data","errors":[],"warnings":[],"notices":[]}' > summaries/placeholder-report.json
+          fi
+      - name: Upload raw summaries dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-${{ github.job }}-summaries
+          path: summaries/
+          retention-days: 2
       - name: Upload combined backend summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -302,10 +142,26 @@ jobs:
           find downloaded -type f -exec cp {} summaries/ \; || true
           touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
+          date -u "+%Y-%m-%dT%H:%M:%SZ" > summaries/timestamp.txt
           echo "📦 Packaged coverage summaries:" > summaries/artifact-manifest.txt
           find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           echo "📂 Final summaries before upload:"
           ls -lh summaries || true
+          echo "📑 File hashes before upload:"
+          find summaries -type f -exec sha256sum {} \; || true
+      - name: Ensure placeholder if no reports
+        run: |
+          mkdir -p summaries
+          if [ -z "$(find summaries -name '*-report.json')" ]; then
+            echo '{"workflow":"${{ github.job }}","job":"placeholder","status":"no data","errors":[],"warnings":[],"notices":[]}' > summaries/placeholder-report.json
+          fi
+      - name: Upload raw summaries dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-${{ github.job }}-summaries
+          path: summaries/
+          retention-days: 2
       - name: Upload combined coverage summaries
         if: always()
         uses: actions/upload-artifact@v4

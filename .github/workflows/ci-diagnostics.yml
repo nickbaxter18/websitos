@@ -34,20 +34,41 @@ jobs:
           name: coverage-summaries
           path: ./summaries/coverage
 
+      - name: Check for missing artifacts
+        run: |
+          mkdir -p summaries
+          for dir in frontend backend coverage; do
+            if [ ! -d "summaries/$dir" ]; then
+              echo "⚠️ $dir-summaries missing" | tee -a summaries/missing-artifacts.log
+            fi
+          done
+
+      - name: Capture environment info
+        run: |
+          echo "📋 Capturing environment info"
+          node -v > summaries/env-info.txt || true
+          python3 --version >> summaries/env-info.txt || true
+          uname -a >> summaries/env-info.txt || true
+
       - name: Debug summaries before aggregation
         run: |
           echo "📂 Available summaries before aggregation:"
           ls -lhR summaries || true
+          echo "📑 File hashes before aggregation:"
+          find summaries -type f -exec sha256sum {} \; || true
 
       - name: Aggregate Diagnostics
         run: |
+          START_TIME=$(date +%s)
           mkdir -p summaries
           node -e '
           const fs = require("fs");
           const path = require("path");
+          const crypto = require("crypto");
           const baseDir = "summaries";
           const allReports = [];
           const manifests = [];
+          let fileCount = 0;
 
           function loadFiles(dir) {
             if (!fs.existsSync(dir)) return;
@@ -55,16 +76,32 @@ jobs:
               const full = path.join(dir, file);
               if (fs.statSync(full).isDirectory()) {
                 loadFiles(full);
-              } else if (file.endsWith("-report.json")) {
-                try {
-                  const data = JSON.parse(fs.readFileSync(full, "utf-8"));
-                  data.__file = full;
-                  allReports.push(data);
-                } catch (e) {
-                  allReports.push({ workflow: "diagnostics", job: file, status: "failure", errors: [{ message: `Failed to parse: ${e.message}` }], warnings: [], notices: [] });
+              } else {
+                fileCount++;
+                if (/\.(json|log|txt|xml)$/i.test(file)) {
+                  try {
+                    const content = fs.readFileSync(full, "utf-8");
+                    let parsed;
+                    try {
+                      parsed = JSON.parse(content);
+                    } catch {
+                      parsed = { raw: content.slice(0,500), warnings: [{ message: "Non-JSON file parsed as raw" }] };
+                    }
+                    parsed.__file = full;
+                    if (fs.existsSync(path.join(path.dirname(full), "exit-code.txt"))) {
+                      parsed.exit_code = fs.readFileSync(path.join(path.dirname(full), "exit-code.txt"), "utf-8").trim();
+                    }
+                    if (fs.existsSync(path.join(path.dirname(full), "timestamp.txt"))) {
+                      parsed.timestamp = fs.readFileSync(path.join(path.dirname(full), "timestamp.txt"), "utf-8").trim();
+                    }
+                    parsed.sha256 = crypto.createHash("sha256").update(content).digest("hex");
+                    allReports.push(parsed);
+                  } catch (e) {
+                    allReports.push({ file: full, status: "failure", errors: [{ message: `Failed to read: ${e.message}` }] });
+                  }
+                } else if (file.endsWith("artifact-manifest.txt")) {
+                  manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
                 }
-              } else if (file.endsWith("artifact-manifest.txt")) {
-                manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
               }
             }
           }
@@ -82,30 +119,36 @@ jobs:
           });
 
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          let summaryTable = "### 📊 Summary Table\n\n| Workflow/Job | Errors | Warnings | Status |\n|--------------|--------|----------|--------|\n";
+          let summaryTable = "### 📊 Summary Table\\n\\n| File | Errors | Warnings | Status | Exit | SHA256 | Timestamp |\\n|------|--------|----------|--------|------|--------|-----------|\\n";
 
           for (const r of allReports) {
-            summaryTable += `| ${r.workflow}/${r.job} | ${r.errors?.length || 0} | ${r.warnings?.length || 0} | ${r.status || "?"} |\n`;
+            summaryTable += `| ${r.__file || r.file || "?"} | ${r.errors?.length || 0} | ${r.warnings?.length || 0} | ${r.status || "?"} | ${r.exit_code || "?"} | ${r.sha256 || "?"} | ${r.timestamp || "?"} |\\n`;
           }
 
-          let manifestSection = "\n### 📦 Artifact Manifests\n";
+          let manifestSection = "\\n### 📦 Artifact Manifests\\n";
           if (manifests.length > 0) {
             manifests.forEach(m => {
-              manifestSection += `\n**${m.path}:**\n\n\u0060\u0060\u0060\n${m.content}\n\u0060\u0060\u0060\n`;
+              manifestSection += `\\n**${m.path}:**\\n\\n\\u0060\\u0060\\u0060\\n${m.content}\\n\\u0060\\u0060\\u0060\\n`;
             });
           } else {
-            manifestSection += "\n_No artifact manifests found._\n";
+            manifestSection += "\\n_No artifact manifests found._\\n";
           }
 
-          const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n\n🔗 [View workflow run](${runUrl})${manifestSection}`;
+          const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\nTotal files scanned: ${fileCount}\\n\\n🔗 [View workflow run](${runUrl})${manifestSection}`;
           fs.writeFileSync("report.md", reportOut);
-          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, reports: allReports.length }, null, 2));
+          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, reports: allReports.length, files: fileCount }, null, 2));
           '
+          END_TIME=$(date +%s)
+          echo "Duration: $((END_TIME-START_TIME))s" > summaries/duration.txt
 
       - name: Debug report after aggregation
         run: |
           echo "📄 Report generated (first 40 lines):"
           head -n 40 report.md || true
+          echo "📄 Report generated (last 20 lines):"
+          tail -n 20 report.md || true
+          echo "📊 Diagnostics Meta:"
+          cat diagnostics-meta.json || true
 
       - name: Upload Diagnostics Report
         if: always()
@@ -115,6 +158,17 @@ jobs:
           path: |
             report.md
             diagnostics-meta.json
+            summaries/env-info.txt
+            summaries/missing-artifacts.log
+            summaries/duration.txt
+
+      - name: Upload Raw Diagnostics Dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-raw-dump
+          path: summaries/
+          retention-days: 2
 
       - name: Post Diagnostics as Check
         if: always()
@@ -124,7 +178,7 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.existsSync('report.md') ? fs.readFileSync('report.md','utf-8').slice(0,60000) : '⚠️ Diagnostics report missing.';
-            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0, reports: 0 };
+            const meta = fs.existsSync('diagnostics-meta.json') ? JSON.parse(fs.readFileSync('diagnostics-meta.json','utf-8')) : { totalErrors: 0, totalWarnings: 0, reports: 0, files: 0 };
             let conclusion = "success";
             if (meta.reports === 0) conclusion = "neutral";
             else if (meta.totalErrors > 0) conclusion = "failure";
