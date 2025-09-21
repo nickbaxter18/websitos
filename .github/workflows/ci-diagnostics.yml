@@ -137,8 +137,8 @@ jobs:
           const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
           const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n\\n🔗 [View workflow run](${runUrl})`;
-          fs.writeFileSync("../report.md", reportOut);
-          fs.writeFileSync("../diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
+          fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "report.md"), reportOut);
+          fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "diagnostics-meta.json"), JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
 
           if (schemaFailures > 0) process.exit(1);
           '
