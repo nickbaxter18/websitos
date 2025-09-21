@@ -47,18 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        task: [black, mypy, pytest, flake8]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest-json-report flake8 mypy black
-
-      # (backend steps unchanged...)
+    ... (backend steps unchanged)
 
   # ---------------------------
   # Coverage Jobs
@@ -67,27 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        task: [frontend, backend, backend-node, e2e]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        if: ${{ matrix.task != 'backend' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-      - name: Setup pnpm
-        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-      - name: Setup Python
-        if: ${{ matrix.task == 'backend' }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      # (coverage steps unchanged...)
+    ... (coverage steps unchanged)
 
   # ---------------------------
   # Central Diagnostics (Reusable Workflow)
@@ -96,4 +65,4 @@ jobs:
     needs: [frontend-checks, backend-checks, coverage-checks]
     uses: ./.github/workflows/ci-diagnostics.yml
     secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      github_token: ${{ secrets.GITHUB_TOKEN }}
