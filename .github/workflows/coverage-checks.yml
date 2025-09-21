@@ -107,7 +107,7 @@ jobs:
         if: ${{ matrix.task == 'e2e' }}
         run: |
           pnpm exec playwright install --with-deps
-          pnpm exec playwright test
+          npx nyc --reporter=json --report-dir=.nyc_output pnpm exec playwright test
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e
           test -f coverage/e2e/coverage-summary.json
           pnpm exec node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
