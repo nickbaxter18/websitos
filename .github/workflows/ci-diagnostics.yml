@@ -2,7 +2,9 @@ name: CI Diagnostics
 
 on:
   workflow_call:
-    secrets: inherit
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 jobs:
   run-diagnostics:
