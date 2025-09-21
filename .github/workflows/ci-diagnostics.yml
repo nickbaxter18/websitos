@@ -38,16 +38,16 @@ jobs:
           mkdir -p .agg_tmp
           cd .agg_tmp
           npm init -y >/dev/null 2>&1
-          npm install ajv-cli @octokit/rest
+          npm install --no-save ajv-cli @octokit/rest
 
       - name: Aggregate Diagnostics
+        working-directory: .agg_tmp
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p summaries
-          echo "📂 Downloaded artifact tree:" && find summaries -type f -ls
+          mkdir -p ../summaries
+          echo "📂 Downloaded artifact tree:" && find ../summaries -type f -ls
 
-          cd .agg_tmp
           node -e '
           const fs = require("fs");
           const path = require("path");
