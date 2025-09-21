@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies (pnpm workspace)
+      - name: Install dependencies (pnpm)
         if: ${{ matrix.task != 'backend' }}
         run: pnpm install
 
@@ -52,12 +52,12 @@ jobs:
       - name: Run frontend coverage (Jest)
         if: ${{ matrix.task == 'frontend' }}
         run: |
-          pnpm --filter frontend exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary
-          test -f frontend/coverage/coverage-summary.json
-          node Scripts/convert-jest-coverage.cjs frontend/coverage/coverage-summary.json frontend-coverage-report.json 0
+          pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary
+          test -f coverage/coverage-summary.json
+          node Scripts/convert-jest-coverage.cjs coverage/coverage-summary.json frontend-coverage-report.json 0
           mkdir -p summaries
           mv frontend-coverage-report.json summaries/
-          mv frontend/coverage/coverage-summary.json summaries/coverage-frontend-raw.log
+          mv coverage/coverage-summary.json summaries/coverage-frontend-raw.log
           sha256sum summaries/* > summaries/checksums.txt
 
       - name: Run backend coverage (Pytest)
@@ -78,7 +78,7 @@ jobs:
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
-          pnpm --filter backend exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage
+          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=backend/coverage
           test -f backend/coverage/coverage-summary.json
           node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json 0
           mkdir -p summaries
@@ -89,14 +89,14 @@ jobs:
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |
-          pnpm --filter e2e exec playwright install --with-deps
-          pnpm --filter e2e exec playwright test
-          npx nyc report --reporter=json-summary --report-dir=e2e/coverage
-          test -f e2e/coverage/coverage-summary.json
-          node Scripts/convert-jest-coverage.cjs e2e/coverage/coverage-summary.json e2e-coverage-report.json 0
+          pnpm exec playwright install --with-deps
+          pnpm exec playwright test
+          npx nyc report --reporter=json-summary --report-dir=coverage/e2e
+          test -f coverage/e2e/coverage-summary.json
+          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
           mkdir -p summaries
           mv e2e-coverage-report.json summaries/
-          mv e2e/coverage/coverage-summary.json summaries/coverage-e2e-raw.log
+          mv coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
           sha256sum summaries/* > summaries/checksums.txt
 
       - name: Generate Artifact Manifest
