@@ -55,7 +55,7 @@ jobs:
           mkdir -p summaries
           cp frontend-coverage-report.json summaries/
           cp coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log
-          sha256sum summaries/* > summaries/checksums.txt
+          cp summaries/* ../summaries/ || true
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
@@ -73,7 +73,6 @@ jobs:
           cp $GITHUB_WORKSPACE/backend-coverage-report.json ../summaries/
           cp coverage/coverage.xml ../summaries/coverage-backend-raw.xml
           cp coverage/coverage-summary.json ../summaries/coverage-backend-raw.log
-          sha256sum ../summaries/* > ../summaries/checksums.txt
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
@@ -84,7 +83,7 @@ jobs:
           mkdir -p summaries
           cp backend-node-coverage-report.json summaries/
           cp backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
-          sha256sum summaries/* > summaries/checksums.txt
+          cp summaries/* ../summaries/ || true
 
       - name: Build frontend for E2E
         if: ${{ matrix.task == 'e2e' }}
@@ -114,7 +113,7 @@ jobs:
           mkdir -p summaries
           cp e2e-coverage-report.json summaries/
           cp coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
-          sha256sum summaries/* > summaries/checksums.txt
+          cp summaries/* ../summaries/ || true
 
       - name: Generate Artifact Manifest
         run: |
@@ -146,9 +145,7 @@ jobs:
           mkdir -p summaries
           echo "📥 Collected coverage artifacts:" > summaries/artifact-manifest.txt
           find downloaded -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          find downloaded -name "*report.json" -exec cp {} summaries/ \;
-          find downloaded -name "*cobertura-report.json" -exec cp {} summaries/ \;
-          find downloaded -name "*coverage-report.json" -exec cp {} summaries/ \;
+          cp $(find downloaded -name "*report.json" -o -name "*coverage-report.json" -o -name "*cobertura-report.json") summaries/ || true
           sha256sum summaries/* >> summaries/artifact-manifest.txt
 
       - name: Upload combined coverage summaries
