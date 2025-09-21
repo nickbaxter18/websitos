@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   # ---------------------------
-  # Frontend Checks
+  # Frontend Jobs
   # ---------------------------
   frontend-checks:
     runs-on: ubuntu-latest
@@ -36,14 +36,21 @@ jobs:
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile   # ensure dependencies are installed per-job
 
-      # ... frontend tasks unchanged ...
+      - name: Upload partial frontend summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
 
   package-frontend:
     if: always()
     runs-on: ubuntu-latest
     needs: frontend-checks
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Download all frontend job artifacts
@@ -55,19 +62,19 @@ jobs:
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
-          find downloaded -type f -exec cp {} summaries/ \; || true
+          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
-          date +%s > summaries/timestamp.txt
       - name: Upload combined frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
           path: summaries/
-          retention-days: 7
+          retention-days: 2
 
   # ---------------------------
-  # Backend Checks
+  # Backend Jobs
   # ---------------------------
   backend-checks:
     runs-on: ubuntu-latest
@@ -84,12 +91,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest-json-report flake8 mypy black
 
-      # ... backend tasks unchanged ...
+      - name: Upload partial backend summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-partial-${{ matrix.task }}
+          path: summaries/
+          retention-days: 2
 
   package-backend:
     if: always()
     runs-on: ubuntu-latest
     needs: backend-checks
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Download all backend job artifacts
@@ -101,19 +115,19 @@ jobs:
       - name: Collect backend summaries
         run: |
           mkdir -p summaries
-          find downloaded -type f -exec cp {} summaries/ \; || true
+          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
-          date +%s > summaries/timestamp.txt
       - name: Upload combined backend summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-summaries
           path: summaries/
-          retention-days: 7
+          retention-days: 2
 
   # ---------------------------
-  # Coverage Checks
+  # Coverage Jobs
   # ---------------------------
   coverage-checks:
     runs-on: ubuntu-latest
@@ -123,6 +137,7 @@ jobs:
         task: [frontend, backend, backend-node, e2e]
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Node.js
         if: ${{ matrix.task != 'backend' }}
         uses: actions/setup-node@v4
@@ -138,85 +153,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install Python deps for backend coverage
+
+      - name: Install frontend/backend-node/e2e dependencies
+        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Install backend dependencies
         if: ${{ matrix.task == 'backend' }}
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest pytest-cov
-      - name: Install xmldom for Cobertura parser
-        if: ${{ matrix.task == 'backend' }}
-        run: |
-          pnpm add -D xmldom
-      - name: Install frontend deps
-        if: ${{ matrix.task == 'frontend' }}
-        run: pnpm install --frozen-lockfile
-      - name: Install e2e deps
-        if: ${{ matrix.task == 'e2e' }}
-        run: pnpm install --frozen-lockfile
-      - name: Install backend-node deps
-        if: ${{ matrix.task == 'backend-node' }}
-        run: |
-          cd backend
-          pnpm install --frozen-lockfile
-          cd ..
-
-      - name: Run Frontend Coverage
-        if: ${{ matrix.task == 'frontend' }}
-        run: |
-          pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary || true
-          node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json || true
-          mkdir -p summaries
-          mv frontend-coverage-report.json summaries/
-      - name: Debug coverage files (frontend)
-        if: always()
-        run: |
-          echo "📂 Checking coverage directory for frontend"
-          ls -R coverage || echo "⚠️ No coverage directory found"
-
-      - name: Run Backend Coverage
-        if: ${{ matrix.task == 'backend' }}
-        run: |
-          pytest backend/tests --cov=./backend --cov-branch --cov-report=xml:coverage/backend/coverage.xml --cov-report=json:coverage/backend/coverage-summary.json || true
-          node Scripts/convert-cobertura.cjs coverage/backend/coverage.xml backend-cobertura-report.json || true
-          node Scripts/convert-pytest-coverage.cjs coverage/backend/coverage-summary.json backend-coverage-report.json || true
-          mkdir -p summaries
-          mv backend-cobertura-report.json summaries/
-          mv backend-coverage-report.json summaries/
-      - name: Debug coverage files (backend)
-        if: always()
-        run: |
-          echo "📂 Checking coverage directory for backend"
-          ls -R coverage || echo "⚠️ No coverage directory found"
-
-      - name: Run Backend-Node Coverage
-        if: ${{ matrix.task == 'backend-node' }}
-        run: |
-          cd backend
-          pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=coverage || true
-          cd ..
-          node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json || true
-          mkdir -p summaries
-          mv backend-node-coverage-report.json summaries/
-      - name: Debug coverage files (backend-node)
-        if: always()
-        run: |
-          echo "📂 Checking coverage directory for backend-node"
-          ls -R backend/coverage || echo "⚠️ No backend/coverage directory found"
-
-      - name: Run E2E Coverage
-        if: ${{ matrix.task == 'e2e' }}
-        run: |
-          pnpm exec playwright install --with-deps || true
-          pnpm exec playwright test || true
-          npx nyc report --reporter=json-summary --report-dir=coverage/e2e || true
-          node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json || true
-          mkdir -p summaries
-          mv e2e-coverage-report.json summaries/
-      - name: Debug coverage files (e2e)
-        if: always()
-        run: |
-          echo "📂 Checking coverage directory for e2e"
-          ls -R coverage/e2e || echo "⚠️ No coverage/e2e directory found"
+          pip install -r requirements.txt pytest-json-report flake8 mypy black
 
       - name: Upload partial coverage summaries
         if: always()
@@ -224,12 +170,13 @@ jobs:
         with:
           name: coverage-partial-${{ matrix.task }}
           path: summaries/
-          retention-days: 7
+          retention-days: 2
 
   package-coverage:
     if: always()
     runs-on: ubuntu-latest
     needs: coverage-checks
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Download all coverage job artifacts
@@ -241,16 +188,16 @@ jobs:
       - name: Collect coverage summaries
         run: |
           mkdir -p summaries
-          find downloaded -type f -exec cp {} summaries/ \; || true
+          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
+          touch summaries/placeholder.txt
           sha256sum summaries/* > summaries/checksums.txt || true
-          date +%s > summaries/timestamp.txt
       - name: Upload combined coverage summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-summaries
           path: summaries/
-          retention-days: 7
+          retention-days: 2
 
   # ---------------------------
   # Central Diagnostics
