@@ -90,6 +90,10 @@ jobs:
           }
           EOF
 
+          echo "✅ Wrote summaries/backend-pytest-diagnostics.json"
+          sha256sum summaries/backend-pytest-diagnostics.json
+          head -n 20 summaries/backend-pytest-diagnostics.json
+
       - name: Run Mypy
         if: ${{ matrix.task == 'mypy' }}
         run: |
@@ -141,6 +145,10 @@ jobs:
             }
           }
           EOF
+
+          echo "✅ Wrote summaries/backend-mypy-diagnostics.json"
+          sha256sum summaries/backend-mypy-diagnostics.json
+          head -n 20 summaries/backend-mypy-diagnostics.json
 
       - name: Run Flake8
         if: ${{ matrix.task == 'flake8' }}
@@ -194,6 +202,10 @@ jobs:
           }
           EOF
 
+          echo "✅ Wrote summaries/backend-flake8-diagnostics.json"
+          sha256sum summaries/backend-flake8-diagnostics.json
+          head -n 20 summaries/backend-flake8-diagnostics.json
+
       - name: Run Black
         if: ${{ matrix.task == 'black' }}
         run: |
@@ -245,3 +257,7 @@ jobs:
             }
           }
           EOF
+
+          echo "✅ Wrote summaries/backend-black-diagnostics.json"
+          sha256sum summaries/backend-black-diagnostics.json
+          head -n 20 summaries/backend-black-diagnostics.json

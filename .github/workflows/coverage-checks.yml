@@ -72,7 +72,6 @@ jobs:
         run: |
           mkdir -p summaries
           start=$(date +%s)
-          echo "▶️ Running Jest with coverage..."
           pnpm exec jest --config jest.config.cjs --coverage --all \
             --coverageReporters=json-summary \
             --coverageDirectory=coverage/frontend
@@ -97,6 +96,7 @@ jobs:
 
           sha256=$(sha256sum $FRONTEND_COVERAGE_JSON | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           cat <<EOF > summaries/frontend-diagnostics.json
           {
@@ -130,6 +130,10 @@ jobs:
             }
           }
           EOF
+
+          echo "✅ Wrote summaries/frontend-diagnostics.json"
+          sha256sum summaries/frontend-diagnostics.json
+          head -n 20 summaries/frontend-diagnostics.json
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
@@ -165,6 +169,7 @@ jobs:
 
           sha256=$(sha256sum $BACKEND_COVERAGE_JSON | awk '{print $1}' || echo "")
           deps=$(pip freeze | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           cat <<EOF > ../summaries/backend-diagnostics.json
           {
@@ -200,6 +205,10 @@ jobs:
           }
           EOF
 
+          echo "✅ Wrote ../summaries/backend-diagnostics.json"
+          sha256sum ../summaries/backend-diagnostics.json
+          head -n 20 ../summaries/backend-diagnostics.json
+
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
@@ -229,6 +238,7 @@ jobs:
 
           sha256=$(sha256sum $BACKEND_NODE_COVERAGE_JSON | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           cat <<EOF > summaries/backend-node-diagnostics.json
           {
@@ -263,6 +273,10 @@ jobs:
           }
           EOF
 
+          echo "✅ Wrote summaries/backend-node-diagnostics.json"
+          sha256sum summaries/backend-node-diagnostics.json
+          head -n 20 summaries/backend-node-diagnostics.json
+
       - name: Run e2e coverage (Playwright)
         if: ${{ matrix.task == 'e2e' }}
         run: |
@@ -292,6 +306,7 @@ jobs:
 
           sha256=$(sha256sum $E2E_COVERAGE_JSON | awk '{print $1}' || echo "")
           deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
 
           cat <<EOF > summaries/e2e-diagnostics.json
           {
@@ -325,3 +340,7 @@ jobs:
             }
           }
           EOF
+
+          echo "✅ Wrote summaries/e2e-diagnostics.json"
+          sha256sum summaries/e2e-diagnostics.json
+          head -n 20 summaries/e2e-diagnostics.json

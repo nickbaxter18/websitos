@@ -99,6 +99,16 @@ jobs:
           }
           EOF
 
+          echo "✅ Wrote summaries/frontend-eslint-diagnostics.json"
+          sha256sum summaries/frontend-eslint-diagnostics.json
+          head -n 20 summaries/frontend-eslint-diagnostics.json
+
+      - name: Validate ESLint artifacts before upload
+        if: ${{ matrix.task == 'lint' }}
+        run: |
+          ls -lh summaries/
+          test -f summaries/frontend-eslint-diagnostics.json || echo "⚠️ No diagnostics JSON created for ESLint"
+
       - name: Run Prettier
         if: ${{ matrix.task == 'prettier' }}
         run: |
@@ -150,6 +160,10 @@ jobs:
             }
           }
           EOF
+
+          echo "✅ Wrote summaries/frontend-prettier-diagnostics.json"
+          sha256sum summaries/frontend-prettier-diagnostics.json
+          head -n 20 summaries/frontend-prettier-diagnostics.json
 
       - name: Run TypeScript type-check
         if: ${{ matrix.task == 'type-check' }}
@@ -203,6 +217,10 @@ jobs:
           }
           EOF
 
+          echo "✅ Wrote summaries/frontend-tsc-diagnostics.json"
+          sha256sum summaries/frontend-tsc-diagnostics.json
+          head -n 20 summaries/frontend-tsc-diagnostics.json
+
       - name: Run Jest unit tests
         if: ${{ matrix.task == 'test-unit' }}
         run: |
@@ -254,6 +272,10 @@ jobs:
             }
           }
           EOF
+
+          echo "✅ Wrote summaries/frontend-jest-diagnostics.json"
+          sha256sum summaries/frontend-jest-diagnostics.json
+          head -n 20 summaries/frontend-jest-diagnostics.json
 
       - name: Run Playwright E2E
         if: ${{ matrix.task == 'playwright-e2e' }}
@@ -307,3 +329,7 @@ jobs:
             }
           }
           EOF
+
+          echo "✅ Wrote summaries/frontend-playwright-diagnostics.json"
+          sha256sum summaries/frontend-playwright-diagnostics.json
+          head -n 20 summaries/frontend-playwright-diagnostics.json
