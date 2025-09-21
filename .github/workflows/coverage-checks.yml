@@ -9,6 +9,13 @@ on:
       - '**'
   workflow_dispatch:
 
+env:
+  FRONTEND_COVERAGE_JSON: coverage/frontend/coverage-summary.json
+  BACKEND_COVERAGE_XML: backend/coverage/coverage.xml
+  BACKEND_COVERAGE_JSON: backend/coverage/coverage-summary.json
+  BACKEND_NODE_COVERAGE_JSON: backend/coverage/coverage-summary.json
+  E2E_COVERAGE_JSON: coverage/e2e/coverage-summary.json
+
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -50,40 +57,38 @@ jobs:
         if: ${{ matrix.task == 'frontend' }}
         run: |
           pnpm exec jest --config jest.config.cjs --coverage --all --coverageReporters=json-summary --coverageDirectory=coverage/frontend
-          test -f coverage/frontend/coverage-summary.json
-          pnpm exec node Scripts/convert-jest-coverage.cjs coverage/frontend/coverage-summary.json frontend-coverage-report.json 0
+          test -f $FRONTEND_COVERAGE_JSON
+          pnpm exec node Scripts/convert-jest-coverage.cjs $FRONTEND_COVERAGE_JSON frontend-coverage-report.json 0
           mkdir -p summaries
           cp frontend-coverage-report.json summaries/
-          cp coverage/frontend/coverage-summary.json summaries/coverage-frontend-raw.log
-          cp summaries/* ../summaries/ || true
+          cp $FRONTEND_COVERAGE_JSON summaries/coverage-frontend-raw.log
 
       - name: Run backend coverage (Pytest)
         if: ${{ matrix.task == 'backend' }}
         working-directory: backend
         run: |
           pytest tests --maxfail=1 --disable-warnings -q --cov=backend --cov-branch \
-            --cov-report=xml:coverage/coverage.xml \
-            --cov-report=json:coverage/coverage-summary.json
-          test -f coverage/coverage.xml
-          test -f coverage/coverage-summary.json
-          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $GITHUB_WORKSPACE/backend/coverage/coverage.xml backend-cobertura-report.json 0
-          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $GITHUB_WORKSPACE/backend/coverage/coverage-summary.json backend-coverage-report.json 0
+            --cov-report=xml:$BACKEND_COVERAGE_XML \
+            --cov-report=json:$BACKEND_COVERAGE_JSON
+          test -f $BACKEND_COVERAGE_XML
+          test -f $BACKEND_COVERAGE_JSON
+          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-cobertura.cjs $BACKEND_COVERAGE_XML backend-cobertura-report.json 0
+          pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-pytest-coverage.cjs $BACKEND_COVERAGE_JSON backend-coverage-report.json 0
           mkdir -p ../summaries
-          cp $GITHUB_WORKSPACE/backend-cobertura-report.json ../summaries/
-          cp $GITHUB_WORKSPACE/backend-coverage-report.json ../summaries/
-          cp coverage/coverage.xml ../summaries/coverage-backend-raw.xml
-          cp coverage/coverage-summary.json ../summaries/coverage-backend-raw.log
+          cp backend-cobertura-report.json ../summaries/
+          cp backend-coverage-report.json ../summaries/
+          cp $BACKEND_COVERAGE_XML ../summaries/coverage-backend-raw.xml
+          cp $BACKEND_COVERAGE_JSON ../summaries/coverage-backend-raw.log
 
       - name: Run backend-node coverage (Jest)
         if: ${{ matrix.task == 'backend-node' }}
         run: |
           pnpm exec jest --config jest.config.cjs --coverage --coverageReporters=json-summary --coverageDirectory=backend/coverage
-          test -f backend/coverage/coverage-summary.json
-          pnpm exec node Scripts/convert-jest-coverage.cjs backend/coverage/coverage-summary.json backend-node-coverage-report.json 0
+          test -f $BACKEND_NODE_COVERAGE_JSON
+          pnpm exec node Scripts/convert-jest-coverage.cjs $BACKEND_NODE_COVERAGE_JSON backend-node-coverage-report.json 0
           mkdir -p summaries
           cp backend-node-coverage-report.json summaries/
-          cp backend/coverage/coverage-summary.json summaries/coverage-backend-node-raw.log
-          cp summaries/* ../summaries/ || true
+          cp $BACKEND_NODE_COVERAGE_JSON summaries/coverage-backend-node-raw.log
 
       - name: Build frontend for E2E
         if: ${{ matrix.task == 'e2e' }}
@@ -108,12 +113,11 @@ jobs:
           pnpm exec playwright install --with-deps
           npx nyc --reporter=json --report-dir=.nyc_output --check-coverage=false pnpm exec playwright test
           npx nyc report --reporter=json-summary --report-dir=coverage/e2e
-          test -f coverage/e2e/coverage-summary.json
-          pnpm exec node Scripts/convert-jest-coverage.cjs coverage/e2e/coverage-summary.json e2e-coverage-report.json 0
+          test -f $E2E_COVERAGE_JSON
+          pnpm exec node Scripts/convert-jest-coverage.cjs $E2E_COVERAGE_JSON e2e-coverage-report.json 0
           mkdir -p summaries
           cp e2e-coverage-report.json summaries/
-          cp coverage/e2e/coverage-summary.json summaries/coverage-e2e-raw.log
-          cp summaries/* ../summaries/ || true
+          cp $E2E_COVERAGE_JSON summaries/coverage-e2e-raw.log
 
       - name: Generate Artifact Manifest
         run: |
@@ -126,7 +130,7 @@ jobs:
         with:
           name: coverage-partial-${{ matrix.task }}
           path: summaries/
-          retention-days: 2
+          retention-days: 7
 
   package-and-upload:
     runs-on: ubuntu-latest
@@ -154,4 +158,4 @@ jobs:
         with:
           name: coverage-summaries
           path: summaries/
-          retention-days: 2
+          retention-days: 7
