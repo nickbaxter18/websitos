@@ -33,14 +33,17 @@ jobs:
           name: coverage-summaries
           path: ./summaries/coverage
 
+      - name: Install aggregator dependencies
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm install ajv-cli @octokit/rest
+
       - name: Aggregate Diagnostics
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p summaries
           echo "📂 Downloaded artifact tree:" && find summaries -type f -ls
-
-          npm install -g ajv-cli jq @octokit/rest || true
 
           node -e '
           const fs = require("fs");
@@ -57,46 +60,9 @@ jobs:
 
           const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-          async function fetchAnnotations() {
-            try {
-              const runId = process.env.GITHUB_RUN_ID;
-              const repoParts = process.env.GITHUB_REPOSITORY.split("/");
-              const { data: jobs } = await octokit.actions.listJobsForWorkflowRun({
-                owner: repoParts[0],
-                repo: repoParts[1],
-                run_id: runId
-              });
-              for (const job of jobs.jobs) {
-                if (!job.check_run_url) continue;
-                const checkRunId = job.check_run_url.split("/").pop();
-                try {
-                  const { data: annotations } = await octokit.checks.listAnnotations({
-                    owner: repoParts[0],
-                    repo: repoParts[1],
-                    check_run_id: checkRunId
-                  });
-                  if (annotations?.length > 0) {
-                    const diagFile = path.join(baseDir, `${job.name.replace(/\s+/g, "-").toLowerCase()}-annotations.json`);
-                    fs.writeFileSync(diagFile, JSON.stringify(annotations, null, 2));
-                    allReports.push({
-                      job: job.name,
-                      errors: annotations.filter(a => a.annotation_level === "failure").length,
-                      warnings: annotations.filter(a => a.annotation_level === "warning").length,
-                      annotations
-                    });
-                  }
-                } catch (e) {
-                  console.error("⚠️ Failed to fetch annotations for job", job.name, e.message);
-                }
-              }
-            } catch (e) {
-              console.error("⚠️ Could not fetch annotations:", e.message);
-            }
-          }
-
           function validateSchema(file) {
             try {
-              execSync(`ajv validate -s ${schemaPath} -d ${file}`, { stdio: "pipe" });
+              execSync(`npx ajv-cli validate -s ${schemaPath} -d ${file}`, { stdio: "pipe" });
               schemaPasses++;
               return null;
             } catch (e) {
@@ -140,64 +106,38 @@ jobs:
             }
           }
 
-          (async () => {
-            await fetchAnnotations();
-            loadFiles(baseDir);
+          loadFiles(baseDir);
 
-            let totalErrors = 0;
-            let totalWarnings = 0;
-            let totalCoverageLines = { covered: 0, missed: 0 };
+          let totalErrors = 0;
+          let totalWarnings = 0;
+          let totalCoverageLines = { covered: 0, missed: 0 };
 
-            let summaryTable = "### 📊 Summary Table\\n\\n| Job | Errors | Warnings | Status | Schema Valid |\\n|-----|--------|----------|--------|--------------|\\n";
-            let metadataTable = "\\n### 🛠 Tool Metadata\\n\\n| Job | Tool | Version | Exit Code | Duration | Fallback |\\n|-----|------|---------|-----------|----------|----------|\\n";
+          let summaryTable = "### 📊 Summary Table\\n\\n| Job | Errors | Warnings | Status | Schema Valid |\\n|-----|--------|----------|--------|--------------|\\n";
+          let metadataTable = "\\n### 🛠 Tool Metadata\\n\\n| Job | Tool | Version | Exit Code | Duration | Fallback |\\n|-----|------|---------|-----------|----------|----------|\\n";
 
-            let detailsSection = "\\n### ❌ Errors and ⚠️ Warnings by Job\\n";
-            let warningsSection = "\\n### ⚠️ Consolidated Warnings\\n";
-            let errorsSection = "\\n### ❌ Consolidated Errors\\n";
-            let failedTestsSection = "\\n### 🧨 Consolidated Test Failures\\n";
-            let testsSection = "\\n### 🧪 Test Results\\n";
-            let schemaSection = "\\n### 📐 Schema Validation Details\\n";
-            let coverageSection = "\\n### 📊 Coverage Summary\\n\\n| Job | Lines Covered | Lines Missed | Coverage % |\\n|-----|---------------|--------------|------------|\\n";
-            let artifactLinksSection = "\\n### 📂 Consolidated Artifacts\\n";
+          if (allReports.length === 0) {
+            summaryTable += "| n/a | 0 | 0 | no reports found | n/a |\\n";
+          }
 
-            if (allReports.length === 0) {
-              summaryTable += "| n/a | 0 | 0 | no reports found | n/a |\\n";
-            }
+          for (const r of allReports) {
+            const errors = Number.isInteger(r.errors) ? r.errors : (r.errors?.length || 0);
+            const warnings = Number.isInteger(r.warnings) ? r.warnings : (r.warnings?.length || 0);
 
-            for (const r of allReports) {
-              const errors = Number.isInteger(r.errors) ? r.errors : (r.errors?.length || 0);
-              const warnings = Number.isInteger(r.warnings) ? r.warnings : (r.warnings?.length || 0);
+            totalErrors += errors;
+            totalWarnings += warnings;
 
-              totalErrors += errors;
-              totalWarnings += warnings;
+            summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\\n`;
 
-              summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\\n`;
+            metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\\n`;
+          }
 
-              metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\\n`;
+          const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
-              if (r.annotations && r.annotations.length > 0) {
-                detailsSection += `\\n**Annotations for ${r.job}:**\\n`;
-                r.annotations.forEach(a => {
-                  detailsSection += `- ${a.annotation_level}: ${a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
-                  if (a.annotation_level === "warning") {
-                    warningsSection += `- ${r.job}: ${a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
-                  }
-                  if (a.annotation_level === "failure") {
-                    errorsSection += `- ${r.job}: ${a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
-                    failedTestsSection += `- ${r.job}: ${a.title || a.message}${a.path ? ` (${a.path}:${a.start_line || ""})` : ""}\\n`;
-                  }
-                });
-              }
-            }
+          const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n\\n🔗 [View workflow run](${runUrl})`;
+          fs.writeFileSync("report.md", reportOut);
+          fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
 
-            const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-
-            const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n${coverageSection}\\n${schemaSection}\\n${detailsSection}\\n${warningsSection}\\n${errorsSection}\\n${failedTestsSection}\\n${testsSection}\\n${artifactLinksSection}\\n\\n🔗 [View workflow run](${runUrl})`;
-            fs.writeFileSync("report.md", reportOut);
-            fs.writeFileSync("diagnostics-meta.json", JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
-
-            if (schemaFailures > 0) process.exit(1);
-          })();
+          if (schemaFailures > 0) process.exit(1);
           '
 
       - name: Upload Diagnostics Report
