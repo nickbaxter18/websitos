@@ -76,11 +76,12 @@ jobs:
 
             function loadFiles(dir) {
               if (!fs.existsSync(dir)) return;
-              for (const file of fs.readdirSync(dir)) {
-                const full = path.join(dir, file);
-                if (fs.statSync(full).isDirectory()) {
+              for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                const full = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
                   loadFiles(full);
-                } else if (file.endsWith("-diagnostics.json")) {
+                } else if (entry.name.endsWith("-diagnostics.json")) {
+                  console.log("🔍 Found diagnostics file:", full);
                   try {
                     const data = JSON.parse(fs.readFileSync(full, "utf-8"));
                     data.__file = full;
@@ -89,21 +90,23 @@ jobs:
                       data.schema_error = schemaError;
                       data.status = "failure";
                     }
+                    console.log("✅ Parsed job:", data.job || full, "errors:", data.errors, "warnings:", data.warnings);
                     allReports.push(data);
                   } catch (e) {
+                    console.error("❌ Failed to parse:", full, e.message);
                     schemaFailures++;
-                    allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
+                    allReports.push({ job: full, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
                   }
-                } else if (file.endsWith("-report.json") || file.endsWith("-fallback.json")) {
+                } else if (entry.name.endsWith("-report.json") || entry.name.endsWith("-fallback.json")) {
                   try {
                     const data = JSON.parse(fs.readFileSync(full, "utf-8"));
                     data.__file = full;
-                    if (file.endsWith("-fallback.json")) data.fallback = true;
+                    if (entry.name.endsWith("-fallback.json")) data.fallback = true;
                     allReports.push(data);
                   } catch (e) {
-                    allReports.push({ job: file, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse: ${e.message}` }] });
+                    allReports.push({ job: full, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse: ${e.message}` }] });
                   }
-                } else if (file === "artifact-manifest.txt") {
+                } else if (entry.name === "artifact-manifest.txt") {
                   manifests.push({ path: full, content: fs.readFileSync(full, "utf-8") });
                 }
               }
@@ -117,6 +120,10 @@ jobs:
 
             let summaryTable = "### 📊 Summary Table\\n\\n| Job | Errors | Warnings | Status | Schema Valid |\\n|-----|--------|----------|--------|--------------|\\n";
             let metadataTable = "\\n### 🛠 Tool Metadata\\n\\n| Job | Tool | Version | Exit Code | Duration | Fallback |\\n|-----|------|---------|-----------|----------|----------|\\n";
+
+            let errorsSection = "\\n### ❌ Consolidated Errors\\n";
+            let warningsSection = "\\n### ⚠️ Consolidated Warnings\\n";
+            let failedTestsSection = "\\n### 🧨 Consolidated Test Failures\\n";
 
             if (allReports.length === 0) {
               summaryTable += "| n/a | 0 | 0 | no reports found | n/a |\\n";
@@ -132,11 +139,27 @@ jobs:
               summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\\n`;
 
               metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\\n`;
+
+              if (errors > 0) {
+                errorsSection += `- ${r.job}: ${errors} errors reported\\n`;
+              }
+              if (warnings > 0) {
+                warningsSection += `- ${r.job}: ${warnings} warnings reported\\n`;
+              }
+              if (r.tests && r.tests.some(t => t.status === "failed")) {
+                r.tests.filter(t => t.status === "failed").forEach(t => {
+                  failedTestsSection += `- ${r.job}: ${t.name} → ${t.message || "failed"}\\n`;
+                });
+              }
             }
+
+            if (errorsSection.trim() === "### ❌ Consolidated Errors") errorsSection += "\\n_No errors reported._\\n";
+            if (warningsSection.trim() === "### ⚠️ Consolidated Warnings") warningsSection += "\\n_No warnings reported._\\n";
+            if (failedTestsSection.trim() === "### 🧨 Consolidated Test Failures") failedTestsSection += "\\n_No test failures reported._\\n";
 
             const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
-            const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n\\n🔗 [View workflow run](${runUrl})`;
+            const reportOut = `## ⚠️ CI Diagnostics Report\\n\\n${summaryTable}\\n${metadataTable}\\n${errorsSection}\\n${warningsSection}\\n${failedTestsSection}\\n\\n🔗 [View workflow run](${runUrl})`;
             fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "report.md"), reportOut);
             fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "diagnostics-meta.json"), JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
 
