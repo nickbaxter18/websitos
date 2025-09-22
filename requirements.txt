@@ -11,7 +11,7 @@ numpy==1.26.4
 
 # ---- Async & HTTP
 httpx==0.28.1
-websockets==12.0
+websockets==15.0.1
 watchfiles==1.0.3
 
 # ---- gRPC (pin to wheel-friendly versions)
