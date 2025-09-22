@@ -47,7 +47,14 @@ jobs:
           echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
           echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
 
-      # [Diagnostics steps omitted for brevity]
+      - name: Ensure summaries dir always exists
+        run: mkdir -p summaries
+
+      - name: Validate summaries before upload
+        if: always()
+        run: |
+          echo "📂 Summaries before upload (${{ matrix.task }}):"
+          ls -lah summaries || echo "❌ summaries/ not found"
 
       - name: Upload frontend summaries (unified)
         if: always()
@@ -56,3 +63,4 @@ jobs:
           name: frontend-summaries
           path: summaries/
           retention-days: 2
+          if-no-files-found: error
