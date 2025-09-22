@@ -60,29 +60,32 @@ jobs:
           RUNNER_NAME: ${{ runner.name }}
           RUNNER_OS: ${{ runner.os }}
         run: |
+          set -euo pipefail
           VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
-          printf '{\n' > summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  "job": "frontend-checks/playwright-e2e",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  "status": "success",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  "exit_code": 0,\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  "metadata": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "tool": "playwright",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "version": "%s"\n' "$VERSION" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  },\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  "environment": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "runner": "%s",\n' "$RUNNER_NAME" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "os": "%s",\n' "$RUNNER_OS" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "resources": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '      "cpu_count": %s,\n' "$CPU" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '      "memory_mb": %s,\n' "$MEM" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '      "disk_free_mb": %s\n' "$DISK" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    }\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  },\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  "dependencies": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "lockfile_sha": "%s",\n' "$LOCKSHA" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "npm": []\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '  }\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '}\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          FILE=summaries/frontend/frontend-playwright-diagnostics.json
+          printf '{\n' > "$FILE"
+          printf '  "job": "frontend-checks/playwright-e2e",\n' >> "$FILE"
+          printf '  "status": "success",\n' >> "$FILE"
+          printf '  "exit_code": 0,\n' >> "$FILE"
+          printf '  "metadata": {\n' >> "$FILE"
+          printf '    "tool": "playwright",\n' >> "$FILE"
+          printf '    "version": "%s"\n' "$VERSION" >> "$FILE"
+          printf '  },\n' >> "$FILE"
+          printf '  "environment": {\n' >> "$FILE"
+          printf '    "runner": "%s",\n' "$RUNNER_NAME" >> "$FILE"
+          printf '    "os": "%s",\n' "$RUNNER_OS" >> "$FILE"
+          printf '    "resources": {\n' >> "$FILE"
+          printf '      "cpu_count": %s,\n' "$CPU" >> "$FILE"
+          printf '      "memory_mb": %s,\n' "$MEM" >> "$FILE"
+          printf '      "disk_free_mb": %s\n' "$DISK" >> "$FILE"
+          printf '    }\n' >> "$FILE"
+          printf '  },\n' >> "$FILE"
+          printf '  "dependencies": {\n' >> "$FILE"
+          printf '    "lockfile_sha": "%s",\n' "$LOCKSHA" >> "$FILE"
+          printf '    "npm": []\n' >> "$FILE"
+          printf '  }\n' >> "$FILE"
+          printf '}\n' >> "$FILE"
+          echo "✅ Final summary file contents:" && cat "$FILE"
 
       - name: Validate summaries before upload
         if: always()
