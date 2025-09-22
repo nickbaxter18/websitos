@@ -57,6 +57,8 @@ jobs:
           MEM: ${{ steps.envinfo.outputs.memory_mb }}
           DISK: ${{ steps.envinfo.outputs.disk_free_mb }}
           LOCKSHA: ${{ steps.envinfo.outputs.lockfile_sha }}
+          RUNNER_NAME: ${{ runner.name }}
+          RUNNER_OS: ${{ runner.os }}
         run: |
           VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
           printf '{\n' > summaries/frontend/frontend-playwright-diagnostics.json
