@@ -12,15 +12,14 @@ jobs:
     timeout-minutes: 10
     continue-on-error: true
     steps:
-      - name: ✅ Job scheduled
-        run: echo "Job is running: ${{ matrix.task }}"
+      - name: ✅ Start job
+        run: echo "Job = frontend-checks/${{ matrix.task }}"
 
-      - name: 🧾 Write diagnostics JSON
+      - name: 🧾 Write diagnostics JSON and validate
         run: |
           mkdir -p summaries/frontend
           FILE="summaries/frontend/frontend-checks_${{ matrix.task }}.json"
-          echo "📦 Writing to $FILE"
-
+          echo "📦 Writing $FILE"
           echo '{
             "job": "frontend-checks/${{ matrix.task }}",
             "status": "success",
@@ -29,14 +28,20 @@ jobs:
             "environment": {"runner": "Hosted Agent", "os": "ubuntu-latest", "resources": {"cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 102400}},
             "dependencies": {"lockfile_sha": "abc123", "npm": ["@playwright/test"]}
           }' > "$FILE"
-
-          echo "✅ File contents:"
+          echo "✅ JSON written"
           cat "$FILE"
-          echo "📂 Directory structure:"
-          find summaries/ -type f -exec ls -lah {} +
+          echo "📂 Summary folder contents:" && ls -lah summaries/frontend || echo "(empty)"
+          echo "📏 File size:" && stat "$FILE"
         shell: bash
 
-      - name: 🚀 Upload summary
+      - name: 🔍 Final directory check before upload
+        run: |
+          echo "📂 Directory check before upload:"
+          ls -lah summaries || echo "summaries missing"
+          ls -lah summaries/frontend || echo "frontend dir missing"
+        shell: bash
+
+      - name: 🚀 Upload full summaries folder
         if: always()
         uses: actions/upload-artifact@v4
         with:
