@@ -18,7 +18,7 @@ jobs:
         run: mkdir -p summaries/frontend
         shell: bash
 
-      - name: 🧾 Write summary with correct filename
+      - name: 🧾 Write pristine schema-compliant JSON
         run: |
           set -euxo pipefail
           FILE=summaries/frontend/frontend-checks_playwright-e2e.json
@@ -33,23 +33,23 @@ jobs:
             },
             "environment": {
               "runner": "Hosted Agent",
-              "os": "Linux",
+              "os": "ubuntu-latest",
               "resources": {
                 "cpu_count": 2,
                 "memory_mb": 7086,
-                "disk_free_mb": 150000
+                "disk_free_mb": 102400
               }
             },
             "dependencies": {
               "lockfile_sha": "abc123",
-              "npm": []
+              "npm": ["@playwright/test"]
             }
           }
           EOF
           cat "$FILE"
         shell: bash
 
-      - name: 🚀 Upload full summaries dir
+      - name: 🚀 Upload summary folder
         uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
