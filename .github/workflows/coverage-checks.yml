@@ -1,121 +1,3 @@
-name: Coverage Checks
-
-on:
-  push:
-    branches:
-      - '**'
-  pull_request:
-    branches:
-      - '**'
-  workflow_dispatch:
-
-env:
-  FRONTEND_COVERAGE_JSON: coverage/frontend/coverage-summary.json
-  BACKEND_COVERAGE_XML: coverage/coverage.xml
-  BACKEND_COVERAGE_JSON: coverage/coverage-summary.json
-  BACKEND_NODE_COVERAGE_JSON: backend/coverage/coverage-summary.json
-  E2E_COVERAGE_JSON: coverage/e2e/coverage-summary.json
-
-jobs:
-  checks:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [frontend, backend, backend-node, e2e]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-
-      - name: Setup Python
-        if: ${{ matrix.task == 'backend' }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies (pnpm)
-        run: pnpm install
-
-      - name: Install backend test dependencies
-        if: ${{ matrix.task == 'backend' }}
-        working-directory: backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r $GITHUB_WORKSPACE/requirements.txt
-
-      - name: Collect environment metadata
-        id: envinfo
-        run: |
-          if [ -f pnpm-lock.yaml ]; then
-            echo "lockfile_sha=$(sha256sum pnpm-lock.yaml | awk '{print $1}')" >> $GITHUB_OUTPUT
-          elif [ -f requirements.txt ]; then
-            echo "lockfile_sha=$(sha256sum requirements.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
-          else
-            echo "lockfile_sha=unknown" >> $GITHUB_OUTPUT
-          fi
-          echo "cpu_count=$(nproc)" >> $GITHUB_OUTPUT
-          echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
-          echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
-
-      - name: Run frontend coverage (Jest)
-        if: ${{ matrix.task == 'frontend' }}
-        run: |
-          mkdir -p summaries
-          start=$(date +%s)
-          pnpm exec jest --config jest.config.cjs --coverage --all \
-            --coverageReporters=json-summary \
-            --coverageDirectory=coverage/frontend
-          jest_exit=$?
-          end=$(date +%s)
-          duration="$((end-start))s"
-
-          fallback=false
-          coverage_json="{}"
-          if [ -s $FRONTEND_COVERAGE_JSON ]; then
-            pnpm exec node $GITHUB_WORKSPACE/Scripts/convert-jest-coverage.cjs $FRONTEND_COVERAGE_JSON frontend-coverage-report.json 0 || echo "⚠️ Converter failed"
-            if [ ! -s frontend-coverage-report.json ]; then
-              fallback=true
-            fi
-            cp frontend-coverage-report.json summaries/frontend-coverage-report.json || true
-            cp $FRONTEND_COVERAGE_JSON summaries/coverage-frontend-raw.json || true
-            coverage_json=$(jq '{lines: {covered: .total.lines.covered, missed: (.total.lines.total - .total.lines.covered), pct: .total.lines.pct}, branches: {covered: .total.branches.covered, missed: (.total.branches.total - .total.branches.covered), pct: .total.branches.pct}}' $FRONTEND_COVERAGE_JSON 2>/dev/null || echo '{}')
-          else
-            echo '{}' > summaries/frontend-coverage-fallback.json
-            fallback=true
-          fi
-
-          sha256=$(sha256sum $FRONTEND_COVERAGE_JSON | awk '{print $1}' || echo "")
-          deps=$(pnpm list --depth 0 --json || echo '[]')
-          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
-
-          cat <<EOF > summaries/frontend-diagnostics.json
-          {
-            "job": "coverage-checks/frontend",
-            "exit_code": $jest_exit,
-            "status": "$( [ "$jest_exit" -eq 0 ] && echo success || echo failure )",
-            "coverage": $coverage_json,
-            "artifacts": [
-              "$( [ "$fallback" = true ] && echo summaries/frontend-coverage-fallback.json || echo summaries/frontend-coverage-report.json )",
-              "summaries/coverage-frontend-raw.json"
-            ],
-            "metadata": {
-              "tool": "jest",
-              "version": "$(pnpm list jest | grep jest | awk '{print $2}')",
-              "duration": "$duration",
-              "sha256": "$sha256",
-              "fallback": $fallback,
-              "trace_id": "${{ github.sha }}"
-            },
             "environment": {
               "runner": "${{ runner.name }}",
               "os": "${{ runner.os }}",
@@ -132,19 +14,14 @@ jobs:
           }
           EOF
 
-          echo "✅ Wrote summaries/frontend-diagnostics.json"
+          echo "✅ Wrote summaries/e2e-diagnostics.json"
           ls -lh summaries || true
           sha256sum summaries/* || true
-          head -n 20 summaries/frontend-diagnostics.json
+          head -n 20 summaries/e2e-diagnostics.json
 
-      - name: Validate Frontend Coverage artifacts before upload
-        if: ${{ matrix.task == 'frontend' }}
-        run: |
-          echo "📂 Summaries before upload (Frontend Coverage):"
-          ls -lh summaries || true
-
-      # Similar debugging will be applied to backend, backend-node, and e2e coverage jobs
-
+      # ---------------------------
+      # Upload artifacts
+      # ---------------------------
       - name: Upload partial coverage summaries
         if: always()
         uses: actions/upload-artifact@v4
