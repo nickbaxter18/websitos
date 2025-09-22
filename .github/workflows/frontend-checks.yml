@@ -50,12 +50,15 @@ jobs:
       - name: Ensure summaries dir always exists
         run: mkdir -p summaries/frontend
 
+      - name: Debug: matrix task value
+        run: echo "matrix.task is: ${{ matrix.task }}"
+
       - name: Debug: entering playwright-e2e summary creation
-        if: matrix.task == 'playwright-e2e'
+        if: contains(matrix.task, 'playwright')
         run: echo "✅ Entering playwright-e2e diagnostic summary generation"
 
       - name: Generate real diagnostics summary for playwright-e2e
-        if: matrix.task == 'playwright-e2e'
+        if: contains(matrix.task, 'playwright')
         env:
           CPU: ${{ steps.envinfo.outputs.cpu_count }}
           MEM: ${{ steps.envinfo.outputs.memory_mb }}
@@ -91,7 +94,7 @@ jobs:
           printf '}\n' >> "$FILE"
 
       - name: Debug: summary file contents
-        if: matrix.task == 'playwright-e2e'
+        if: contains(matrix.task, 'playwright')
         run: cat summaries/frontend/frontend-playwright-diagnostics.json || echo "❌ File not found"
 
       - name: Validate summaries before upload
