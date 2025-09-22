@@ -1,0 +1,63 @@
+name: Debug Frontend Summary
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  frontend-summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - name: 🟢 Confirm job scheduled
+        run: echo "✅ Job is running: ${{ github.job }}"
+        shell: bash
+
+      - name: 🧾 Write and inspect JSON summary
+        run: |
+          mkdir -p summaries/frontend
+          FILE="summaries/frontend/${{ github.job }}.json"
+          echo "📦 Writing to $FILE"
+
+          cat <<EOF > "$FILE"
+          {
+            "job": "${{ github.job }}",
+            "status": "success",
+            "exit_code": 0,
+            "metadata": {
+              "tool": "playwright",
+              "version": "1.55.0"
+            },
+            "environment": {
+              "runner": "Hosted Agent",
+              "os": "ubuntu-latest",
+              "resources": {
+                "cpu_count": 2,
+                "memory_mb": 7086,
+                "disk_free_mb": 102400
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "abc123",
+              "npm": ["@playwright/test"]
+            }
+          }
+          EOF
+
+          echo "✅ File content:"
+          cat "$FILE"
+          echo "📂 Directory structure:"
+          find summaries/ -type f -exec ls -lah {} +
+        shell: bash
+
+      - name: 🚀 Upload for diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-summaries
+          path: summaries/
+          retention-days: 2
+          if-no-files-found: error
