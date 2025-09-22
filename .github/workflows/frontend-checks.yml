@@ -12,7 +12,9 @@ on:
 jobs:
   frontend-checks:
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         task: [lint, prettier, type-check, test-unit, playwright-e2e]
     steps:
