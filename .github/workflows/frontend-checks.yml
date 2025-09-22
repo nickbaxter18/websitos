@@ -17,6 +17,9 @@ jobs:
       matrix:
         task: [lint, prettier, type-check, test-unit, playwright-e2e]
     steps:
+      - name: Confirm matrix expansion
+        run: echo "Matrix context: ${{ toJson(matrix) }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -49,9 +52,6 @@ jobs:
 
       - name: Ensure summaries dir always exists
         run: mkdir -p summaries/frontend
-
-      - name: Debug: matrix task value
-        run: echo "matrix.task is: ${{ matrix.task }}"
 
       - name: Debug: entering playwright-e2e summary creation
         if: contains(matrix.task, 'playwright')
