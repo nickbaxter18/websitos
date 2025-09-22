@@ -32,7 +32,13 @@ jobs:
           echo '  "environment": { "runner": "Hosted Agent", "os": "Linux", "resources": { "cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 150000 } },' >> "$FILE"
           echo '  "dependencies": { "lockfile_sha": "abc123", "npm": [] }' >> "$FILE"
           echo '}' >> "$FILE"
+          echo "✅ Summary created at $FILE"
           cat "$FILE"
+
+      - name: Confirm summary file exists
+        run: |
+          echo "📂 Listing summary directory:"
+          ls -lah summaries/frontend || echo "❌ summaries/frontend not found"
 
       - name: Upload frontend summaries
         uses: actions/upload-artifact@v4
