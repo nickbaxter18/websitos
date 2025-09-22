@@ -54,40 +54,41 @@ jobs:
       - name: Ensure summaries dir exists
         run: mkdir -p summaries/frontend
 
-      - name: Generate summary for playwright-e2e
-        if: contains(matrix.task, 'playwright')
+      - name: Conditionally generate summary in shell
         run: |
-          set -euo pipefail
-          VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
-          CPU=${{ steps.envinfo.outputs.cpu_count }}
-          MEM=${{ steps.envinfo.outputs.memory_mb }}
-          DISK=${{ steps.envinfo.outputs.disk_free_mb }}
-          LOCKSHA=${{ steps.envinfo.outputs.lockfile_sha }}
-          FILE=summaries/frontend/frontend-playwright-diagnostics.json
-          printf '{\n' > "$FILE"
-          printf '  "job": "frontend-checks/playwright-e2e",\n' >> "$FILE"
-          printf '  "status": "success",\n' >> "$FILE"
-          printf '  "exit_code": 0,\n' >> "$FILE"
-          printf '  "metadata": {\n' >> "$FILE"
-          printf '    "tool": "playwright",\n' >> "$FILE"
-          printf '    "version": "%s"\n' "$VERSION" >> "$FILE"
-          printf '  },\n' >> "$FILE"
-          printf '  "environment": {\n' >> "$FILE"
-          printf '    "runner": "${{ runner.name }}",\n' >> "$FILE"
-          printf '    "os": "${{ runner.os }}",\n' >> "$FILE"
-          printf '    "resources": {\n' >> "$FILE"
-          printf '      "cpu_count": %s,\n' "$CPU" >> "$FILE"
-          printf '      "memory_mb": %s,\n' "$MEM" >> "$FILE"
-          printf '      "disk_free_mb": %s\n' "$DISK" >> "$FILE"
-          printf '    }\n' >> "$FILE"
-          printf '  },\n' >> "$FILE"
-          printf '  "dependencies": {\n' >> "$FILE"
-          printf '    "lockfile_sha": "%s",\n' "$LOCKSHA" >> "$FILE"
-          printf '    "npm": []\n' >> "$FILE"
-          printf '  }\n' >> "$FILE"
-          printf '}\n' >> "$FILE"
-          echo "✅ Summary created at $FILE"
-          cat "$FILE"
+          if [[ "${{ matrix.task }}" == *playwright* ]]; then
+            set -euo pipefail
+            VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
+            CPU=${{ steps.envinfo.outputs.cpu_count }}
+            MEM=${{ steps.envinfo.outputs.memory_mb }}
+            DISK=${{ steps.envinfo.outputs.disk_free_mb }}
+            LOCKSHA=${{ steps.envinfo.outputs.lockfile_sha }}
+            FILE=summaries/frontend/frontend-playwright-diagnostics.json
+            printf '{\n' > "$FILE"
+            printf '  "job": "frontend-checks/playwright-e2e",\n' >> "$FILE"
+            printf '  "status": "success",\n' >> "$FILE"
+            printf '  "exit_code": 0,\n' >> "$FILE"
+            printf '  "metadata": {\n' >> "$FILE"
+            printf '    "tool": "playwright",\n' >> "$FILE"
+            printf '    "version": "%s"\n' "$VERSION" >> "$FILE"
+            printf '  },\n' >> "$FILE"
+            printf '  "environment": {\n' >> "$FILE"
+            printf '    "runner": "${{ runner.name }}",\n' >> "$FILE"
+            printf '    "os": "${{ runner.os }}",\n' >> "$FILE"
+            printf '    "resources": {\n' >> "$FILE"
+            printf '      "cpu_count": %s,\n' "$CPU" >> "$FILE"
+            printf '      "memory_mb": %s,\n' "$MEM" >> "$FILE"
+            printf '      "disk_free_mb": %s\n' "$DISK" >> "$FILE"
+            printf '    }\n' >> "$FILE"
+            printf '  },\n' >> "$FILE"
+            printf '  "dependencies": {\n' >> "$FILE"
+            printf '    "lockfile_sha": "%s",\n' "$LOCKSHA" >> "$FILE"
+            printf '    "npm": []\n' >> "$FILE"
+            printf '  }\n' >> "$FILE"
+            printf '}\n' >> "$FILE"
+            echo "✅ Summary created at $FILE"
+            cat "$FILE"
+          fi
 
       - name: Validate and upload summary
         if: always()
