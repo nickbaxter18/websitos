@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  frontend-checks:
+  checks:
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy:
@@ -56,16 +56,13 @@ jobs:
 
       - name: Generate summary for playwright-e2e
         if: contains(matrix.task, 'playwright')
-        env:
-          CPU: ${{ steps.envinfo.outputs.cpu_count }}
-          MEM: ${{ steps.envinfo.outputs.memory_mb }}
-          DISK: ${{ steps.envinfo.outputs.disk_free_mb }}
-          LOCKSHA: ${{ steps.envinfo.outputs.lockfile_sha }}
-          RUNNER_NAME: ${{ runner.name }}
-          RUNNER_OS: ${{ runner.os }}
         run: |
           set -euo pipefail
           VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
+          CPU=${{ steps.envinfo.outputs.cpu_count }}
+          MEM=${{ steps.envinfo.outputs.memory_mb }}
+          DISK=${{ steps.envinfo.outputs.disk_free_mb }}
+          LOCKSHA=${{ steps.envinfo.outputs.lockfile_sha }}
           FILE=summaries/frontend/frontend-playwright-diagnostics.json
           printf '{\n' > "$FILE"
           printf '  "job": "frontend-checks/playwright-e2e",\n' >> "$FILE"
@@ -76,8 +73,8 @@ jobs:
           printf '    "version": "%s"\n' "$VERSION" >> "$FILE"
           printf '  },\n' >> "$FILE"
           printf '  "environment": {\n' >> "$FILE"
-          printf '    "runner": "%s",\n' "$RUNNER_NAME" >> "$FILE"
-          printf '    "os": "%s",\n' "$RUNNER_OS" >> "$FILE"
+          printf '    "runner": "${{ runner.name }}",\n' >> "$FILE"
+          printf '    "os": "${{ runner.os }}",\n' >> "$FILE"
           printf '    "resources": {\n' >> "$FILE"
           printf '      "cpu_count": %s,\n' "$CPU" >> "$FILE"
           printf '      "memory_mb": %s,\n' "$MEM" >> "$FILE"
