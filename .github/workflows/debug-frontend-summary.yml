@@ -1,8 +1,8 @@
 name: Debug Frontend Summary
 
 on:
-  push:
   workflow_dispatch:
+  push:
 
 jobs:
   frontend-summary:
@@ -11,24 +11,28 @@ jobs:
     continue-on-error: true
     steps:
       - name: ✅ Job scheduled
-        run: echo "Job is scheduled. github.job=${{ github.job }}"
+        run: echo "github.job = frontend-checks/playwright-e2e"
 
-      - name: 🧾 Write minimal diagnostics JSON
+      - name: 🧾 Write JSON with known diagnostics job ID
         run: |
           mkdir -p summaries/frontend
-          FILE="summaries/frontend/${{ github.job }}.json"
+          FILE="summaries/frontend/frontend-checks_playwright-e2e.json"
+          echo "📦 Writing to $FILE"
+
           echo '{
-            "job": "${{ github.job }}",
+            "job": "frontend-checks/playwright-e2e",
             "status": "success",
             "exit_code": 0,
             "metadata": {"tool": "playwright", "version": "1.55.0"},
             "environment": {"runner": "Hosted Agent", "os": "ubuntu-latest", "resources": {"cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 102400}},
             "dependencies": {"lockfile_sha": "abc123", "npm": ["@playwright/test"]}
           }' > "$FILE"
-          echo "✅ File written to $FILE"
-          cat "$FILE"
 
-      - name: 🚀 Upload for diagnostics
+          echo "✅ File contents:"
+          cat "$FILE"
+        shell: bash
+
+      - name: 🚀 Upload summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
