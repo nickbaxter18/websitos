@@ -13,31 +13,24 @@ jobs:
   diagnostics-playwright:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      JOB_ID: ${{ github.job }}
     steps:
-      - name: 📛 Print GitHub job context
+      - name: 🔍 Print job + write + upload in one
         run: |
-          echo "=================="
-          echo "github.job = $JOB_ID"
+          echo "======================="
+          echo "github.job = ${{ github.job }}"
           echo "github.workflow = ${{ github.workflow }}"
           echo "runner.os = ${{ runner.os }}"
-          echo "=================="
-        shell: bash
+          echo "======================="
 
-      - name: 📂 Pre-check summaries folder (before write)
-        run: |
           mkdir -p summaries/frontend
-          echo "📦 Before write contents:" && ls -lahR summaries || echo "(empty)"
-        shell: bash
+          echo "📂 summaries/ (pre):" && ls -lahR summaries
 
-      - name: 🧾 Write and verify JSON summary
-        run: |
-          set -euxo pipefail
-          FILE="summaries/frontend/$JOB_ID.json"
+          FILE="summaries/frontend/${{ github.job }}.json"
+          echo "📦 Writing to $FILE"
+
           cat <<EOF > "$FILE"
           {
-            "job": "$JOB_ID",
+            "job": "${{ github.job }}",
             "status": "success",
             "exit_code": 0,
             "metadata": {
@@ -59,16 +52,14 @@ jobs:
             }
           }
           EOF
-          echo "✅ File written to $FILE"
-          ls -lah summaries/frontend
+
+          echo "✅ Contents of $FILE"
           cat "$FILE"
+
+          echo "📂 summaries/ (post):" && find summaries/ -type f -exec ls -lah {} +
         shell: bash
 
-      - name: 📦 Final artifact file listing
-        run: find summaries/ -type f -exec ls -lah {} +
-        shell: bash
-
-      - name: 🚀 Upload for diagnostics
+      - name: 🚀 Upload full folder
         if: always()
         uses: actions/upload-artifact@v4
         with:
