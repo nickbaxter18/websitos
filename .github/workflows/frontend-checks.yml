@@ -12,11 +12,13 @@ on:
 jobs:
   diagnostics-playwright:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Setup summary folder
+      - name: 🗂 Setup summary folder
         run: mkdir -p summaries/frontend
+        shell: bash
 
-      - name: Write fixed JSON summary
+      - name: 🧾 Write fixed JSON summary
         run: |
           set -euxo pipefail
           echo "⚙️ Writing fixed summary"
@@ -31,13 +33,19 @@ jobs:
           echo '}' >> "$FILE"
           echo "✅ Summary created at $FILE"
           cat "$FILE"
+        shell: bash
 
-      - name: Confirm summary file exists
+      - name: 🔎 Lint summary file
+        run: jq . summaries/frontend/frontend-playwright-diagnostics.json
+        shell: bash
+
+      - name: 📂 Confirm summary file exists
         run: |
           echo "📂 Listing summary directory:"
           ls -lah summaries/frontend || echo "❌ summaries/frontend not found"
+        shell: bash
 
-      - name: Upload frontend summaries
+      - name: 🚀 Upload frontend summaries
         uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
