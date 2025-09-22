@@ -10,17 +10,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  diagnostics-playwright:
+  frontend-summary:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    continue-on-error: true
     steps:
-      - name: 🔍 Print job + write + upload in one
+      - name: 🟢 Job scheduled check
+        run: echo "✅ Job is running!"
+        shell: bash
+
+      - name: 🧾 Write JSON + confirm all steps
         run: |
-          echo "======================="
+          echo "=================="
           echo "github.job = ${{ github.job }}"
-          echo "github.workflow = ${{ github.workflow }}"
-          echo "runner.os = ${{ runner.os }}"
-          echo "======================="
+          echo "=================="
 
           mkdir -p summaries/frontend
           echo "📂 summaries/ (pre):" && ls -lahR summaries
@@ -53,13 +56,12 @@ jobs:
           }
           EOF
 
-          echo "✅ Contents of $FILE"
+          echo "✅ File content:"
           cat "$FILE"
-
           echo "📂 summaries/ (post):" && find summaries/ -type f -exec ls -lah {} +
         shell: bash
 
-      - name: 🚀 Upload full folder
+      - name: 🚀 Upload for diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
