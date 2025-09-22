@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest-json-report flake8 mypy black
+          pip install -r requirements.txt black flake8 mypy pytest pytest-cov
 
       - name: Collect environment metadata
         id: envinfo
@@ -38,20 +38,141 @@ jobs:
           echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
           echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
 
-      - name: Ensure summaries dir always exists
-        run: mkdir -p summaries
-
-      - name: Validate summaries before upload
-        if: always()
+      - name: Run ${{ matrix.task }}
+        id: run_task
+        continue-on-error: true
+        shell: bash
         run: |
-          echo "📂 Summaries before upload (${{ matrix.task }}):"
-          ls -lah summaries || echo "❌ summaries/ not found"
+          set -o pipefail
+          TASK="${{ matrix.task }}"
+          LOG_DIR="diagnostics/backend"
+          mkdir -p "$LOG_DIR"
+          LOG_FILE="$LOG_DIR/${TASK}_output.log"
+          TOOL_NAME="$TASK"
+          COMMAND=""
+          VERSION_CMD=""
+          case "$TASK" in
+            black)
+              COMMAND="black --check ."
+              VERSION_CMD="black --version"
+              ;;
+            flake8)
+              COMMAND="flake8 ."
+              VERSION_CMD="flake8 --version"
+              ;;
+            mypy)
+              COMMAND="mypy --config-file mypy.ini ."
+              VERSION_CMD="mypy --version"
+              ;;
+            pytest)
+              COMMAND="pytest --maxfail=20 --tb=short"
+              VERSION_CMD="pytest --version"
+              TOOL_NAME="pytest"
+              ;;
+            *)
+              echo "Unknown backend task: $TASK" >&2
+              echo "exit_code=1" >> "$GITHUB_OUTPUT"
+              echo "status=failure" >> "$GITHUB_OUTPUT"
+              exit 1
+              ;;
+          esac
 
-      - name: Upload backend summaries (unified)
+          RUNNER_INFO="${RUNNER_NAME:-Hosted Agent} (${RUNNER_OS:-ubuntu-latest})"
+          TOOL_VERSION="unknown"
+          if [ -n "$VERSION_CMD" ]; then
+            set +e
+            TOOL_VERSION=$(eval "$VERSION_CMD" 2>/dev/null | head -n 1)
+            if [ -z "$TOOL_VERSION" ]; then TOOL_VERSION="unknown"; fi
+            set -e
+          fi
+
+          echo "::group::${TASK}-diagnostics"
+          echo "::tool::${TOOL_NAME}"
+          echo "::version::${TOOL_VERSION}"
+          echo "::runner::${RUNNER_INFO}"
+
+          set +e
+          bash -c "$COMMAND" 2>&1 | tee "$LOG_FILE"
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+
+          echo "::exit_code::${EXIT_CODE}"
+          echo "::endgroup::"
+
+          STATUS="success"
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          printf 'exit_code=%s\n' "$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          printf 'status=%s\n' "$STATUS" >> "$GITHUB_OUTPUT"
+          printf 'tool_version=%s\n' "$TOOL_VERSION" >> "$GITHUB_OUTPUT"
+          printf 'command=%s\n' "$COMMAND" >> "$GITHUB_OUTPUT"
+          printf 'log_file=%s\n' "$LOG_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload tool output log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-summaries
+          name: backend-${{ matrix.task }}-logs
+          path: ${{ steps.run_task.outputs.log_file }}
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: 📦 Write diagnostics JSON
+        if: always()
+        shell: bash
+        run: |
+          SCOPE="backend"
+          JOB_KEY="backend-checks_${{ matrix.task }}"
+          EXIT_CODE="${{ steps.run_task.outputs.exit_code }}"
+          STATUS="${{ steps.run_task.outputs.status }}"
+          TOOL_VERSION="${{ steps.run_task.outputs.tool_version }}"
+          if [ -z "$EXIT_CODE" ] || ! [[ "$EXIT_CODE" =~ ^-?[0-9]+$ ]]; then EXIT_CODE=1; fi
+          if [ -z "$STATUS" ]; then STATUS="success"; fi
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          mkdir -p "summaries/$SCOPE"
+          RUNNER_LABEL="${RUNNER_NAME:-Hosted Agent}"
+          RUNNER_OS_LABEL="${RUNNER_OS:-ubuntu-latest}"
+          export JOB_KEY STATUS EXIT_CODE RUNNER_LABEL RUNNER_OS_LABEL
+          export TOOL_NAME="${{ matrix.task }}"
+          export TOOL_VERSION_VALUE="${TOOL_VERSION:-unknown}"
+          python - <<'PY' | tee "summaries/${SCOPE}/${JOB_KEY}.json"
+import json
+import os
+
+data = {
+    "job": os.environ["JOB_KEY"],
+    "status": os.environ["STATUS"],
+    "exit_code": int(os.environ.get("EXIT_CODE", "1")),
+    "metadata": {
+        "tool": os.environ["TOOL_NAME"],
+        "version": os.environ.get("TOOL_VERSION_VALUE", "unknown"),
+    },
+    "environment": {
+        "runner": os.environ.get("RUNNER_LABEL", "Hosted Agent"),
+        "os": os.environ.get("RUNNER_OS_LABEL", "ubuntu-latest"),
+    },
+    "dependencies": {
+        "npm": [],
+    },
+}
+
+print(json.dumps(data, indent=2))
+PY
+          ls -lah "summaries/$SCOPE"
+          cat "summaries/$SCOPE/${JOB_KEY}.json"
+          if [ ! -s "summaries/$SCOPE/${JOB_KEY}.json" ]; then
+            echo "Diagnostics summary missing for ${JOB_KEY}" >&2
+            exit 1
+          fi
+
+      - name: Upload diagnostics summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-summary-backend-checks_${{ matrix.task }}
           path: summaries/
           retention-days: 2
           if-no-files-found: error
+
+      - name: Fail job if task failed
+        if: ${{ always() && steps.run_task.outputs.exit_code != '0' }}
+        run: exit 1

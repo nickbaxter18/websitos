@@ -1,157 +1,81 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Diagnostics Schema",
+  "title": "CI Job Summary",
   "type": "object",
   "required": [
-    "job",
-    "exit_code",
+    "schema_version",
+    "job_key",
     "status",
-    "errors",
-    "warnings",
-    "artifacts",
+    "exit_code",
+    "started_at",
+    "completed_at",
+    "duration_seconds",
+    "environment",
     "metadata",
-    "environment"
+    "dependencies"
   ],
   "properties": {
-    "job": { "type": "string" },
-    "exit_code": { "type": "integer" },
-    "status": { "type": "string", "enum": ["success", "failure", "warning", "skipped"] },
-    "errors": { "type": "integer", "minimum": 0 },
-    "warnings": { "type": "integer", "minimum": 0 },
-    "messages": {
-      "type": "array",
-      "description": "Detailed messages from tool outputs",
-      "items": {
-        "type": "object",
-        "required": ["type", "message"],
-        "properties": {
-          "type": { "type": "string", "enum": ["error", "warning", "notice"] },
-          "message": { "type": "string" },
-          "file": { "type": "string" },
-          "line": { "type": "integer" },
-          "column": { "type": "integer" },
-          "rule": { "type": "string" },
-          "stack": { "type": "string" }
-        }
-      }
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-    "annotations": {
-      "type": "array",
-      "description": "Annotations pulled from GitHub Actions API",
-      "items": {
-        "type": "object",
-        "properties": {
-          "annotation_level": { "type": "string", "enum": ["failure", "warning", "notice"] },
-          "message": { "type": "string" },
-          "path": { "type": "string" },
-          "start_line": { "type": "integer" },
-          "end_line": { "type": "integer" },
-          "title": { "type": "string" }
-        }
-      }
+    "job_key": {
+      "type": "string"
     },
-    "tests": {
-      "type": "array",
-      "description": "Detailed test case results",
-      "items": {
-        "type": "object",
-        "required": ["name", "status"],
-        "properties": {
-          "name": { "type": "string" },
-          "status": { "type": "string", "enum": ["passed", "failed", "skipped"] },
-          "duration": { "type": "string" },
-          "message": { "type": "string" },
-          "file": { "type": "string" },
-          "line": { "type": "integer" },
-          "stack": { "type": "string" }
-        }
-      }
+    "status": {
+      "type": "string",
+      "enum": ["success", "failure", "warning", "skipped"]
     },
-    "coverage": {
+    "exit_code": {
+      "type": "integer"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "environment": {
       "type": "object",
-      "description": "Coverage details per job",
+      "required": ["os", "node_version"],
       "properties": {
-        "lines": {
-          "type": "object",
-          "properties": {
-            "covered": { "type": "integer" },
-            "missed": { "type": "integer" },
-            "pct": { "type": "number" }
-          }
-        },
-        "branches": {
-          "type": "object",
-          "properties": {
-            "covered": { "type": "integer" },
-            "missed": { "type": "integer" },
-            "pct": { "type": "number" }
-          }
-        },
-        "files": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "path": { "type": "string" },
-              "lines_pct": { "type": "number" },
-              "branches_pct": { "type": "number" }
-            }
-          }
-        }
-      }
-    },
-    "artifacts": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["name", "path"],
-        "properties": {
-          "name": { "type": "string" },
-          "path": { "type": "string" },
-          "url": { "type": "string" }
-        }
-      }
+        "os": { "type": "string" },
+        "node_version": { "type": "string" },
+        "docker_image": { "type": "string" },
+        "browser": { "type": "string" },
+        "runner": { "type": "string" }
+      },
+      "additionalProperties": true
     },
     "metadata": {
       "type": "object",
       "properties": {
         "tool": { "type": "string" },
         "version": { "type": "string" },
-        "duration": { "type": "string" },
-        "sha256": { "type": "string" },
-        "fallback": { "type": "boolean" }
-      }
-    },
-    "environment": {
-      "type": "object",
-      "properties": {
-        "runner": { "type": "string" },
-        "os": { "type": "string" },
-        "node": { "type": "string" },
-        "python": { "type": "string" },
-        "pnpm": { "type": "string" },
-        "git_sha": { "type": "string" },
-        "job_started": { "type": "string", "format": "date-time" },
-        "job_ended": { "type": "string", "format": "date-time" }
-      }
+        "logs_size_bytes": { "type": "integer", "minimum": 0 },
+        "retry_count": { "type": "integer", "minimum": 0 },
+        "warnings_count": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["tool", "version", "logs_size_bytes", "retry_count", "warnings_count"],
+      "additionalProperties": true
     },
     "dependencies": {
       "type": "object",
-      "description": "Snapshot of dependencies and lockfile",
       "properties": {
-        "lockfile_sha": { "type": "string" },
-        "npm": { "type": "object" },
-        "pip": { "type": "object" }
-      }
-    },
-    "resources": {
-      "type": "object",
-      "description": "System resource info",
-      "properties": {
-        "cpu_count": { "type": "integer" },
-        "memory_mb": { "type": "integer" },
-        "disk_free_mb": { "type": "integer" }
-      }
+        "npm": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["npm"],
+      "additionalProperties": true
     }
-  }
+  },
+  "additionalProperties": false
 }
