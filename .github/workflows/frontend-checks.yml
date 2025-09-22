@@ -16,15 +16,25 @@ jobs:
     env:
       JOB_ID: ${{ github.job }}
     steps:
-      - name: 📛 Show GitHub Job ID
-        run: echo "github.job=$JOB_ID"
+      - name: 📛 Print GitHub job context
+        run: |
+          echo "=================="
+          echo "github.job = $JOB_ID"
+          echo "github.workflow = ${{ github.workflow }}"
+          echo "runner.os = ${{ runner.os }}"
+          echo "=================="
         shell: bash
 
-      - name: 🧾 Write dynamic JSON summary
+      - name: 📂 Pre-check summaries folder (before write)
+        run: |
+          mkdir -p summaries/frontend
+          echo "📦 Before write contents:" && ls -lahR summaries || echo "(empty)"
+        shell: bash
+
+      - name: 🧾 Write and verify JSON summary
         run: |
           set -euxo pipefail
           FILE="summaries/frontend/$JOB_ID.json"
-          mkdir -p summaries/frontend
           cat <<EOF > "$FILE"
           {
             "job": "$JOB_ID",
@@ -49,14 +59,13 @@ jobs:
             }
           }
           EOF
-          echo "✅ JSON written to $FILE"
+          echo "✅ File written to $FILE"
+          ls -lah summaries/frontend
           cat "$FILE"
         shell: bash
 
-      - name: 📂 Echo all artifact files
-        run: |
-          echo "📦 Artifact contents:"
-          find summaries/ -type f | sort
+      - name: 📦 Final artifact file listing
+        run: find summaries/ -type f -exec ls -lah {} +
         shell: bash
 
       - name: 🚀 Upload for diagnostics
