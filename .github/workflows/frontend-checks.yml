@@ -54,28 +54,33 @@ jobs:
         if: matrix.task == 'playwright-e2e'
         run: |
           VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
-          echo '{' > summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  "job": "frontend-checks/playwright-e2e",' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  "status": "success",' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  "exit_code": 0,' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  "metadata": {' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '    "tool": "playwright",' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo "    \"version\": \"$VERSION\"" >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  },' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  "environment": {' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '    "runner": "${{ runner.name }}",' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '    "os": "${{ runner.os }}",' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '    "resources": {' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '      "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '      "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '      "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '    }' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  },' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  "dependencies": {' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '    "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '    "npm": []' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '  }' >> summaries/frontend/frontend-playwright-diagnostics.json
-          echo '}' >> summaries/frontend/frontend-playwright-diagnostics.json
+          CPU=${{ steps.envinfo.outputs.cpu_count }}
+          MEM=${{ steps.envinfo.outputs.memory_mb }}
+          DISK=${{ steps.envinfo.outputs.disk_free_mb }}
+          LOCKSHA=${{ steps.envinfo.outputs.lockfile_sha }}
+
+          printf '{\n' > summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  "job": "frontend-checks/playwright-e2e",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  "status": "success",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  "exit_code": 0,\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  "metadata": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "tool": "playwright",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "version": "%s"\n' "$VERSION" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  },\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  "environment": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "runner": "%s",\n' "${{ runner.name }}" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "os": "%s",\n' "${{ runner.os }}" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "resources": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '      "cpu_count": %s,\n' "$CPU" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '      "memory_mb": %s,\n' "$MEM" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '      "disk_free_mb": %s\n' "$DISK" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    }\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  },\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  "dependencies": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "lockfile_sha": "%s",\n' "$LOCKSHA" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "npm": []\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '  }\n' >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '}\n' >> summaries/frontend/frontend-playwright-diagnostics.json
 
       - name: Validate summaries before upload
         if: always()
