@@ -54,10 +54,11 @@ jobs:
       - name: Ensure summaries dir exists
         run: mkdir -p summaries/frontend
 
-      - name: Conditionally generate summary in shell
+      - name: Conditionally generate summary (final patch)
         run: |
+          echo "🔍 matrix.task = ${{ matrix.task }}"
           if [[ "${{ matrix.task }}" == *playwright* ]]; then
-            set -euo pipefail
+            echo "✅ Running summary block"
             VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
             CPU=${{ steps.envinfo.outputs.cpu_count }}
             MEM=${{ steps.envinfo.outputs.memory_mb }}
@@ -88,6 +89,8 @@ jobs:
             printf '}\n' >> "$FILE"
             echo "✅ Summary created at $FILE"
             cat "$FILE"
+          else
+            echo "⏭️ Skipping summary (not playwright)"
           fi
 
       - name: Validate and upload summary
