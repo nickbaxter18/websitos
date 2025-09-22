@@ -1,0 +1,85 @@
+
+# SECTION 1: Header & Purpose
+# Aggregates all diagnostics summaries uploaded by the Codex Diagnostics CI workflow and renders a Markdown report.
+name: Codex Diagnostics Aggregator
+
+on:
+  workflow_run:
+    workflows: ["Codex Diagnostics CI"]
+    types: [completed]
+
+# SECTION 2: Imports / Dependencies
+# Uses actions/checkout@v4 to pull the repository, actions/download-artifact@v4 to retrieve summaries from the triggering run,
+# actions/setup-node@v4 for Node tooling, and actions/upload-artifact@v4 to persist the aggregated report.
+
+jobs:
+  aggregate:
+    name: Aggregate Diagnostics
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion != 'skipped' }}
+
+    steps:
+      - name: Checkout repository snapshot
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download diagnostics summaries
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: diagnostics-summary-*
+          path: summaries
+          merge-multiple: true
+          if-no-files-found: error
+
+      - name: Inspect downloaded summaries
+        run: |
+          echo "Summaries downloaded from workflow run ${{ github.event.workflow_run.id }}:"
+          ls -R summaries
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Execute diagnostics aggregator
+        run: |
+          node .github/scripts/aggregator.js --summaries summaries --output diagnostics-report
+
+      - name: Show generated diagnostics report
+        run: |
+          ls -lah diagnostics-report*
+          cat diagnostics-report.md
+
+      - name: Upload aggregated diagnostics artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-aggregated-report
+          path: |
+            diagnostics-report.md
+            diagnostics-report.json
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Emit report summary
+        run: |
+          echo "::group::CI Diagnostics Summary"
+          cat diagnostics-report.md
+          echo "::endgroup::"
+
+# SECTION 3: Types & Schema
+# The aggregator expects artifacts named diagnostics-summary-<job_key> that each include summaries/<scope>/<job_key>.json.
+# The aggregated Markdown output is written to diagnostics-report.md with metadata in diagnostics-report.json.
+
+# SECTION 4: Core Logic
+# Steps download artifacts, run the Node aggregator script, surface the markdown for visibility, and upload the final report.
+
+# SECTION 5: Error Handling
+# The download step uses if-no-files-found: error to prevent silent failures. The aggregator script validates JSON and exits non-zero on schema issues.
+
+# SECTION 6: Performance
+# Aggregation operates on small JSON files and completes quickly under Node.js with no additional dependencies.
+
+# SECTION 7: Exports
+# Exposes diagnostics-report.md and diagnostics-report.json as artifacts for downstream consumers and manual inspection.
