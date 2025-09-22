@@ -27,24 +27,15 @@ try {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         loadFiles(full);
-      } else if (entry.name.endsWith("-diagnostics.json")) {
-        processedFiles.push(`✔️ Diagnostics: ${full}`);
-        try {
-          const data = JSON.parse(fs.readFileSync(full, "utf-8"));
-          data.__file = full;
-          const schemaError = validateSchema(full);
-          if (schemaError) {
-            data.schema_error = schemaError;
-            data.status = "failure";
-          }
-          allReports.push(data);
-        } catch (e) {
-          schemaFailures++;
-          allReports.push({ job: full, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
-        }
-      } else if (entry.name.endsWith("-fallback.json")) {
+        continue;
+      }
+
+      if (!entry.name.endsWith(".json")) continue;
+
+      const isFallback = entry.name.endsWith("-fallback.json");
+      if (isFallback) {
         processedFiles.push(`⚠️ Fallback: ${full}`);
-        if (!allReports.some(r => r.__file && r.__file.includes(entry.name.replace("-fallback.json", "-diagnostics.json")))) {
+        if (!allReports.some(r => r.__file && r.__file.includes(entry.name.replace("-fallback.json", "")))) {
           try {
             const data = JSON.parse(fs.readFileSync(full, "utf-8"));
             data.__file = full;
@@ -54,6 +45,22 @@ try {
             allReports.push({ job: full, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse fallback: ${e.message}` }] });
           }
         }
+        continue;
+      }
+
+      processedFiles.push(`✔️ Summary: ${full}`);
+      try {
+        const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+        data.__file = full;
+        const schemaError = validateSchema(full);
+        if (schemaError) {
+          data.schema_error = schemaError;
+          data.status = "failure";
+        }
+        allReports.push(data);
+      } catch (e) {
+        schemaFailures++;
+        allReports.push({ job: full, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
       }
     }
   }
@@ -61,19 +68,19 @@ try {
   loadFiles(baseDir);
 
   const expectedJobs = [
-    "frontend-checks/eslint",
-    "frontend-checks/prettier",
-    "frontend-checks/tsc",
-    "frontend-checks/jest-unit",
-    "frontend-checks/playwright-e2e",
-    "backend-checks/pytest",
-    "backend-checks/mypy",
-    "backend-checks/flake8",
-    "backend-checks/black",
-    "coverage-checks/frontend",
-    "coverage-checks/backend",
-    "coverage-checks/backend-node",
-    "coverage-checks/e2e"
+    "frontend-checks_lint",
+    "frontend-checks_prettier",
+    "frontend-checks_type-check",
+    "frontend-checks_test-unit",
+    "frontend-checks_playwright-e2e",
+    "backend-checks_black",
+    "backend-checks_flake8",
+    "backend-checks_mypy",
+    "backend-checks_pytest",
+    "coverage-checks_frontend",
+    "coverage-checks_backend",
+    "coverage-checks_backend-node",
+    "coverage-checks_e2e"
   ];
 
   expectedJobs.forEach(job => {
@@ -86,24 +93,31 @@ try {
   let totalWarnings = 0;
   let totalCoverageLines = { covered: 0, missed: 0 };
 
-  let summaryTable = "### 📊 Summary Table\n\n| Job | Errors | Warnings | Status | Schema Valid |\n|-----|--------|----------|--------|--------------|\n";
-  let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Tool | Version | Exit Code | Duration | Fallback |\n|-----|------|---------|-----------|----------|----------|\n";
+  let summaryTable = "### 📊 Summary Table\n\n| Job | Status | Exit Code | Schema Valid |\n|-----|--------|-----------|--------------|\n";
+  let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Tool | Version | Runner | OS |\n|-----|------|---------|--------|----|\n";
 
   let errorsSection = "\n### ❌ Consolidated Errors\n";
   let warningsSection = "\n### ⚠️ Consolidated Warnings\n";
   let failedTestsSection = "\n### 🧨 Consolidated Test Failures\n";
-  let processedSection = "\n### 📂 Files Processed\n" + processedFiles.join("\n");
+  const processedList = processedFiles.length ? processedFiles.join("\n") : "No summary files discovered.";
+  let processedSection = "\n### 📂 Files Processed\n" + processedList;
 
   for (const r of allReports) {
-    const errors = Number.isInteger(r.errors) ? r.errors : (r.errors?.length || 0);
-    const warnings = Number.isInteger(r.warnings) ? r.warnings : (r.warnings?.length || 0);
+    const errors = Number.isInteger(r.errors)
+      ? r.errors
+      : (Array.isArray(r.errors) ? r.errors.length : 0);
+    const warnings = Number.isInteger(r.warnings)
+      ? r.warnings
+      : (Array.isArray(r.warnings) ? r.warnings.length : 0);
 
     totalErrors += errors;
     totalWarnings += warnings;
 
-    summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\n`;
+    const status = r.status || "?";
+    const exitCode = Number.isInteger(r.exit_code) ? r.exit_code : r.exit_code ?? "?";
+    summaryTable += `| ${r.job || r.__file} | ${status} | ${exitCode} | ${r.schema_error ? "❌" : "✅"} |\n`;
 
-    metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\n`;
+    metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.environment?.runner || "?"} | ${r.environment?.os || "?"} |\n`;
 
     if (errors > 0) errorsSection += `- ${r.job}: ${errors} errors reported\n`;
     if (warnings > 0) warningsSection += `- ${r.job}: ${warnings} warnings reported\n`;

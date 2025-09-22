@@ -38,20 +38,83 @@ jobs:
           echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
           echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
 
-      - name: Ensure summaries dir always exists
-        run: mkdir -p summaries
-
-      - name: Validate summaries before upload
-        if: always()
+      - name: Run ${{ matrix.task }}
+        id: run_task
+        continue-on-error: true
+        shell: bash
         run: |
-          echo "📂 Summaries before upload (${{ matrix.task }}):"
-          ls -lah summaries || echo "❌ summaries/ not found"
+          set -o pipefail
+          TASK="${{ matrix.task }}"
+          set +e
+          EXIT_CODE=0
+          case "$TASK" in
+            black)
+              black --check .
+              EXIT_CODE=$?
+              ;;
+            flake8)
+              flake8
+              EXIT_CODE=$?
+              ;;
+            mypy)
+              mypy .
+              EXIT_CODE=$?
+              ;;
+            pytest)
+              pytest
+              EXIT_CODE=$?
+              ;;
+            *)
+              echo "Unknown backend task: $TASK" >&2
+              EXIT_CODE=1
+              ;;
+          esac
+          set -e
+          STATUS="success"
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          exit "$EXIT_CODE"
 
-      - name: Upload backend summaries (unified)
+      - name: 📦 Write diagnostics JSON
+        if: always()
+        shell: bash
+        run: |
+          SCOPE="backend"
+          JOB_KEY="backend-checks_${{ matrix.task }}"
+          EXIT_CODE="${{ steps.run_task.outputs.exit_code }}"
+          STATUS="${{ steps.run_task.outputs.status }}"
+          if [ -z "$EXIT_CODE" ]; then EXIT_CODE=1; fi
+          if [ -z "$STATUS" ]; then STATUS="success"; fi
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          mkdir -p "summaries/$SCOPE"
+          tee "summaries/$SCOPE/${JOB_KEY}.json" <<EOF
+{
+  "job": "${JOB_KEY}",
+  "status": "${STATUS}",
+  "exit_code": ${EXIT_CODE},
+  "metadata": {
+    "tool": "${{ matrix.task }}",
+    "version": "1.0.0"
+  },
+  "environment": {
+    "runner": "Hosted Agent",
+    "os": "ubuntu-latest"
+  },
+  "dependencies": {
+    "npm": []
+  }
+}
+EOF
+          ls -lah "summaries/$SCOPE"
+          cat "summaries/$SCOPE/${JOB_KEY}.json"
+          if [ "$EXIT_CODE" -ne 0 ]; then exit "$EXIT_CODE"; fi
+
+      - name: Upload diagnostics summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-summaries
+          name: diagnostics-summary-backend-checks_${{ matrix.task }}
           path: summaries/
           retention-days: 2
           if-no-files-found: error
