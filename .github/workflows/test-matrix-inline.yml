@@ -1,0 +1,23 @@
+name: Matrix-Inline-Debug
+
+on:
+  workflow_dispatch:
+
+jobs:
+  matrix-inline:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [playwright-e2e, lint, type-check]
+    steps:
+      - name: Matrix task echo
+        run: echo "🔍 matrix.task = ${{ matrix.task }}"
+
+      - name: Conditional shell test
+        run: |
+          echo "Checking inline condition: ${{ matrix.task }}"
+          if [[ "${{ matrix.task }}" == *playwright* ]]; then
+            echo "✅ inside conditional block"
+          else
+            echo "⛔ outside conditional block"
+          fi
