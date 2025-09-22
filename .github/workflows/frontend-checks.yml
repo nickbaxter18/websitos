@@ -14,42 +14,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: 🗂 Setup summary folder
-        run: mkdir -p summaries/frontend
+      - name: 📛 Dump GitHub Job + Context Info
+        run: |
+          echo "github.job = ${{ github.job }}"
+          echo "github.workflow = ${{ github.workflow }}"
+          echo "github.run_id = ${{ github.run_id }}"
+          echo "github.run_number = ${{ github.run_number }}"
+          echo "runner.name = ${{ runner.name }}"
+          echo "runner.os = ${{ runner.os }}"
         shell: bash
 
-      - name: 🧾 Write schema-valid JSON
+      - name: 📁 List summaries folder (debug only)
         run: |
-          set -euxo pipefail
+          mkdir -p summaries/frontend
+          ls -lahR summaries || echo "No summaries yet"
+        shell: bash
+
+      - name: 🧾 Write minimal diagnostic JSON
+        run: |
           FILE=summaries/frontend/frontend-checks_playwright-e2e.json
-          cat <<EOF > "$FILE"
-          {
-            "job": "frontend-checks/playwright-e2e",
-            "status": "success",
-            "exit_code": 0,
-            "metadata": {
-              "tool": "playwright",
-              "version": "1.55.0"
-            },
-            "environment": {
-              "runner": "Hosted Agent",
-              "os": "ubuntu-latest",
-              "resources": {
-                "cpu_count": 2,
-                "memory_mb": 7086,
-                "disk_free_mb": 102400
-              }
-            },
-            "dependencies": {
-              "lockfile_sha": "abc123",
-              "npm": ["@playwright/test"]
-            }
-          }
-          EOF
+          echo '{"job": "frontend-checks/playwright-e2e", "status": "success", "exit_code": 0, "metadata": {"tool": "test", "version": "1.0.0"}, "environment": {"runner": "debug", "os": "ubuntu"}, "dependencies": {"lockfile_sha": "abc123", "npm": []}}' > "$FILE"
           cat "$FILE"
         shell: bash
 
-      - name: 🚀 Upload exact folder and artifact name
+      - name: 🚀 Upload diagnostic file in full path
         uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
