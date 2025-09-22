@@ -2,8 +2,6 @@ name: Debug Frontend Summary
 
 on:
   push:
-    branches:
-      - '**'
   workflow_dispatch:
 
 jobs:
@@ -12,46 +10,23 @@ jobs:
     timeout-minutes: 10
     continue-on-error: true
     steps:
-      - name: 🟢 Confirm job scheduled
-        run: echo "✅ Job is running: ${{ github.job }}"
-        shell: bash
+      - name: ✅ Job scheduled
+        run: echo "Job is scheduled. github.job=${{ github.job }}"
 
-      - name: 🧾 Write and inspect JSON summary
+      - name: 🧾 Write minimal diagnostics JSON
         run: |
           mkdir -p summaries/frontend
           FILE="summaries/frontend/${{ github.job }}.json"
-          echo "📦 Writing to $FILE"
-
-          cat <<EOF > "$FILE"
-          {
+          echo '{
             "job": "${{ github.job }}",
             "status": "success",
             "exit_code": 0,
-            "metadata": {
-              "tool": "playwright",
-              "version": "1.55.0"
-            },
-            "environment": {
-              "runner": "Hosted Agent",
-              "os": "ubuntu-latest",
-              "resources": {
-                "cpu_count": 2,
-                "memory_mb": 7086,
-                "disk_free_mb": 102400
-              }
-            },
-            "dependencies": {
-              "lockfile_sha": "abc123",
-              "npm": ["@playwright/test"]
-            }
-          }
-          EOF
-
-          echo "✅ File content:"
+            "metadata": {"tool": "playwright", "version": "1.55.0"},
+            "environment": {"runner": "Hosted Agent", "os": "ubuntu-latest", "resources": {"cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 102400}},
+            "dependencies": {"lockfile_sha": "abc123", "npm": ["@playwright/test"]}
+          }' > "$FILE"
+          echo "✅ File written to $FILE"
           cat "$FILE"
-          echo "📂 Directory structure:"
-          find summaries/ -type f -exec ls -lah {} +
-        shell: bash
 
       - name: 🚀 Upload for diagnostics
         if: always()
