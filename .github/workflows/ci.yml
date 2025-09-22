@@ -66,6 +66,8 @@ jobs:
       - name: Collect frontend summaries
         run: |
           mkdir -p summaries
+          # Collect diagnostics + reports
+          find downloaded -type f -iname "*-diagnostics.json" -exec cp {} summaries/ \; || true
           find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
           if [ "$(ls -A summaries/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
             echo '{"workflow":"package-frontend","job":"fallback","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"No reports found, generated fallback"}]}' > summaries/frontend-fallback.json
@@ -74,6 +76,8 @@ jobs:
           find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           sha256sum summaries/* >> summaries/artifact-manifest.txt || true
           cat summaries/artifact-manifest.txt
+          echo "📂 Final packaged summaries:"
+          ls -lh summaries || true
 
       - uses: actions/upload-artifact@v4
         with:
@@ -126,6 +130,8 @@ jobs:
       - name: Collect backend summaries
         run: |
           mkdir -p summaries
+          # Collect diagnostics + reports
+          find downloaded -type f -iname "*-diagnostics.json" -exec cp {} summaries/ \; || true
           find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
           if [ "$(ls -A summaries/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
             echo '{"workflow":"package-backend","job":"fallback","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"No reports found, generated fallback"}]}' > summaries/backend-fallback.json
@@ -134,6 +140,8 @@ jobs:
           find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           sha256sum summaries/* >> summaries/artifact-manifest.txt || true
           cat summaries/artifact-manifest.txt
+          echo "📂 Final packaged summaries:"
+          ls -lh summaries || true
 
       - uses: actions/upload-artifact@v4
         with:
@@ -195,6 +203,8 @@ jobs:
       - name: Collect coverage summaries
         run: |
           mkdir -p summaries
+          # Collect diagnostics + reports
+          find downloaded -type f -iname "*-diagnostics.json" -exec cp {} summaries/ \; || true
           find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
           if [ "$(ls -A summaries/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
             echo '{"workflow":"package-coverage","job":"fallback","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"No reports found, generated fallback"}]}' > summaries/coverage-fallback.json
@@ -203,6 +213,8 @@ jobs:
           find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
           sha256sum summaries/* >> summaries/artifact-manifest.txt || true
           cat summaries/artifact-manifest.txt
+          echo "📂 Final packaged summaries:"
+          ls -lh summaries || true
 
       - uses: actions/upload-artifact@v4
         with:
