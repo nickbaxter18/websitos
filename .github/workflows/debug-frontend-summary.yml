@@ -1,0 +1,51 @@
+name: Debug Frontend Summary
+
+on:
+  workflow_dispatch:
+
+jobs:
+  frontend-checks:
+    strategy:
+      matrix:
+        task: [playwright-e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - name: ✅ Start job
+        run: echo "Job = frontend-checks/${{ matrix.task }}"
+
+      - name: 🧾 Write diagnostics JSON and validate
+        run: |
+          mkdir -p summaries/frontend
+          FILE="summaries/frontend/frontend-checks_${{ matrix.task }}.json"
+          echo "📦 Writing $FILE"
+          echo '{
+            "job": "frontend-checks/${{ matrix.task }}",
+            "status": "success",
+            "exit_code": 0,
+            "metadata": {"tool": "playwright", "version": "1.55.0"},
+            "environment": {"runner": "Hosted Agent", "os": "ubuntu-latest", "resources": {"cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 102400}},
+            "dependencies": {"lockfile_sha": "abc123", "npm": ["@playwright/test"]}
+          }' > "$FILE"
+          echo "✅ JSON written"
+          cat "$FILE"
+          echo "📂 Summary folder contents:" && ls -lah summaries/frontend || echo "(empty)"
+          echo "📏 File size:" && stat "$FILE"
+        shell: bash
+
+      - name: 🔍 Final directory check before upload
+        run: |
+          echo "📂 Directory check before upload:"
+          ls -lah summaries || echo "summaries missing"
+          ls -lah summaries/frontend || echo "frontend dir missing"
+        shell: bash
+
+      - name: 🚀 Upload full summaries folder
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-summaries
+          path: summaries/
+          retention-days: 2
+          if-no-files-found: error
