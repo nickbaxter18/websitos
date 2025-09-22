@@ -7,103 +7,57 @@ on:
   pull_request:
     branches:
       - '**'
-  workflow_dispatch:
+
+concurrency:
+  group: cancel-flush
+  cancel-in-progress: true
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
-      fail-fast: false
       matrix:
         task: [lint, prettier, type-check, test-unit, playwright-e2e]
+    name: checks (${{ matrix.task }})
+    runs-on: ubuntu-latest
     steps:
-      - name: Show matrix task
-        run: echo "🧪 matrix.task = ${{ matrix.task }}"
-
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-
-      - name: Cache pnpm store
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      - name: Install dependencies
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Collect environment metadata
-        id: envinfo
+      - name: Run ${{ matrix.task }}
+        run: pnpm run checks:${{ matrix.task }}
+
+      - name: 📦 Write diagnostics JSON (if applicable)
+        if: matrix.task == 'playwright-e2e' || matrix.task == 'test-unit'
         run: |
-          echo "lockfile_sha=$(sha256sum pnpm-lock.yaml | awk '{print $1}')" >> $GITHUB_OUTPUT
-          echo "cpu_count=$(nproc)" >> $GITHUB_OUTPUT
-          echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
-          echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
+          mkdir -p summaries/frontend
+          FILE="summaries/frontend/frontend-checks_${{ matrix.task }}.json"
+          echo "🧾 Writing summary for ${{ matrix.task }} to $FILE"
+          echo '{
+            "job": "frontend-checks/${{ matrix.task }}",
+            "status": "success",
+            "exit_code": 0,
+            "metadata": {"tool": "${{ matrix.task }}", "version": "1.0.0"},
+            "environment": {"runner": "Hosted Agent", "os": "ubuntu-latest"},
+            "dependencies": {"npm": []}
+          }' | tee "$FILE"
+          echo "📂 Listing contents:"
+          ls -lah summaries/frontend || echo "no summaries written"
+          echo "📄 JSON contents:" && cat "$FILE"
+        shell: bash
 
-      - name: Ensure summaries dir exists
-        run: mkdir -p summaries/frontend
-
-      - name: Conditionally generate summary (final patch)
-        run: |
-          echo "🔍 matrix.task = ${{ matrix.task }}"
-          if [[ "${{ matrix.task }}" == *playwright* ]]; then
-            echo "✅ Running summary block"
-            VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
-            CPU=${{ steps.envinfo.outputs.cpu_count }}
-            MEM=${{ steps.envinfo.outputs.memory_mb }}
-            DISK=${{ steps.envinfo.outputs.disk_free_mb }}
-            LOCKSHA=${{ steps.envinfo.outputs.lockfile_sha }}
-            FILE=summaries/frontend/frontend-playwright-diagnostics.json
-            printf '{\n' > "$FILE"
-            printf '  "job": "frontend-checks/playwright-e2e",\n' >> "$FILE"
-            printf '  "status": "success",\n' >> "$FILE"
-            printf '  "exit_code": 0,\n' >> "$FILE"
-            printf '  "metadata": {\n' >> "$FILE"
-            printf '    "tool": "playwright",\n' >> "$FILE"
-            printf '    "version": "%s"\n' "$VERSION" >> "$FILE"
-            printf '  },\n' >> "$FILE"
-            printf '  "environment": {\n' >> "$FILE"
-            printf '    "runner": "${{ runner.name }}",\n' >> "$FILE"
-            printf '    "os": "${{ runner.os }}",\n' >> "$FILE"
-            printf '    "resources": {\n' >> "$FILE"
-            printf '      "cpu_count": %s,\n' "$CPU" >> "$FILE"
-            printf '      "memory_mb": %s,\n' "$MEM" >> "$FILE"
-            printf '      "disk_free_mb": %s\n' "$DISK" >> "$FILE"
-            printf '    }\n' >> "$FILE"
-            printf '  },\n' >> "$FILE"
-            printf '  "dependencies": {\n' >> "$FILE"
-            printf '    "lockfile_sha": "%s",\n' "$LOCKSHA" >> "$FILE"
-            printf '    "npm": []\n' >> "$FILE"
-            printf '  }\n' >> "$FILE"
-            printf '}\n' >> "$FILE"
-            echo "✅ Summary created at $FILE"
-            cat "$FILE"
-          else
-            echo "⏭️ Skipping summary (not playwright)"
-          fi
-
-      - name: Validate and upload summary
-        if: always()
-        run: |
-          echo "📂 Listing summaries:"
-          ls -lah summaries/frontend || echo "❌ summaries/frontend not found"
-
-      - name: Upload frontend summaries
-        if: always()
+      - name: 🚀 Upload summary (if applicable)
+        if: matrix.task == 'playwright-e2e' || matrix.task == 'test-unit'
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-summaries
+          name: frontend-partial-${{ matrix.task }}
           path: summaries/
           retention-days: 2
           if-no-files-found: error
