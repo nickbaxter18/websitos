@@ -49,10 +49,10 @@ jobs:
           cat "$FILE"
         shell: bash
 
-      - name: 🚀 Upload diagnostics summary only
+      - name: 🚀 Upload full summaries dir
         uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
-          path: summaries/frontend/frontend-checks_playwright-e2e.json
+          path: summaries/
           retention-days: 2
           if-no-files-found: error
