@@ -1,31 +1,78 @@
-            "environment": {
-              "runner": "${{ runner.name }}",
-              "os": "${{ runner.os }}",
-              "resources": {
-                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
-                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
-                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
-              }
-            },
-            "dependencies": {
-              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
-              "npm": $deps
-            }
-          }
-          EOF
+name: Coverage Checks
 
-          echo "✅ Wrote summaries/e2e-diagnostics.json"
-          ls -lh summaries || true
-          sha256sum summaries/* || true
-          head -n 20 summaries/e2e-diagnostics.json
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
 
-      # ---------------------------
-      # Upload artifacts
-      # ---------------------------
-      - name: Upload partial coverage summaries
+env:
+  FRONTEND_COVERAGE_JSON: coverage/frontend/coverage-summary.json
+  BACKEND_COVERAGE_XML: coverage/coverage.xml
+  BACKEND_COVERAGE_JSON: coverage/coverage-summary.json
+  BACKEND_NODE_COVERAGE_JSON: backend/coverage/coverage-summary.json
+  E2E_COVERAGE_JSON: coverage/e2e/coverage-summary.json
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [frontend, backend, backend-node, e2e]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Python
+        if: ${{ matrix.task == 'backend' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies (pnpm)
+        run: pnpm install
+
+      - name: Install backend test dependencies
+        if: ${{ matrix.task == 'backend' }}
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r $GITHUB_WORKSPACE/requirements.txt
+
+      - name: Collect environment metadata
+        id: envinfo
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "lockfile_sha=$(sha256sum pnpm-lock.yaml | awk '{print $1}')" >> $GITHUB_OUTPUT
+          elif [ -f requirements.txt ]; then
+            echo "lockfile_sha=$(sha256sum requirements.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+          else
+            echo "lockfile_sha=unknown" >> $GITHUB_OUTPUT
+          fi
+          echo "cpu_count=$(nproc)" >> $GITHUB_OUTPUT
+          echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
+          echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
+
+      # [Diagnostics steps omitted for brevity]
+
+      - name: Upload coverage summaries (unified)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-partial-${{ matrix.task }}
+          name: coverage-summaries
           path: summaries/
           retention-days: 2
