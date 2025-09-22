@@ -3,16 +3,25 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 try {
-  const baseDir = "summaries";
+  const workspaceDir = process.env.GITHUB_WORKSPACE || process.cwd();
+  const baseDir = path.join(workspaceDir, "summaries");
+  const schemaPath = path.join(workspaceDir, "diagnostics.schema.json");
+  const localAjv = path.join(workspaceDir, ".agg_tmp", "node_modules", ".bin", "ajv");
+  const ajvCommand = fs.existsSync(localAjv)
+    ? `"${localAjv}"`
+    : "npx --yes --package ajv-cli ajv";
+
   const allReports = [];
   const processedFiles = [];
-  const schemaPath = "diagnostics.schema.json";
   let schemaFailures = 0;
   let schemaPasses = 0;
 
   function validateSchema(file) {
     try {
-      execSync(`npx ajv-cli validate -s ${schemaPath} -d ${file}`, { stdio: "pipe" });
+      execSync(`${ajvCommand} validate -s "${schemaPath}" -d "${file}"`, {
+        stdio: "pipe",
+        cwd: workspaceDir
+      });
       schemaPasses++;
       return null;
     } catch (e) {
@@ -27,33 +36,57 @@ try {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         loadFiles(full);
-      } else if (entry.name.endsWith("-diagnostics.json")) {
-        processedFiles.push(`✔️ Diagnostics: ${full}`);
-        try {
-          const data = JSON.parse(fs.readFileSync(full, "utf-8"));
-          data.__file = full;
-          const schemaError = validateSchema(full);
-          if (schemaError) {
-            data.schema_error = schemaError;
-            data.status = "failure";
-          }
-          allReports.push(data);
-        } catch (e) {
-          schemaFailures++;
-          allReports.push({ job: full, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }], schema_error: e.toString() });
-        }
-      } else if (entry.name.endsWith("-fallback.json")) {
-        processedFiles.push(`⚠️ Fallback: ${full}`);
-        if (!allReports.some(r => r.__file && r.__file.includes(entry.name.replace("-fallback.json", "-diagnostics.json")))) {
+        continue;
+      }
+
+      if (!entry.name.endsWith(".json")) continue;
+
+      const rel = path.relative(workspaceDir, full) || entry.name;
+      const isFallback = entry.name.endsWith("-fallback.json");
+      if (isFallback) {
+        processedFiles.push(`⚠️ Fallback: ${rel}`);
+        const baseName = entry.name.replace("-fallback.json", "");
+        if (!allReports.some(r => r.__file && r.__file.includes(baseName))) {
           try {
             const data = JSON.parse(fs.readFileSync(full, "utf-8"));
-            data.__file = full;
+            data.__file = rel;
             data.fallback = true;
             allReports.push(data);
           } catch (e) {
-            allReports.push({ job: full, status: "failure", errors: 1, warnings: 0, messages: [{ type: "error", message: `Failed to parse fallback: ${e.message}` }] });
+            allReports.push({
+              job: rel,
+              status: "failure",
+              errors: 1,
+              warnings: 0,
+              messages: [{ type: "error", message: `Failed to parse fallback: ${e.message}` }]
+            });
           }
         }
+        continue;
+      }
+
+      processedFiles.push(`✔️ Summary: ${rel}`);
+      try {
+        const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+        data.__file = rel;
+        const schemaError = validateSchema(full);
+        if (schemaError) {
+          data.schema_error = schemaError;
+          if (data.status !== "missing") {
+            data.status = "failure";
+          }
+        }
+        allReports.push(data);
+      } catch (e) {
+        schemaFailures++;
+        allReports.push({
+          job: rel,
+          status: "failure",
+          errors: 1,
+          warnings: 0,
+          messages: [{ type: "error", message: `Failed to parse diagnostics: ${e.message}` }],
+          schema_error: e.toString()
+        });
       }
     }
   }
@@ -61,55 +94,112 @@ try {
   loadFiles(baseDir);
 
   const expectedJobs = [
-    "frontend-checks/eslint",
-    "frontend-checks/prettier",
-    "frontend-checks/tsc",
-    "frontend-checks/jest-unit",
-    "frontend-checks/playwright-e2e",
-    "backend-checks/pytest",
-    "backend-checks/mypy",
-    "backend-checks/flake8",
-    "backend-checks/black",
-    "coverage-checks/frontend",
-    "coverage-checks/backend",
-    "coverage-checks/backend-node",
-    "coverage-checks/e2e"
+    "frontend-checks_lint",
+    "frontend-checks_prettier",
+    "frontend-checks_type-check",
+    "frontend-checks_test-unit",
+    "frontend-checks_playwright-e2e",
+    "backend-checks_black",
+    "backend-checks_flake8",
+    "backend-checks_mypy",
+    "backend-checks_pytest",
+    "coverage-checks_frontend",
+    "coverage-checks_backend",
+    "coverage-checks_backend-node",
+    "coverage-checks_e2e"
   ];
 
-  expectedJobs.forEach(job => {
-    if (!allReports.some(r => r.job === job)) {
-      allReports.push({ job, status: "missing", errors: 0, warnings: 0, messages: [{ type: "warning", message: "No diagnostics JSON uploaded" }] });
+  const expectedSet = new Set(expectedJobs);
+  const jobMap = new Map();
+  const extras = [];
+
+  for (const report of allReports) {
+    if (report.job && expectedSet.has(report.job) && !jobMap.has(report.job)) {
+      jobMap.set(report.job, report);
+    } else {
+      extras.push(report);
     }
+  }
+
+  const orderedReports = expectedJobs.map(job => {
+    if (jobMap.has(job)) return jobMap.get(job);
+    return {
+      job,
+      status: "missing",
+      exit_code: null,
+      errors: 0,
+      warnings: 1,
+      messages: [{ type: "warning", message: "No diagnostics JSON uploaded" }]
+    };
   });
+
+  const finalReports = [
+    ...orderedReports,
+    ...extras.filter(r => !expectedSet.has(r.job) || r.fallback)
+  ];
 
   let totalErrors = 0;
   let totalWarnings = 0;
-  let totalCoverageLines = { covered: 0, missed: 0 };
+  const totalCoverageLines = { covered: 0, missed: 0 };
 
-  let summaryTable = "### 📊 Summary Table\n\n| Job | Errors | Warnings | Status | Schema Valid |\n|-----|--------|----------|--------|--------------|\n";
-  let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Tool | Version | Exit Code | Duration | Fallback |\n|-----|------|---------|-----------|----------|----------|\n";
+  let summaryTable = "### 📊 Summary Table\n\n| Job | Status | Exit Code | Schema Valid |\n|-----|--------|-----------|--------------|\n";
+  let metadataTable = "\n### 🛠 Tool Metadata\n\n| Job | Tool | Version | Runner | OS |\n|-----|------|---------|--------|----|\n";
 
   let errorsSection = "\n### ❌ Consolidated Errors\n";
   let warningsSection = "\n### ⚠️ Consolidated Warnings\n";
   let failedTestsSection = "\n### 🧨 Consolidated Test Failures\n";
-  let processedSection = "\n### 📂 Files Processed\n" + processedFiles.join("\n");
+  const processedList = processedFiles.length ? processedFiles.join("\n") : "No summary files discovered.";
+  const processedSection = "\n### 📂 Files Processed\n" + processedList;
+  const appendWarning = message => {
+    if (warningsSection.includes("_No warnings reported._")) {
+      warningsSection = warningsSection.replace("_No warnings reported._", "").trimEnd();
+    }
+    if (!warningsSection.endsWith("\n")) {
+      warningsSection += "\n";
+    }
+    warningsSection += `${message}\n`;
+  };
 
-  for (const r of allReports) {
-    const errors = Number.isInteger(r.errors) ? r.errors : (r.errors?.length || 0);
-    const warnings = Number.isInteger(r.warnings) ? r.warnings : (r.warnings?.length || 0);
+  for (const r of finalReports) {
+    const errors = Number.isInteger(r.errors)
+      ? r.errors
+      : (Array.isArray(r.errors) ? r.errors.length : 0);
+    const warnings = Number.isInteger(r.warnings)
+      ? r.warnings
+      : (Array.isArray(r.warnings) ? r.warnings.length : 0);
 
     totalErrors += errors;
     totalWarnings += warnings;
 
-    summaryTable += `| ${r.job || r.__file} | ${errors} | ${warnings} | ${r.status || "?"} | ${r.schema_error ? "❌" : "✅"} |\n`;
+    let exitCodeValue = null;
+    if (typeof r.exit_code === "number") {
+      exitCodeValue = r.exit_code;
+    } else if (typeof r.exit_code === "string" && r.exit_code.trim() !== "" && !Number.isNaN(Number(r.exit_code))) {
+      exitCodeValue = Number(r.exit_code);
+    }
+    const exitCodeDisplay = exitCodeValue ?? "?";
 
-    metadataTable += `| ${r.job || r.__file} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.exit_code ?? "?"} | ${r.metadata?.duration || "?"} | ${r.metadata?.fallback || false} |\n`;
+    let status = r.status || "?";
+    if (r.schema_error) {
+      status = "failure";
+    } else if (exitCodeValue !== null && status !== "missing") {
+      if (exitCodeValue !== 0 && status !== "failure") {
+        status = "failure";
+      }
+      if (exitCodeValue === 0 && status === "?") {
+        status = "success";
+      }
+    }
 
-    if (errors > 0) errorsSection += `- ${r.job}: ${errors} errors reported\n`;
-    if (warnings > 0) warningsSection += `- ${r.job}: ${warnings} warnings reported\n`;
+    summaryTable += `| ${r.job || r.__file || "unknown"} | ${status} | ${exitCodeDisplay} | ${r.schema_error ? "❌" : "✅"} |\n`;
+
+    metadataTable += `| ${r.job || r.__file || "unknown"} | ${r.metadata?.tool || "?"} | ${r.metadata?.version || "?"} | ${r.environment?.runner || "?"} | ${r.environment?.os || "?"} |\n`;
+
+    if (errors > 0) errorsSection += `- ${r.job || r.__file}: ${errors} errors reported\n`;
+    if (warnings > 0) warningsSection += `- ${r.job || r.__file}: ${warnings} warnings reported\n`;
     if (r.tests && r.tests.some(t => t.status === "failed")) {
       r.tests.filter(t => t.status === "failed").forEach(t => {
-        failedTestsSection += `- ${r.job}: ${t.name} → ${t.message || "failed"}\n`;
+        failedTestsSection += `- ${r.job || r.__file}: ${t.name} → ${t.message || "failed"}\n`;
       });
     }
 
@@ -125,23 +215,44 @@ try {
 
   let coverageSection = "\n### 📊 Coverage Summary\n";
   if (totalCoverageLines.covered + totalCoverageLines.missed > 0) {
-    const overallPct = (totalCoverageLines.covered / (totalCoverageLines.covered + totalCoverageLines.missed) * 100).toFixed(2);
-    coverageSection += `Overall Coverage: ${overallPct}% (${totalCoverageLines.covered}/${totalCoverageLines.covered + totalCoverageLines.missed} lines covered)\n`;
-    if (overallPct < 70) {
-      errorsSection += `\n⚠️ Coverage below threshold: ${overallPct}%\n`;
+    const total = totalCoverageLines.covered + totalCoverageLines.missed;
+    const overallPct = ((totalCoverageLines.covered / total) * 100).toFixed(2);
+    coverageSection += `Overall Coverage: ${overallPct}% (${totalCoverageLines.covered}/${total} lines covered)\n`;
+    if (Number(overallPct) < 70) {
+      appendWarning(`⚠️ Coverage below threshold: ${overallPct}%`);
       process.exitCode = 1;
     }
   } else {
     coverageSection += "No coverage data found.\n";
   }
 
-  const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+  const runUrl = process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
+    ? `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+    : null;
 
-  const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${errorsSection}\n${warningsSection}\n${failedTestsSection}\n${coverageSection}\n${processedSection}\n\n🔗 [View workflow run](${runUrl})`;
-  fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "report.md"), reportOut);
-  fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "diagnostics-meta.json"), JSON.stringify({ totalErrors, totalWarnings, jobs: allReports.length, schemaFailures, schemaPasses, coverage: totalCoverageLines }, null, 2));
+  const reportOut = `## ⚠️ CI Diagnostics Report\n\n${summaryTable}\n${metadataTable}\n${errorsSection}\n${warningsSection}\n${failedTestsSection}\n${coverageSection}\n${processedSection}${runUrl ? `\n\n🔗 [View workflow run](${runUrl})` : ""}`;
 
+  fs.writeFileSync(path.join(workspaceDir, "report.md"), reportOut);
+  fs.writeFileSync(
+    path.join(workspaceDir, "diagnostics-meta.json"),
+    JSON.stringify(
+      {
+        totalErrors,
+        totalWarnings,
+        jobs: finalReports.length,
+        schemaFailures,
+        schemaPasses,
+        coverage: totalCoverageLines
+      },
+      null,
+      2
+    )
+  );
 } catch (err) {
-  fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "report.md"), `## ⚠️ Diagnostics Aggregator Error\n\n${err.message}`);
-  fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, "diagnostics-meta.json"), JSON.stringify({ totalErrors: 0, totalWarnings: 0, jobs: 0, schemaFailures: 1, schemaPasses: 0 }, null, 2));
+  const workspaceDir = process.env.GITHUB_WORKSPACE || process.cwd();
+  fs.writeFileSync(path.join(workspaceDir, "report.md"), `## ⚠️ Diagnostics Aggregator Error\n\n${err.message}`);
+  fs.writeFileSync(
+    path.join(workspaceDir, "diagnostics-meta.json"),
+    JSON.stringify({ totalErrors: 0, totalWarnings: 0, jobs: 0, schemaFailures: 1, schemaPasses: 0 }, null, 2)
+  );
 }
