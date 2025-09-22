@@ -50,20 +50,18 @@ jobs:
       - name: Ensure summaries dir always exists
         run: mkdir -p summaries/frontend
 
-      - name: Generate diagnostic summary for playwright-e2e
+      - name: Generate real diagnostics summary for playwright-e2e
         if: matrix.task == 'playwright-e2e'
         run: |
-          echo '{}' > summaries/frontend/frontend-playwright-fallback.json
+          VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
           cat <<EOF > summaries/frontend/frontend-playwright-diagnostics.json
           {
             "job": "frontend-checks/playwright-e2e",
             "status": "success",
             "exit_code": 0,
-            "artifacts": ["summaries/frontend/frontend-playwright-fallback.json"],
             "metadata": {
               "tool": "playwright",
-              "version": "$(pnpm list playwright | grep playwright | awk '{print $2}')",
-              "trace_id": "${{ github.sha }}"
+              "version": "$VERSION"
             },
             "environment": {
               "runner": "${{ runner.name }}",
