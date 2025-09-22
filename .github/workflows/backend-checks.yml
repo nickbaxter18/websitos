@@ -38,20 +38,120 @@ jobs:
           echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
           echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
 
-      - name: Ensure summaries dir always exists
-        run: mkdir -p summaries
-
-      - name: Validate summaries before upload
-        if: always()
+      - name: Run ${{ matrix.task }}
+        id: run_task
+        continue-on-error: true
+        shell: bash
         run: |
-          echo "📂 Summaries before upload (${{ matrix.task }}):"
-          ls -lah summaries || echo "❌ summaries/ not found"
+          set -o pipefail
+          TASK="${{ matrix.task }}"
+          set +e
+          EXIT_CODE=0
+          case "$TASK" in
+            black)
+              black --check .
+              EXIT_CODE=$?
+              ;;
+            flake8)
+              flake8
+              EXIT_CODE=$?
+              ;;
+            mypy)
+              mypy .
+              EXIT_CODE=$?
+              ;;
+            pytest)
+              pytest
+              EXIT_CODE=$?
+              ;;
+            *)
+              echo "Unknown backend task: $TASK" >&2
+              EXIT_CODE=1
+              ;;
+          esac
+          set -e
+          STATUS="success"
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          exit "$EXIT_CODE"
 
-      - name: Upload backend summaries (unified)
+      - name: 📦 Write diagnostics JSON
+        if: always()
+        shell: bash
+        run: |
+          SCOPE="backend"
+          JOB_KEY="backend-checks_${{ matrix.task }}"
+          EXIT_CODE="${{ steps.run_task.outputs.exit_code }}"
+          STATUS="${{ steps.run_task.outputs.status }}"
+          LOCKFILE_SHA="${{ steps.envinfo.outputs.lockfile_sha || 'missing' }}"
+          CPU_COUNT="${{ steps.envinfo.outputs.cpu_count || '0' }}"
+          MEMORY_MB="${{ steps.envinfo.outputs.memory_mb || '0' }}"
+          DISK_FREE_MB="${{ steps.envinfo.outputs.disk_free_mb || '0' }}"
+          COMMAND=""
+          case "${{ matrix.task }}" in
+            black)
+              COMMAND="black --check ."
+              ;;
+            flake8)
+              COMMAND="flake8"
+              ;;
+            mypy)
+              COMMAND="mypy ."
+              ;;
+            pytest)
+              COMMAND="pytest"
+              ;;
+            *)
+              COMMAND="unknown"
+              ;;
+          esac
+          if [ -z "$EXIT_CODE" ]; then EXIT_CODE=1; fi
+          if [ -z "$STATUS" ]; then STATUS="success"; fi
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          mkdir -p "summaries/$SCOPE"
+          RUNNER_LABEL="${RUNNER_NAME:-Hosted Agent}"
+          RUNNER_OS_LABEL="${RUNNER_OS:-ubuntu-latest}"
+          tee "summaries/$SCOPE/${JOB_KEY}.json" <<EOF
+{
+  "job": "${JOB_KEY}",
+  "status": "${STATUS}",
+  "exit_code": ${EXIT_CODE},
+  "metadata": {
+    "tool": "${{ matrix.task }}",
+    "version": "1.0.0",
+    "command": "${COMMAND}",
+    "lockfile_sha": "${LOCKFILE_SHA}"
+  },
+  "environment": {
+    "runner": "${RUNNER_LABEL}",
+    "os": "${RUNNER_OS_LABEL}",
+    "cpu_count": ${CPU_COUNT},
+    "memory_mb": ${MEMORY_MB},
+    "disk_free_mb": ${DISK_FREE_MB}
+  },
+  "dependencies": {
+    "npm": [],
+    "pip": ["requirements.txt"]
+  }
+}
+EOF
+          find summaries -maxdepth 2 -type f -print
+          cat "summaries/$SCOPE/${JOB_KEY}.json"
+          if [ ! -s "summaries/$SCOPE/${JOB_KEY}.json" ]; then
+            echo "Diagnostics summary missing for ${JOB_KEY}" >&2
+            exit 1
+          fi
+
+      - name: Upload diagnostics summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-summaries
-          path: summaries/
+          name: diagnostics-summary-backend-checks_${{ matrix.task }}
+          path: summaries/backend/backend-checks_${{ matrix.task }}.json
           retention-days: 2
           if-no-files-found: error
+
+      - name: Fail job if task failed
+        if: ${{ always() && steps.run_task.outputs.exit_code != '0' }}
+        run: exit 1
