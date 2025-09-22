@@ -2,25 +2,27 @@ name: Debug Frontend Summary
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
-  frontend-summary:
+  frontend-checks:
+    strategy:
+      matrix:
+        task: [playwright-e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
     steps:
       - name: ✅ Job scheduled
-        run: echo "github.job = frontend-checks/playwright-e2e"
+        run: echo "Job is running: ${{ matrix.task }}"
 
       - name: 🧾 Write diagnostics JSON
         run: |
           mkdir -p summaries/frontend
-          FILE="summaries/frontend/frontend-checks_playwright-e2e.json"
+          FILE="summaries/frontend/frontend-checks_${{ matrix.task }}.json"
           echo "📦 Writing to $FILE"
 
           echo '{
-            "job": "frontend-checks/playwright-e2e",
+            "job": "frontend-checks/${{ matrix.task }}",
             "status": "success",
             "exit_code": 0,
             "metadata": {"tool": "playwright", "version": "1.55.0"},
@@ -28,9 +30,10 @@ jobs:
             "dependencies": {"lockfile_sha": "abc123", "npm": ["@playwright/test"]}
           }' > "$FILE"
 
-          echo "✅ JSON content:" && cat "$FILE"
-          echo "📂 Folder contents:" && ls -lah summaries/frontend
-          echo "📏 File size:" && stat "$FILE"
+          echo "✅ File contents:"
+          cat "$FILE"
+          echo "📂 Directory structure:"
+          find summaries/ -type f -exec ls -lah {} +
         shell: bash
 
       - name: 🚀 Upload summary
