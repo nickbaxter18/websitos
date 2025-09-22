@@ -105,14 +105,238 @@ jobs:
           sha256sum summaries/* || true
           head -n 20 summaries/frontend-eslint-diagnostics.json
 
-      - name: Validate ESLint artifacts before upload
-        if: ${{ matrix.task == 'lint' }}
+      - name: Run Prettier
+        if: ${{ matrix.task == 'prettier' }}
         run: |
-          echo "📂 Summaries before upload (ESLint):"
-          ls -lh summaries || true
+          mkdir -p summaries
+          start=$(date +%s)
+          pnpm exec prettier --check "**/*.{js,ts,tsx,json,css,md}" > prettier-output.txt 2>&1 || true
+          prettier_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
 
-      # Similar debugging will be applied to Prettier, TSC, Jest, Playwright jobs
-      # Each will log summaries directory, hash files, and preview JSON before upload
+          sha256=$(sha256sum prettier-output.txt | awk '{print $1}' || echo "")
+          deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
+
+          errors=$(grep -c "Code style issues found" prettier-output.txt || echo 0)
+          warnings=0
+
+          cat <<EOF > summaries/frontend-prettier-diagnostics.json
+          {
+            "job": "frontend-checks/prettier",
+            "exit_code": $prettier_exit,
+            "status": "$( [ "$prettier_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": [],
+            "annotations": [],
+            "tests": [],
+            "coverage": {},
+            "artifacts": ["summaries/prettier-output.txt"],
+            "metadata": {
+              "tool": "prettier",
+              "version": "$(pnpm list prettier | grep prettier | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false,
+              "trace_id": "${{ github.sha }}"
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "npm": $deps
+            }
+          }
+          EOF
+
+          echo "✅ Wrote summaries/frontend-prettier-diagnostics.json"
+          ls -lh summaries || true
+          sha256sum summaries/* || true
+          head -n 20 summaries/frontend-prettier-diagnostics.json
+
+      - name: Run TypeScript type-check
+        if: ${{ matrix.task == 'type-check' }}
+        run: |
+          mkdir -p summaries
+          start=$(date +%s)
+          pnpm exec tsc --noEmit > tsc-output.txt 2>&1 || true
+          tsc_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          sha256=$(sha256sum tsc-output.txt | awk '{print $1}' || echo "")
+          deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
+
+          errors=$(grep -c "error TS" tsc-output.txt || echo 0)
+          warnings=$(grep -c "warning TS" tsc-output.txt || echo 0)
+
+          cat <<EOF > summaries/frontend-tsc-diagnostics.json
+          {
+            "job": "frontend-checks/tsc",
+            "exit_code": $tsc_exit,
+            "status": "$( [ "$tsc_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": [],
+            "annotations": [],
+            "tests": [],
+            "coverage": {},
+            "artifacts": ["summaries/tsc-output.txt"],
+            "metadata": {
+              "tool": "tsc",
+              "version": "$(pnpm list typescript | grep typescript | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false,
+              "trace_id": "${{ github.sha }}"
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "npm": $deps
+            }
+          }
+          EOF
+
+          echo "✅ Wrote summaries/frontend-tsc-diagnostics.json"
+          ls -lh summaries || true
+          sha256sum summaries/* || true
+          head -n 20 summaries/frontend-tsc-diagnostics.json
+
+      - name: Run Jest unit tests
+        if: ${{ matrix.task == 'test-unit' }}
+        run: |
+          mkdir -p summaries
+          start=$(date +%s)
+          pnpm exec jest --json --outputFile=jest-output.json || true
+          jest_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          sha256=$(sha256sum jest-output.json | awk '{print $1}' || echo "")
+          deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
+
+          errors=$(jq '.numFailedTests' jest-output.json 2>/dev/null || echo 0)
+          warnings=0
+
+          cat <<EOF > summaries/frontend-jest-diagnostics.json
+          {
+            "job": "frontend-checks/jest-unit",
+            "exit_code": $jest_exit,
+            "status": "$( [ "$jest_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": [],
+            "annotations": [],
+            "tests": $(jq '.testResults | map({name: .name, status: .status, message: .message, duration: .duration})' jest-output.json 2>/dev/null || echo []),
+            "coverage": {},
+            "artifacts": ["summaries/jest-output.json"],
+            "metadata": {
+              "tool": "jest",
+              "version": "$(pnpm list jest | grep jest | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false,
+              "trace_id": "${{ github.sha }}"
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "npm": $deps
+            }
+          }
+          EOF
+
+          echo "✅ Wrote summaries/frontend-jest-diagnostics.json"
+          ls -lh summaries || true
+          sha256sum summaries/* || true
+          head -n 20 summaries/frontend-jest-diagnostics.json
+
+      - name: Run Playwright E2E
+        if: ${{ matrix.task == 'playwright-e2e' }}
+        run: |
+          mkdir -p summaries
+          start=$(date +%s)
+          pnpm exec playwright install --with-deps
+          pnpm exec playwright test --reporter=json > playwright-output.json || true
+          pw_exit=$?
+          end=$(date +%s)
+          duration="$((end-start))s"
+
+          sha256=$(sha256sum playwright-output.json | awk '{print $1}' || echo "")
+          deps=$(pnpm list --depth 0 --json || echo '[]')
+          echo "$deps" | jq . >/dev/null 2>&1 || deps="[]"
+
+          errors=$(jq '.suites[].specs[] | map(select(.ok==false)) | length' playwright-output.json 2>/dev/null || echo 0)
+          warnings=0
+
+          cat <<EOF > summaries/frontend-playwright-diagnostics.json
+          {
+            "job": "frontend-checks/playwright-e2e",
+            "exit_code": $pw_exit,
+            "status": "$( [ "$pw_exit" -eq 0 ] && echo success || echo failure )",
+            "errors": $errors,
+            "warnings": $warnings,
+            "messages": [],
+            "annotations": [],
+            "tests": $(jq '.suites[].specs[] | map({name: .title, status: (if .ok then "passed" else "failed" end), message: .error.message})' playwright-output.json 2>/dev/null || echo []),
+            "coverage": {},
+            "artifacts": ["summaries/playwright-output.json"],
+            "metadata": {
+              "tool": "playwright",
+              "version": "$(pnpm list @playwright/test | grep @playwright/test | awk '{print $2}')",
+              "duration": "$duration",
+              "sha256": "$sha256",
+              "fallback": false,
+              "trace_id": "${{ github.sha }}"
+            },
+            "environment": {
+              "runner": "${{ runner.name }}",
+              "os": "${{ runner.os }}",
+              "resources": {
+                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
+                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
+                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
+              "npm": $deps
+            }
+          }
+          EOF
+
+          echo "✅ Wrote summaries/frontend-playwright-diagnostics.json"
+          ls -lh summaries || true
+          sha256sum summaries/* || true
+          head -n 20 summaries/frontend-playwright-diagnostics.json
 
       - name: Upload partial frontend summaries
         if: always()
