@@ -50,6 +50,10 @@ jobs:
       - name: Ensure summaries dir always exists
         run: mkdir -p summaries/frontend
 
+      - name: Debug: entering playwright-e2e summary creation
+        if: matrix.task == 'playwright-e2e'
+        run: echo "✅ Entering playwright-e2e diagnostic summary generation"
+
       - name: Generate real diagnostics summary for playwright-e2e
         if: matrix.task == 'playwright-e2e'
         env:
@@ -85,7 +89,10 @@ jobs:
           printf '    "npm": []\n' >> "$FILE"
           printf '  }\n' >> "$FILE"
           printf '}\n' >> "$FILE"
-          echo "✅ Final summary file contents:" && cat "$FILE"
+
+      - name: Debug: summary file contents
+        if: matrix.task == 'playwright-e2e'
+        run: cat summaries/frontend/frontend-playwright-diagnostics.json || echo "❌ File not found"
 
       - name: Validate summaries before upload
         if: always()
