@@ -31,33 +31,93 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Run ${{ matrix.task }}
-        run: pnpm run checks:${{ matrix.task }}
-
-      - name: 📦 Write diagnostics JSON (if applicable)
-        if: matrix.task == 'playwright-e2e' || matrix.task == 'test-unit'
-        run: |
-          mkdir -p summaries/frontend
-          FILE="summaries/frontend/frontend-checks_${{ matrix.task }}.json"
-          echo "🧾 Writing summary for ${{ matrix.task }} to $FILE"
-          echo '{
-            "job": "frontend-checks/${{ matrix.task }}",
-            "status": "success",
-            "exit_code": 0,
-            "metadata": {"tool": "${{ matrix.task }}", "version": "1.0.0"},
-            "environment": {"runner": "Hosted Agent", "os": "ubuntu-latest"},
-            "dependencies": {"npm": []}
-          }' | tee "$FILE"
-          echo "📂 Listing contents:"
-          ls -lah summaries/frontend || echo "no summaries written"
-          echo "📄 JSON contents:" && cat "$FILE"
+      - name: Collect environment metadata
+        id: envinfo
         shell: bash
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "lockfile_sha=$(sha256sum pnpm-lock.yaml | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          else
+            echo "lockfile_sha=missing" >> "$GITHUB_OUTPUT"
+          fi
+          echo "cpu_count=$(nproc)" >> "$GITHUB_OUTPUT"
+          echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> "$GITHUB_OUTPUT"
+          echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> "$GITHUB_OUTPUT"
 
-      - name: 🚀 Upload summary (if applicable)
-        if: matrix.task == 'playwright-e2e' || matrix.task == 'test-unit'
+      - name: Run ${{ matrix.task }}
+        id: run_task
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          pnpm run checks:${{ matrix.task }}
+          EXIT_CODE=$?
+          set -e
+          STATUS="success"
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          exit "$EXIT_CODE"
+
+      - name: 📦 Write diagnostics JSON
+        if: always()
+        shell: bash
+        run: |
+          SCOPE="frontend"
+          JOB_KEY="frontend-checks_${{ matrix.task }}"
+          EXIT_CODE="${{ steps.run_task.outputs.exit_code }}"
+          STATUS="${{ steps.run_task.outputs.status }}"
+          LOCKFILE_SHA="${{ steps.envinfo.outputs.lockfile_sha || 'missing' }}"
+          CPU_COUNT="${{ steps.envinfo.outputs.cpu_count || '0' }}"
+          MEMORY_MB="${{ steps.envinfo.outputs.memory_mb || '0' }}"
+          DISK_FREE_MB="${{ steps.envinfo.outputs.disk_free_mb || '0' }}"
+          COMMAND="pnpm run checks:${{ matrix.task }}"
+          if [ -z "$EXIT_CODE" ]; then EXIT_CODE=1; fi
+          if [ -z "$STATUS" ]; then STATUS="success"; fi
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          mkdir -p "summaries/$SCOPE"
+          RUNNER_LABEL="${RUNNER_NAME:-Hosted Agent}"
+          RUNNER_OS_LABEL="${RUNNER_OS:-ubuntu-latest}"
+          tee "summaries/$SCOPE/${JOB_KEY}.json" <<EOF
+{
+  "job": "${JOB_KEY}",
+  "status": "${STATUS}",
+  "exit_code": ${EXIT_CODE},
+  "metadata": {
+    "tool": "${{ matrix.task }}",
+    "version": "1.0.0",
+    "command": "${COMMAND}",
+    "lockfile_sha": "${LOCKFILE_SHA}"
+  },
+  "environment": {
+    "runner": "${RUNNER_LABEL}",
+    "os": "${RUNNER_OS_LABEL}",
+    "cpu_count": ${CPU_COUNT},
+    "memory_mb": ${MEMORY_MB},
+    "disk_free_mb": ${DISK_FREE_MB}
+  },
+  "dependencies": {
+    "npm": []
+  }
+}
+EOF
+          find summaries -maxdepth 2 -type f -print
+          cat "summaries/$SCOPE/${JOB_KEY}.json"
+          if [ ! -s "summaries/$SCOPE/${JOB_KEY}.json" ]; then
+            echo "Diagnostics summary missing for ${JOB_KEY}" >&2
+            exit 1
+          fi
+
+      - name: Upload diagnostics summary
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-partial-${{ matrix.task }}
-          path: summaries/
+          name: diagnostics-summary-frontend-checks_${{ matrix.task }}
+          path: summaries/frontend/frontend-checks_${{ matrix.task }}.json
           retention-days: 2
           if-no-files-found: error
+
+      - name: Fail job if task failed
+        if: ${{ always() && steps.run_task.outputs.exit_code != '0' }}
+        run: exit 1
