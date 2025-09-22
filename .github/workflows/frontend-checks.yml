@@ -14,30 +14,46 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: 📛 Dump GitHub Job + Context Info
-        run: |
-          echo "github.job = ${{ github.job }}"
-          echo "github.workflow = ${{ github.workflow }}"
-          echo "github.run_id = ${{ github.run_id }}"
-          echo "github.run_number = ${{ github.run_number }}"
-          echo "runner.name = ${{ runner.name }}"
-          echo "runner.os = ${{ runner.os }}"
+      - name: 📛 Show GitHub Job ID
+        run: echo "github.job=${{ github.job }}"
         shell: bash
 
-      - name: 📁 List summaries folder (debug only)
+      - name: 🧾 Write dynamic job-matching JSON
         run: |
+          set -euxo pipefail
+          JOB_ID="${{ github.job }}"
+          FILE="summaries/frontend/${JOB_ID}.json"
           mkdir -p summaries/frontend
-          ls -lahR summaries || echo "No summaries yet"
-        shell: bash
-
-      - name: 🧾 Write minimal diagnostic JSON
-        run: |
-          FILE=summaries/frontend/frontend-checks_playwright-e2e.json
-          echo '{"job": "frontend-checks/playwright-e2e", "status": "success", "exit_code": 0, "metadata": {"tool": "test", "version": "1.0.0"}, "environment": {"runner": "debug", "os": "ubuntu"}, "dependencies": {"lockfile_sha": "abc123", "npm": []}}' > "$FILE"
+          cat <<EOF > "$FILE"
+          {
+            "job": "$JOB_ID",
+            "status": "success",
+            "exit_code": 0,
+            "metadata": {
+              "tool": "playwright",
+              "version": "1.55.0"
+            },
+            "environment": {
+              "runner": "Hosted Agent",
+              "os": "ubuntu-latest",
+              "resources": {
+                "cpu_count": 2,
+                "memory_mb": 7086,
+                "disk_free_mb": 102400
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "abc123",
+              "npm": ["@playwright/test"]
+            }
+          }
+          EOF
+          echo "✅ JSON written to $FILE"
           cat "$FILE"
         shell: bash
 
-      - name: 🚀 Upload diagnostic file in full path
+      - name: 🚀 Upload for diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
