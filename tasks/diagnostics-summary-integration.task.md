@@ -1,0 +1,178 @@
+# Diagnostics Summary Integration Contract
+
+This document captures the canonical contract for Codex-compatible diagnostics summaries across the equipment rental platform's CI pipelines. Every update to the CI or diagnostics tooling must uphold this specification so the aggregator can render an accurate CI Diagnostics Report.
+
+## 1. Matrix Coverage
+
+The following matrix entries MUST emit diagnostics summaries on every run of `Codex Diagnostics CI`:
+
+- **frontend-checks**: `lint`, `prettier`, `type-check`, `test-unit`, `playwright-e2e`
+- **backend-checks**: `black`, `flake8`, `mypy`, `pytest`
+- **coverage-checks**: `frontend`, `backend`, `backend-node`, `e2e`
+
+Each entry corresponds to a `job_key` that the aggregator expects exactly once. These keys are defined in `.github/scripts/aggregator.js` and must not change without updating the aggregator and test suite.
+
+## 2. Summary File Responsibilities
+
+For every matrix job:
+
+1. Create a scoped directory at `summaries/<scope>` where `<scope>` is one of `frontend`, `backend`, or `coverage`.
+2. Write a diagnostics JSON file at `summaries/<scope>/<job-key>.json` where `<job-key>` matches the matrix entry (for example `frontend-checks_lint`).
+3. The JSON MUST match the schema below. Write it with `tee` to guarantee the file is persisted even if the job fails:
+
+```bash
+mkdir -p summaries/<scope>
+START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+START_EPOCH=$(date -u +%s)
+# ... run your tool, capture EXIT_CODE, END_TIME, END_EPOCH ...
+DURATION=$((END_EPOCH - START_EPOCH))
+NODE_VERSION=$(node --version 2>/dev/null || echo "not-installed")
+LOG_BYTES=$(wc -c < "$LOG_FILE" 2>/dev/null || echo 0)
+cat <<JSON | tee summaries/<scope>/<job-key>.json
+{
+  "schema_version": "1.0.0",
+  "job_key": "<job-key>",
+  "status": "success",
+  "exit_code": 0,
+  "started_at": "$START_TIME",
+  "completed_at": "$END_TIME",
+  "duration_seconds": $DURATION,
+  "environment": {
+    "os": "ubuntu-latest",
+    "node_version": "$NODE_VERSION",
+    "runner": "Hosted Agent"
+  },
+  "metadata": {
+    "tool": "<task>",
+    "version": "1.0.0",
+    "logs_size_bytes": $LOG_BYTES,
+    "retry_count": 0,
+    "warnings_count": 0
+  },
+  "dependencies": {
+    "npm": []
+  }
+}
+JSON
+```
+
+4. Immediately confirm the file exists and contains the expected payload using `ls -lah summaries/<scope>` and `cat summaries/<scope>/<job-key>.json`.
+5. Upload the `summaries/` directory as an artifact named `diagnostics-summary-<job-key>` with `retention-days: 2` and `if-no-files-found: error`.
+6. Steps that run tooling MUST use `continue-on-error: true` so diagnostics are collected even when tools fail.
+
+## 3. JSON Schema (Draft 7)
+
+The schema resides at `diagnostics.schema.json` and is enforced in the aggregator with Ajv. Required fields:
+
+- `schema_version` (`string`, `^\d+\.\d+\.\d+$`, currently `1.0.0`)
+- `job_key` (`string`)
+- `status` (`string`, enum: `success`, `failure`, `warning`, `skipped`)
+- `exit_code` (`integer`)
+- `started_at` (`string`, ISO 8601)
+- `completed_at` (`string`, ISO 8601)
+- `duration_seconds` (`number`, ≥ 0)
+- `environment.os` (`string`)
+- `environment.node_version` (`string`)
+- `metadata.tool` (`string`)
+- `metadata.version` (`string`)
+- `metadata.logs_size_bytes` (`integer`, ≥ 0)
+- `metadata.retry_count` (`integer`, ≥ 0)
+- `metadata.warnings_count` (`integer`, ≥ 0)
+- `dependencies.npm` (`array<string>`)
+
+Additional fields MAY be included, but they must not omit or mutate the required structure. The schema forbids additional top-level properties beyond those defined.
+
+## 4. Validation & Aggregation Expectations
+
+- `.github/scripts/aggregator.js` recursively discovers all `summaries/**/*.json` files, validates them against the schema using Ajv (with `ajv-formats` for `date-time`), verifies the `schema_version` equals `1.0.0`, and records missing jobs.
+- Any missing or invalid summary results in a `missing` row within the diagnostics report and the workflow exits with `exitCode = 1` to flag CI degradation.
+- Artifact download rules in `.github/workflows/diagnostics.yml` use `pattern: diagnostics-summary-*` to collect every job's artifact before running the aggregator.
+
+## 5. Examples
+
+Example frontend lint summary:
+
+```json
+{
+  "schema_version": "1.0.0",
+  "job_key": "frontend-checks_lint",
+  "status": "success",
+  "exit_code": 0,
+  "started_at": "2024-01-01T00:00:00Z",
+  "completed_at": "2024-01-01T00:00:05Z",
+  "duration_seconds": 5,
+  "environment": {
+    "os": "ubuntu-latest",
+    "node_version": "v20.10.0",
+    "runner": "Hosted Agent"
+  },
+  "metadata": {
+    "tool": "eslint",
+    "version": "9.0.0",
+    "logs_size_bytes": 2048,
+    "retry_count": 0,
+    "warnings_count": 0
+  },
+  "dependencies": {
+    "npm": []
+  }
+}
+```
+
+Example backend pytest summary reflecting a failure (`exit_code` non-zero and `status: "failure"`).
+
+## 6. Security, Risk & Threat Disclosure
+
+- **Assumptions**: job outputs are generated by CI tasks and do not contain secrets; `summaries/` is a trusted workspace directory.
+- **Secret Leakage**: do not log secrets into summaries; only include tool names, versions, exit codes, durations, and static environment metadata.
+- **Artifact Interception**: always upload via `actions/upload-artifact@v4` and ensure paths reference the scoped summaries directory.
+- **Denial of Service**: JSON payloads should remain small (< 10 KB). If a tool produces excessive data, truncate or omit optional fields.
+
+## 7. Performance & Scalability
+
+- Writing summaries is O(1) per job and should complete in milliseconds.
+- Aggregation is O(n) with n ≤ 13 (current job count) plus any extra summaries. Ajv validation and markdown rendering complete in milliseconds.
+- Summary generation must add less than one minute to CI execution time.
+
+## 8. Test Intelligence & Coverage
+
+The diagnostics aggregator is covered by tests in `tests/aggregator/` which verify:
+
+1. Nominal parsing of valid summaries.
+2. Handling of missing job files.
+3. Detection of malformed JSON.
+4. Schema violations (missing fields or wrong types).
+5. Schema version mismatches.
+6. Scale behaviour with hundreds of additional summaries.
+
+Each test MUST document intent (e.g., "Guards against missing job keys").
+
+## 9. Variant Analysis & Decision Making
+
+- **Variant A**: Manual schema validation derived from `diagnostics.schema.json`. Lower dependency footprint but error-prone for evolving schemas.
+- **Variant B (Selected)**: Ajv-based schema validation with `ajv-formats`. Provides exhaustive validation, easy schema evolution, and reliable format enforcement at the cost of a lightweight dependency install.
+
+Both variants were evaluated; Variant B is implemented to satisfy long-term maintainability and correctness.
+
+## 10. Final Reflection & Improvement Hooks
+
+Planned improvements for future iterations:
+
+1. Stream large artifact sets to support thousands of jobs without blocking.
+2. Generate TypeScript typings for summaries to enhance compile-time safety.
+3. Automatically comment aggregated diagnostics on pull requests for rapid feedback.
+
+## 11. Task Metadata
+
+```json
+{
+  "task_id": "codex-compiler-20250922T123000Z",
+  "feature": "CI Diagnostics Pipeline",
+  "mode": "production",
+  "variants_compared": true,
+  "lint_passed": true,
+  "test_coverage": "nominal+edge+negative+schema",
+  "risk_surface_declared": true,
+  "assumptions_listed": true
+}
+```
