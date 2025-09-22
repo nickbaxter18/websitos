@@ -11,16 +11,12 @@ on:
 
 jobs:
   diagnostics-playwright:
-    name: Frontend Diagnostics (playwright-e2e)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        task: [playwright-e2e]
     steps:
       - name: Setup summary folder
         run: mkdir -p summaries/frontend
 
-      - name: Write fixed JSON summary (with debug)
+      - name: Write fixed JSON summary
         run: |
           set -euxo pipefail
           echo "⚙️ Writing fixed summary"
