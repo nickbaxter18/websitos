@@ -1,29 +1,71 @@
-name: CI
+
+# SECTION 1: Header & Purpose
+# This workflow orchestrates the Codex diagnostics CI matrix for the equipment rental platform.
+# It runs frontend, backend, and coverage checks, then emits structured diagnostics summaries for downstream aggregation.
+name: Codex Diagnostics CI
 
 on:
   push:
-    branches:
-      - '**'
+    branches: [main]
   pull_request:
-    branches:
-      - '**'
   workflow_dispatch:
 
-permissions:
-  checks: write
-  contents: read
-  pull-requests: write
+# SECTION 2: Imports / Dependencies
+# Actions used across jobs: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v2,
+# actions/setup-python@v5, actions/cache@v4, and actions/upload-artifact@v4 for publishing summaries.
+
+env:
+  SUMMARY_ROOT: summaries
+  RUNNER_LABEL: Hosted Agent
+  RUNNER_OS: ubuntu-latest
+  DIAGNOSTICS_SCHEMA_VERSION: "1.0.0"
+
+# SECTION 3: Types, Interfaces, Contracts
+# - matrix.task: friendly name for the diagnostic check.
+# - matrix.job_key: canonical identifier consumed by the diagnostics aggregator.
+# - matrix.scope: directory under summaries/ where the JSON report is written.
+# - matrix.tool & matrix.command: tool metadata and execution command to run the real check.
+# Each run step surfaces exit_code and tool_version outputs used when composing JSON summaries.
 
 jobs:
-  # ---------------------------
-  # Frontend Checks
-  # ---------------------------
+  # SECTION 4: Core Logic / Implementation — Frontend diagnostics matrix
   frontend-checks:
-    runs-on: ubuntu-latest
+    name: 'Frontend :: ${{ matrix.job_key }}'
+    runs-on: ${{ env.RUNNER_OS }}
     strategy:
       fail-fast: false
       matrix:
-        task: [lint, prettier, type-check, test-unit, playwright-e2e]
+        include:
+          - task: lint
+            job_key: frontend-checks_lint
+            scope: frontend
+            tool: eslint
+            command: pnpm lint
+            version_command: pnpm exec eslint --version
+          - task: prettier
+            job_key: frontend-checks_prettier
+            scope: frontend
+            tool: prettier
+            command: pnpm exec prettier --check .
+            version_command: pnpm exec prettier --version
+          - task: type-check
+            job_key: frontend-checks_type-check
+            scope: frontend
+            tool: tsc
+            command: pnpm exec tsc --noEmit
+            version_command: pnpm exec tsc --version
+          - task: test-unit
+            job_key: frontend-checks_test-unit
+            scope: frontend
+            tool: vitest
+            command: pnpm exec vitest run --coverage
+            version_command: pnpm exec vitest --version
+          - task: playwright-e2e
+            job_key: frontend-checks_playwright-e2e
+            scope: frontend
+            tool: playwright
+            command: pnpm exec playwright test --reporter=line
+            version_command: pnpm exec playwright --version
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,201 +73,589 @@ jobs:
           node-version: 20
       - uses: pnpm/action-setup@v2
         with:
-          version: 10
-      - uses: actions/cache@v3
+          version: 9
+      - uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run ${{ matrix.tool }}
+        id: run_tool
+        continue-on-error: true
+        env:
+          LOG_FILE: diagnostic-logs/${{ matrix.job_key }}.log
+          TOOL_COMMAND: ${{ matrix.command }}
+          VERSION_COMMAND: ${{ matrix.version_command }}
+          TOOL_NAME: ${{ matrix.tool }}
+        run: |
+          set -o pipefail
+          mkdir -p diagnostic-logs
+          TOOL_VERSION=$(eval "$VERSION_COMMAND" 2>/dev/null || true)
+          if [ -z "$TOOL_VERSION" ]; then
+            TOOL_VERSION="unknown"
+          fi
+          echo "tool_version=$TOOL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "log_path=$LOG_FILE" >> "$GITHUB_OUTPUT"
+          START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          START_TS=$(date -u +%s)
+          echo "started_at=$START_TIME" >> "$GITHUB_OUTPUT"
+          echo "::group::${TOOL_NAME} diagnostics"
+          echo "::tool::${TOOL_NAME}"
+          echo "::version::$TOOL_VERSION"
+          echo "::runner::$(uname -a)"
+          eval "$TOOL_COMMAND" | tee "$LOG_FILE"
+          EXIT_CODE=${PIPESTATUS[0]}
+          END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          END_TS=$(date -u +%s)
+          DURATION=$((END_TS - START_TS))
+          if [ "$DURATION" -lt 0 ]; then
+            DURATION=0
+          fi
+          echo "completed_at=$END_TIME" >> "$GITHUB_OUTPUT"
+          echo "duration_seconds=$DURATION" >> "$GITHUB_OUTPUT"
+          echo "::exit_code::$EXIT_CODE"
+          echo "::endgroup::"
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo "::warning::${TOOL_NAME} exited with code $EXIT_CODE"
+          fi
+          exit 0
+      - name: Generate diagnostics summary
+        if: always()
+        env:
+          JOB_KEY: ${{ matrix.job_key }}
+          SCOPE: ${{ matrix.scope }}
+          TOOL_NAME: ${{ matrix.tool }}
+          EXIT_CODE: ${{ steps.run_tool.outputs.exit_code }}
+          TOOL_VERSION: ${{ steps.run_tool.outputs.tool_version }}
+          LOG_PATH: ${{ steps.run_tool.outputs.log_path }}
+          STARTED_AT: ${{ steps.run_tool.outputs.started_at }}
+          COMPLETED_AT: ${{ steps.run_tool.outputs.completed_at }}
+          DURATION_SECONDS: ${{ steps.run_tool.outputs.duration_seconds }}
+        run: |
+          mkdir -p "${SUMMARY_ROOT}/${SCOPE}"
+          EXIT_CODE_VALUE=${EXIT_CODE:-1}
+          if ! [[ "$EXIT_CODE_VALUE" =~ ^-?[0-9]+$ ]]; then
+            EXIT_CODE_VALUE=1
+          fi
+          STATUS="failure"
+          if [ "$EXIT_CODE_VALUE" -eq 0 ]; then
+            STATUS="success"
+          fi
+          START_VALUE="${STARTED_AT:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}"
+          END_VALUE="${COMPLETED_AT:-$START_VALUE}"
+          DURATION_VALUE=${DURATION_SECONDS:-0}
+          if [ -z "${DURATION_VALUE}" ]; then
+            DURATION_VALUE=0
+          fi
+          NODE_VERSION=$(node --version 2>/dev/null || echo "not-installed")
+          LOG_BYTES=0
+          if [ -n "${LOG_PATH}" ] && [ -f "${LOG_PATH}" ]; then
+            LOG_BYTES=$(wc -c < "${LOG_PATH}" 2>/dev/null || echo 0)
+          fi
+          LOG_ARTIFACT_NAME="diagnostics-log-${JOB_KEY}"
+          SUMMARY_PATH="${SUMMARY_ROOT}/${SCOPE}/${JOB_KEY}.json"
+          export SUMMARY_PATH
+          export SUMMARY_SCHEMA_VERSION="${DIAGNOSTICS_SCHEMA_VERSION}"
+          export SUMMARY_JOB_KEY="${JOB_KEY}"
+          export SUMMARY_STATUS="${STATUS}"
+          export SUMMARY_EXIT_CODE="${EXIT_CODE_VALUE}"
+          export SUMMARY_STARTED_AT="${START_VALUE}"
+          export SUMMARY_COMPLETED_AT="${END_VALUE}"
+          export SUMMARY_DURATION="${DURATION_VALUE}"
+          export SUMMARY_RUNNER_OS="${RUNNER_OS}"
+          export SUMMARY_RUNNER_LABEL="${RUNNER_LABEL}"
+          export SUMMARY_NODE_VERSION="${NODE_VERSION}"
+          export SUMMARY_TOOL="${TOOL_NAME}"
+          export SUMMARY_TOOL_VERSION="${TOOL_VERSION:-unknown}"
+          export SUMMARY_LOG_BYTES="${LOG_BYTES}"
+          export SUMMARY_LOG_ARTIFACT="${LOG_ARTIFACT_NAME}"
+          export SUMMARY_LOG_PATH="${LOG_PATH}"
+          python -c "import json, os
+            def to_int(name: str, default: int = 0) -> int:
+                try:
+                    return int(os.environ.get(name, default))
+                except (TypeError, ValueError):
+                    return default
 
-      - name: Upload partial frontend summaries
+            summary = {
+                'schema_version': os.environ.get('SUMMARY_SCHEMA_VERSION', '1.0.0'),
+                'job_key': os.environ.get('SUMMARY_JOB_KEY', ''),
+                'status': os.environ.get('SUMMARY_STATUS', 'failure'),
+                'exit_code': to_int('SUMMARY_EXIT_CODE', 1),
+                'started_at': os.environ.get('SUMMARY_STARTED_AT'),
+                'completed_at': os.environ.get('SUMMARY_COMPLETED_AT'),
+                'duration_seconds': to_int('SUMMARY_DURATION', 0),
+                'environment': {
+                    'os': os.environ.get('SUMMARY_RUNNER_OS', ''),
+                    'node_version': os.environ.get('SUMMARY_NODE_VERSION', ''),
+                    'runner': os.environ.get('SUMMARY_RUNNER_LABEL', ''),
+                },
+                'metadata': {
+                    'tool': os.environ.get('SUMMARY_TOOL', ''),
+                    'version': os.environ.get('SUMMARY_TOOL_VERSION', 'unknown'),
+                    'logs_size_bytes': to_int('SUMMARY_LOG_BYTES', 0),
+                    'retry_count': 0,
+                    'warnings_count': 0,
+                    'log_artifact': os.environ.get('SUMMARY_LOG_ARTIFACT', ''),
+                    'log_path': os.environ.get('SUMMARY_LOG_PATH', ''),
+                },
+                'dependencies': {
+                    'npm': [],
+                },
+            }
+
+            print(json.dumps(summary, indent=2))
+          " | tee "$SUMMARY_PATH"
+          ls -lah "${SUMMARY_ROOT}/${SCOPE}"
+          cat "${SUMMARY_ROOT}/${SCOPE}/${JOB_KEY}.json"
+      - name: Upload diagnostics summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-partial-${{ matrix.task }}
-          path: summaries/
+          name: diagnostics-summary-${{ matrix.job_key }}
+          path: ${SUMMARY_ROOT}/
           retention-days: 2
-
-  package-frontend:
-    if: always()
-    runs-on: ubuntu-latest
-    needs: frontend-checks
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+          if-no-files-found: error
+      - name: Upload diagnostics log
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          pattern: frontend-partial-*
-          path: ./downloaded
-          merge-multiple: true
+          name: diagnostics-log-${{ matrix.job_key }}
+          path: ${{ steps.run_tool.outputs.log_path }}
+          retention-days: 5
+          if-no-files-found: error
+      - name: Fail job if tool failed
+        if: ${{ always() && steps.run_tool.outputs.exit_code != '0' }}
+        run: exit 1
 
-      - name: Debug artifacts (frontend)
-        run: |
-          echo "📂 Downloaded frontend artifacts:"
-          ls -R downloaded || true
-
-      - name: Collect frontend summaries
-        run: |
-          mkdir -p summaries
-          # Collect diagnostics + reports
-          find downloaded -type f -iname "*-diagnostics.json" -exec cp {} summaries/ \; || true
-          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
-          if [ "$(ls -A summaries/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
-            echo '{"workflow":"package-frontend","job":"fallback","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"No reports found, generated fallback"}]}' > summaries/frontend-fallback.json
-          fi
-          echo "📦 Artifact manifest for frontend:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          sha256sum summaries/* >> summaries/artifact-manifest.txt || true
-          cat summaries/artifact-manifest.txt
-          echo "📂 Final packaged summaries:"
-          ls -lh summaries || true
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: frontend-summaries
-          path: summaries/
-
-  # ---------------------------
-  # Backend Checks
-  # ---------------------------
+  # SECTION 4: Core Logic / Implementation — Backend diagnostics matrix
   backend-checks:
-    runs-on: ubuntu-latest
+    name: 'Backend :: ${{ matrix.job_key }}'
+    runs-on: ${{ env.RUNNER_OS }}
     strategy:
       fail-fast: false
       matrix:
-        task: [black, mypy, pytest, flake8]
+        include:
+          - task: black
+            job_key: backend-checks_black
+            scope: backend
+            tool: black
+            command: python -m black . --check
+            version_command: python -m black --version
+          - task: flake8
+            job_key: backend-checks_flake8
+            scope: backend
+            tool: flake8
+            command: python -m flake8
+            version_command: python -m flake8 --version
+          - task: mypy
+            job_key: backend-checks_mypy
+            scope: backend
+            tool: mypy
+            command: python -m mypy . --pretty --show-error-codes
+            version_command: python -m mypy --version
+          - task: pytest
+            job_key: backend-checks_pytest
+            scope: backend
+            tool: pytest
+            command: python -m pytest --maxfail=1 --disable-warnings -q
+            version_command: python -m pytest --version
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: |
+      - name: Install backend dependencies
+        run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest-json-report flake8 mypy black
+          pip install -r requirements.txt
+          pip install black flake8 mypy pytest
+      - name: Run ${{ matrix.tool }}
+        id: run_backend_tool
+        continue-on-error: true
+        env:
+          LOG_FILE: diagnostic-logs/${{ matrix.job_key }}.log
+          TOOL_COMMAND: ${{ matrix.command }}
+          VERSION_COMMAND: ${{ matrix.version_command }}
+          TOOL_NAME: ${{ matrix.tool }}
+        run: |
+          set -o pipefail
+          mkdir -p diagnostic-logs
+          TOOL_VERSION=$(eval "$VERSION_COMMAND" 2>/dev/null || true)
+          if [ -z "$TOOL_VERSION" ]; then
+            TOOL_VERSION="unknown"
+          fi
+          echo "tool_version=$TOOL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "log_path=$LOG_FILE" >> "$GITHUB_OUTPUT"
+          START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          START_TS=$(date -u +%s)
+          echo "started_at=$START_TIME" >> "$GITHUB_OUTPUT"
+          echo "::group::${TOOL_NAME} diagnostics"
+          echo "::tool::${TOOL_NAME}"
+          echo "::version::$TOOL_VERSION"
+          echo "::runner::$(uname -a)"
+          eval "$TOOL_COMMAND" | tee "$LOG_FILE"
+          EXIT_CODE=${PIPESTATUS[0]}
+          END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          END_TS=$(date -u +%s)
+          DURATION=$((END_TS - START_TS))
+          if [ "$DURATION" -lt 0 ]; then
+            DURATION=0
+          fi
+          echo "completed_at=$END_TIME" >> "$GITHUB_OUTPUT"
+          echo "duration_seconds=$DURATION" >> "$GITHUB_OUTPUT"
+          echo "::exit_code::$EXIT_CODE"
+          echo "::endgroup::"
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo "::warning::${TOOL_NAME} exited with code $EXIT_CODE"
+          fi
+          exit 0
+      - name: Generate diagnostics summary
+        if: always()
+        env:
+          JOB_KEY: ${{ matrix.job_key }}
+          SCOPE: ${{ matrix.scope }}
+          TOOL_NAME: ${{ matrix.tool }}
+          EXIT_CODE: ${{ steps.run_backend_tool.outputs.exit_code }}
+          TOOL_VERSION: ${{ steps.run_backend_tool.outputs.tool_version }}
+          LOG_PATH: ${{ steps.run_backend_tool.outputs.log_path }}
+          STARTED_AT: ${{ steps.run_backend_tool.outputs.started_at }}
+          COMPLETED_AT: ${{ steps.run_backend_tool.outputs.completed_at }}
+          DURATION_SECONDS: ${{ steps.run_backend_tool.outputs.duration_seconds }}
+        run: |
+          mkdir -p "${SUMMARY_ROOT}/${SCOPE}"
+          EXIT_CODE_VALUE=${EXIT_CODE:-1}
+          if ! [[ "$EXIT_CODE_VALUE" =~ ^-?[0-9]+$ ]]; then
+            EXIT_CODE_VALUE=1
+          fi
+          STATUS="failure"
+          if [ "$EXIT_CODE_VALUE" -eq 0 ]; then
+            STATUS="success"
+          fi
+          START_VALUE="${STARTED_AT:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}"
+          END_VALUE="${COMPLETED_AT:-$START_VALUE}"
+          DURATION_VALUE=${DURATION_SECONDS:-0}
+          if [ -z "${DURATION_VALUE}" ]; then
+            DURATION_VALUE=0
+          fi
+          NODE_VERSION=$(node --version 2>/dev/null || echo "not-installed")
+          LOG_BYTES=0
+          if [ -n "${LOG_PATH}" ] && [ -f "${LOG_PATH}" ]; then
+            LOG_BYTES=$(wc -c < "${LOG_PATH}" 2>/dev/null || echo 0)
+          fi
+          LOG_ARTIFACT_NAME="diagnostics-log-${JOB_KEY}"
+          SUMMARY_PATH="${SUMMARY_ROOT}/${SCOPE}/${JOB_KEY}.json"
+          export SUMMARY_PATH
+          export SUMMARY_SCHEMA_VERSION="${DIAGNOSTICS_SCHEMA_VERSION}"
+          export SUMMARY_JOB_KEY="${JOB_KEY}"
+          export SUMMARY_STATUS="${STATUS}"
+          export SUMMARY_EXIT_CODE="${EXIT_CODE_VALUE}"
+          export SUMMARY_STARTED_AT="${START_VALUE}"
+          export SUMMARY_COMPLETED_AT="${END_VALUE}"
+          export SUMMARY_DURATION="${DURATION_VALUE}"
+          export SUMMARY_RUNNER_OS="${RUNNER_OS}"
+          export SUMMARY_RUNNER_LABEL="${RUNNER_LABEL}"
+          export SUMMARY_NODE_VERSION="${NODE_VERSION}"
+          export SUMMARY_TOOL="${TOOL_NAME}"
+          export SUMMARY_TOOL_VERSION="${TOOL_VERSION:-unknown}"
+          export SUMMARY_LOG_BYTES="${LOG_BYTES}"
+          export SUMMARY_LOG_ARTIFACT="${LOG_ARTIFACT_NAME}"
+          export SUMMARY_LOG_PATH="${LOG_PATH}"
+          python -c "import json, os
+            def to_int(name: str, default: int = 0) -> int:
+                try:
+                    return int(os.environ.get(name, default))
+                except (TypeError, ValueError):
+                    return default
 
-      - name: Upload partial backend summaries
+            summary = {
+                'schema_version': os.environ.get('SUMMARY_SCHEMA_VERSION', '1.0.0'),
+                'job_key': os.environ.get('SUMMARY_JOB_KEY', ''),
+                'status': os.environ.get('SUMMARY_STATUS', 'failure'),
+                'exit_code': to_int('SUMMARY_EXIT_CODE', 1),
+                'started_at': os.environ.get('SUMMARY_STARTED_AT'),
+                'completed_at': os.environ.get('SUMMARY_COMPLETED_AT'),
+                'duration_seconds': to_int('SUMMARY_DURATION', 0),
+                'environment': {
+                    'os': os.environ.get('SUMMARY_RUNNER_OS', ''),
+                    'node_version': os.environ.get('SUMMARY_NODE_VERSION', ''),
+                    'runner': os.environ.get('SUMMARY_RUNNER_LABEL', ''),
+                },
+                'metadata': {
+                    'tool': os.environ.get('SUMMARY_TOOL', ''),
+                    'version': os.environ.get('SUMMARY_TOOL_VERSION', 'unknown'),
+                    'logs_size_bytes': to_int('SUMMARY_LOG_BYTES', 0),
+                    'retry_count': 0,
+                    'warnings_count': 0,
+                    'log_artifact': os.environ.get('SUMMARY_LOG_ARTIFACT', ''),
+                    'log_path': os.environ.get('SUMMARY_LOG_PATH', ''),
+                },
+                'dependencies': {
+                    'npm': [],
+                },
+            }
+
+            print(json.dumps(summary, indent=2))
+          " | tee "$SUMMARY_PATH"
+          ls -lah "${SUMMARY_ROOT}/${SCOPE}"
+          cat "${SUMMARY_ROOT}/${SCOPE}/${JOB_KEY}.json"
+      - name: Upload diagnostics summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-partial-${{ matrix.task }}
-          path: summaries/
+          name: diagnostics-summary-${{ matrix.job_key }}
+          path: ${SUMMARY_ROOT}/
           retention-days: 2
-
-  package-backend:
-    if: always()
-    runs-on: ubuntu-latest
-    needs: backend-checks
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+          if-no-files-found: error
+      - name: Upload diagnostics log
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          pattern: backend-partial-*
-          path: ./downloaded
-          merge-multiple: true
+          name: diagnostics-log-${{ matrix.job_key }}
+          path: ${{ steps.run_backend_tool.outputs.log_path }}
+          retention-days: 5
+          if-no-files-found: error
+      - name: Fail job if tool failed
+        if: ${{ always() && steps.run_backend_tool.outputs.exit_code != '0' }}
+        run: exit 1
 
-      - name: Debug artifacts (backend)
-        run: |
-          echo "📂 Downloaded backend artifacts:"
-          ls -R downloaded || true
-
-      - name: Collect backend summaries
-        run: |
-          mkdir -p summaries
-          # Collect diagnostics + reports
-          find downloaded -type f -iname "*-diagnostics.json" -exec cp {} summaries/ \; || true
-          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
-          if [ "$(ls -A summaries/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
-            echo '{"workflow":"package-backend","job":"fallback","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"No reports found, generated fallback"}]}' > summaries/backend-fallback.json
-          fi
-          echo "📦 Artifact manifest for backend:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          sha256sum summaries/* >> summaries/artifact-manifest.txt || true
-          cat summaries/artifact-manifest.txt
-          echo "📂 Final packaged summaries:"
-          ls -lh summaries || true
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: backend-summaries
-          path: summaries/
-
-  # ---------------------------
-  # Coverage Checks
-  # ---------------------------
+  # SECTION 4: Core Logic / Implementation — Coverage diagnostics matrix
   coverage-checks:
-    runs-on: ubuntu-latest
+    name: 'Coverage :: ${{ matrix.job_key }}'
+    runs-on: ${{ env.RUNNER_OS }}
     strategy:
       fail-fast: false
       matrix:
-        task: [frontend, backend, backend-node, e2e]
+        include:
+          - task: frontend
+            job_key: coverage-checks_frontend
+            scope: coverage
+            tool: vitest-coverage
+            command: pnpm exec vitest run --coverage
+            version_command: pnpm exec vitest --version
+            setup_node: true
+            setup_python: false
+          - task: backend
+            job_key: coverage-checks_backend
+            scope: coverage
+            tool: pytest-cov
+            command: python -m pytest --cov=backend --cov-report=term --cov-report=xml:coverage/backend.xml --cov-report=html:htmlcov
+            version_command: python -m pytest --version
+            setup_node: false
+            setup_python: true
+          - task: backend-node
+            job_key: coverage-checks_backend-node
+            scope: coverage
+            tool: jest
+            command: pnpm exec jest --coverage
+            version_command: pnpm exec jest --version
+            setup_node: true
+            setup_python: false
+          - task: e2e
+            job_key: coverage-checks_e2e
+            scope: coverage
+            tool: playwright-coverage
+            command: pnpm exec playwright test --reporter=line
+            version_command: pnpm exec playwright --version
+            setup_node: true
+            setup_python: false
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
-        if: ${{ matrix.task != 'backend' }}
+        if: ${{ matrix.setup_node }}
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: 20
       - name: Setup pnpm
-        if: ${{ matrix.task == 'frontend' || matrix.task == 'e2e' || matrix.task == 'backend-node' }}
+        if: ${{ matrix.setup_node }}
         uses: pnpm/action-setup@v2
         with:
-          version: 10
+          version: 9
+      - name: Cache pnpm store
+        if: ${{ matrix.setup_node }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+      - name: Install frontend tooling
+        if: ${{ matrix.setup_node }}
+        run: pnpm install --frozen-lockfile
       - name: Setup Python
-        if: ${{ matrix.task == 'backend' }}
+        if: ${{ matrix.setup_python }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install backend tooling
+        if: ${{ matrix.setup_python }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      - name: Prepare Playwright dependencies
+        if: ${{ matrix.tool == 'playwright-coverage' }}
+        run: pnpm exec playwright install --with-deps
+      - name: Run ${{ matrix.tool }}
+        id: run_coverage_tool
+        continue-on-error: true
+        env:
+          LOG_FILE: diagnostic-logs/${{ matrix.job_key }}.log
+          TOOL_COMMAND: ${{ matrix.command }}
+          VERSION_COMMAND: ${{ matrix.version_command }}
+          TOOL_NAME: ${{ matrix.tool }}
+        run: |
+          set -o pipefail
+          mkdir -p diagnostic-logs
+          TOOL_VERSION=$(eval "$VERSION_COMMAND" 2>/dev/null || true)
+          if [ -z "$TOOL_VERSION" ]; then
+            TOOL_VERSION="unknown"
+          fi
+          echo "tool_version=$TOOL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "log_path=$LOG_FILE" >> "$GITHUB_OUTPUT"
+          START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          START_TS=$(date -u +%s)
+          echo "started_at=$START_TIME" >> "$GITHUB_OUTPUT"
+          echo "::group::${TOOL_NAME} diagnostics"
+          echo "::tool::${TOOL_NAME}"
+          echo "::version::$TOOL_VERSION"
+          echo "::runner::$(uname -a)"
+          eval "$TOOL_COMMAND" | tee "$LOG_FILE"
+          EXIT_CODE=${PIPESTATUS[0]}
+          END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          END_TS=$(date -u +%s)
+          DURATION=$((END_TS - START_TS))
+          if [ "$DURATION" -lt 0 ]; then
+            DURATION=0
+          fi
+          echo "completed_at=$END_TIME" >> "$GITHUB_OUTPUT"
+          echo "duration_seconds=$DURATION" >> "$GITHUB_OUTPUT"
+          echo "::exit_code::$EXIT_CODE"
+          echo "::endgroup::"
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo "::warning::${TOOL_NAME} exited with code $EXIT_CODE"
+          fi
+          exit 0
+      - name: Generate diagnostics summary
+        if: always()
+        env:
+          JOB_KEY: ${{ matrix.job_key }}
+          SCOPE: ${{ matrix.scope }}
+          TOOL_NAME: ${{ matrix.tool }}
+          EXIT_CODE: ${{ steps.run_coverage_tool.outputs.exit_code }}
+          TOOL_VERSION: ${{ steps.run_coverage_tool.outputs.tool_version }}
+          LOG_PATH: ${{ steps.run_coverage_tool.outputs.log_path }}
+          STARTED_AT: ${{ steps.run_coverage_tool.outputs.started_at }}
+          COMPLETED_AT: ${{ steps.run_coverage_tool.outputs.completed_at }}
+          DURATION_SECONDS: ${{ steps.run_coverage_tool.outputs.duration_seconds }}
+        run: |
+          mkdir -p "${SUMMARY_ROOT}/${SCOPE}"
+          EXIT_CODE_VALUE=${EXIT_CODE:-1}
+          if ! [[ "$EXIT_CODE_VALUE" =~ ^-?[0-9]+$ ]]; then
+            EXIT_CODE_VALUE=1
+          fi
+          STATUS="failure"
+          if [ "$EXIT_CODE_VALUE" -eq 0 ]; then
+            STATUS="success"
+          fi
+          START_VALUE="${STARTED_AT:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}"
+          END_VALUE="${COMPLETED_AT:-$START_VALUE}"
+          DURATION_VALUE=${DURATION_SECONDS:-0}
+          if [ -z "${DURATION_VALUE}" ]; then
+            DURATION_VALUE=0
+          fi
+          NODE_VERSION=$(node --version 2>/dev/null || echo "not-installed")
+          LOG_BYTES=0
+          if [ -n "${LOG_PATH}" ] && [ -f "${LOG_PATH}" ]; then
+            LOG_BYTES=$(wc -c < "${LOG_PATH}" 2>/dev/null || echo 0)
+          fi
+          LOG_ARTIFACT_NAME="diagnostics-log-${JOB_KEY}"
+          SUMMARY_PATH="${SUMMARY_ROOT}/${SCOPE}/${JOB_KEY}.json"
+          export SUMMARY_PATH
+          export SUMMARY_SCHEMA_VERSION="${DIAGNOSTICS_SCHEMA_VERSION}"
+          export SUMMARY_JOB_KEY="${JOB_KEY}"
+          export SUMMARY_STATUS="${STATUS}"
+          export SUMMARY_EXIT_CODE="${EXIT_CODE_VALUE}"
+          export SUMMARY_STARTED_AT="${START_VALUE}"
+          export SUMMARY_COMPLETED_AT="${END_VALUE}"
+          export SUMMARY_DURATION="${DURATION_VALUE}"
+          export SUMMARY_RUNNER_OS="${RUNNER_OS}"
+          export SUMMARY_RUNNER_LABEL="${RUNNER_LABEL}"
+          export SUMMARY_NODE_VERSION="${NODE_VERSION}"
+          export SUMMARY_TOOL="${TOOL_NAME}"
+          export SUMMARY_TOOL_VERSION="${TOOL_VERSION:-unknown}"
+          export SUMMARY_LOG_BYTES="${LOG_BYTES}"
+          export SUMMARY_LOG_ARTIFACT="${LOG_ARTIFACT_NAME}"
+          export SUMMARY_LOG_PATH="${LOG_PATH}"
+          python -c "import json, os
+            def to_int(name: str, default: int = 0) -> int:
+                try:
+                    return int(os.environ.get(name, default))
+                except (TypeError, ValueError):
+                    return default
 
-      - name: Upload partial coverage summaries
+            summary = {
+                'schema_version': os.environ.get('SUMMARY_SCHEMA_VERSION', '1.0.0'),
+                'job_key': os.environ.get('SUMMARY_JOB_KEY', ''),
+                'status': os.environ.get('SUMMARY_STATUS', 'failure'),
+                'exit_code': to_int('SUMMARY_EXIT_CODE', 1),
+                'started_at': os.environ.get('SUMMARY_STARTED_AT'),
+                'completed_at': os.environ.get('SUMMARY_COMPLETED_AT'),
+                'duration_seconds': to_int('SUMMARY_DURATION', 0),
+                'environment': {
+                    'os': os.environ.get('SUMMARY_RUNNER_OS', ''),
+                    'node_version': os.environ.get('SUMMARY_NODE_VERSION', ''),
+                    'runner': os.environ.get('SUMMARY_RUNNER_LABEL', ''),
+                },
+                'metadata': {
+                    'tool': os.environ.get('SUMMARY_TOOL', ''),
+                    'version': os.environ.get('SUMMARY_TOOL_VERSION', 'unknown'),
+                    'logs_size_bytes': to_int('SUMMARY_LOG_BYTES', 0),
+                    'retry_count': 0,
+                    'warnings_count': 0,
+                    'log_artifact': os.environ.get('SUMMARY_LOG_ARTIFACT', ''),
+                    'log_path': os.environ.get('SUMMARY_LOG_PATH', ''),
+                },
+                'dependencies': {
+                    'npm': [],
+                },
+            }
+
+            print(json.dumps(summary, indent=2))
+          " | tee "$SUMMARY_PATH"
+          ls -lah "${SUMMARY_ROOT}/${SCOPE}"
+          cat "${SUMMARY_ROOT}/${SCOPE}/${JOB_KEY}.json"
+      - name: Upload diagnostics summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-partial-${{ matrix.task }}
-          path: summaries/
+          name: diagnostics-summary-${{ matrix.job_key }}
+          path: ${SUMMARY_ROOT}/
           retention-days: 2
-
-  package-coverage:
-    if: always()
-    runs-on: ubuntu-latest
-    needs: coverage-checks
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+          if-no-files-found: error
+      - name: Upload diagnostics log
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          pattern: coverage-partial-*
-          path: ./downloaded
-          merge-multiple: true
+          name: diagnostics-log-${{ matrix.job_key }}
+          path: ${{ steps.run_coverage_tool.outputs.log_path }}
+          retention-days: 5
+          if-no-files-found: error
+      - name: Fail job if tool failed
+        if: ${{ always() && steps.run_coverage_tool.outputs.exit_code != '0' }}
+        run: exit 1
 
-      - name: Debug artifacts (coverage)
-        run: |
-          echo "📂 Downloaded coverage artifacts:"
-          ls -R downloaded || true
+  # SECTION 5: Error & Edge Case Handling
+  # - All summary steps use tee to guard against truncation and mkdir -p before writing.
+  # - Artifact uploads specify if-no-files-found: error to surface missing summaries.
+  # - continue-on-error on execution steps guarantees diagnostics even when tools fail.
 
-      - name: Collect coverage summaries
-        run: |
-          mkdir -p summaries
-          # Collect diagnostics + reports
-          find downloaded -type f -iname "*-diagnostics.json" -exec cp {} summaries/ \; || true
-          find downloaded -type f -iname "*-report.json" -exec cp {} summaries/ \; || true
-          if [ "$(ls -A summaries/*.json 2>/dev/null | wc -l)" -eq 0 ]; then
-            echo '{"workflow":"package-coverage","job":"fallback","status":"neutral","errors":[],"warnings":[],"notices":[{"message":"No reports found, generated fallback"}]}' > summaries/coverage-fallback.json
-          fi
-          echo "📦 Artifact manifest for coverage:" > summaries/artifact-manifest.txt
-          find summaries -type f -printf "%p (%s bytes)\n" >> summaries/artifact-manifest.txt
-          sha256sum summaries/* >> summaries/artifact-manifest.txt || true
-          cat summaries/artifact-manifest.txt
-          echo "📂 Final packaged summaries:"
-          ls -lh summaries || true
+  # SECTION 6: Performance / Resource Considerations
+  # Summary generation is lightweight JSON writing and directory listings. Installation steps reuse caches provided by actions.
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-summaries
-          path: summaries/
-
-  # ---------------------------
-  # Diagnostics
-  # ---------------------------
-  diagnostics:
-    if: always()
-    needs: [package-frontend, package-backend, package-coverage]
-    uses: ./.github/workflows/ci-diagnostics.yml
-    secrets: inherit
+  # SECTION 7: Exports / Public API
+  # Diagnostics artifacts (diagnostics-summary-<job_key>) and log files uploaded per job provide downstream inputs for diagnostics.yml.
