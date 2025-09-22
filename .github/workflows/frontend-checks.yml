@@ -13,16 +13,17 @@ jobs:
   diagnostics-playwright:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      JOB_ID: ${{ github.job }}
     steps:
       - name: 📛 Show GitHub Job ID
-        run: echo "github.job=${{ github.job }}"
+        run: echo "github.job=$JOB_ID"
         shell: bash
 
-      - name: 🧾 Write dynamic job-matching JSON
+      - name: 🧾 Write job-aligned JSON
         run: |
           set -euxo pipefail
-          JOB_ID="${{ github.job }}"
-          FILE="summaries/frontend/${JOB_ID}.json"
+          FILE="summaries/frontend/$JOB_ID.json"
           mkdir -p summaries/frontend
           cat <<EOF > "$FILE"
           {
