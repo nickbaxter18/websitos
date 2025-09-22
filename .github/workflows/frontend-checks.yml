@@ -54,30 +54,28 @@ jobs:
         if: matrix.task == 'playwright-e2e'
         run: |
           VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
-          cat <<EOF > summaries/frontend/frontend-playwright-diagnostics.json
-          {
-            "job": "frontend-checks/playwright-e2e",
-            "status": "success",
-            "exit_code": 0,
-            "metadata": {
-              "tool": "playwright",
-              "version": "$VERSION"
-            },
-            "environment": {
-              "runner": "${{ runner.name }}",
-              "os": "${{ runner.os }}",
-              "resources": {
-                "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},
-                "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},
-                "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}
-              }
-            },
-            "dependencies": {
-              "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",
-              "npm": []
-            }
-          }
-          EOF
+          echo '{' > summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  "job": "frontend-checks/playwright-e2e",' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  "status": "success",' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  "exit_code": 0,' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  "metadata": {' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '    "tool": "playwright",' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo "    \"version\": \"$VERSION\"" >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  },' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  "environment": {' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '    "runner": "${{ runner.name }}",' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '    "os": "${{ runner.os }}",' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '    "resources": {' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '      "cpu_count": ${{ steps.envinfo.outputs.cpu_count }},' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '      "memory_mb": ${{ steps.envinfo.outputs.memory_mb }},' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '      "disk_free_mb": ${{ steps.envinfo.outputs.disk_free_mb }}' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '    }' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  },' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  "dependencies": {' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '    "lockfile_sha": "${{ steps.envinfo.outputs.lockfile_sha }}",' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '    "npm": []' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '  }' >> summaries/frontend/frontend-playwright-diagnostics.json
+          echo '}' >> summaries/frontend/frontend-playwright-diagnostics.json
 
       - name: Validate summaries before upload
         if: always()
