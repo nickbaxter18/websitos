@@ -18,7 +18,7 @@ jobs:
         run: mkdir -p summaries/frontend
         shell: bash
 
-      - name: 🧾 Write pristine schema-compliant JSON
+      - name: 🧾 Write schema-valid JSON
         run: |
           set -euxo pipefail
           FILE=summaries/frontend/frontend-checks_playwright-e2e.json
@@ -49,7 +49,7 @@ jobs:
           cat "$FILE"
         shell: bash
 
-      - name: 🚀 Upload summary folder
+      - name: 🚀 Upload exact folder and artifact name
         uses: actions/upload-artifact@v4
         with:
           name: frontend-summaries
