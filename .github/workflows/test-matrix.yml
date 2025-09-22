@@ -1,0 +1,19 @@
+name: Matrix Debug
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [lint, prettier, type-check, test-unit, playwright-e2e]
+    steps:
+      - name: Show matrix expansion
+        run: |
+          echo "✅ Matrix task: ${{ matrix.task }}"
+
+      - name: Check if it's playwright
+        if: contains(matrix.task, 'playwright')
+        run: echo "🎯 Matched playwright-e2e matrix condition"
