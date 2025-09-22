@@ -13,7 +13,7 @@ jobs:
       - name: ✅ Job scheduled
         run: echo "github.job = frontend-checks/playwright-e2e"
 
-      - name: 🧾 Write JSON with known diagnostics job ID
+      - name: 🧾 Write diagnostics JSON
         run: |
           mkdir -p summaries/frontend
           FILE="summaries/frontend/frontend-checks_playwright-e2e.json"
@@ -28,8 +28,9 @@ jobs:
             "dependencies": {"lockfile_sha": "abc123", "npm": ["@playwright/test"]}
           }' > "$FILE"
 
-          echo "✅ File contents:"
-          cat "$FILE"
+          echo "✅ JSON content:" && cat "$FILE"
+          echo "📂 Folder contents:" && ls -lah summaries/frontend
+          echo "📏 File size:" && stat "$FILE"
         shell: bash
 
       - name: 🚀 Upload summary
