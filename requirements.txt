@@ -35,7 +35,7 @@ portalocker==2.10.1
 pymupdf==1.24.10   # provides 'fitz'
 
 # ---- Form parsing (FastAPI file uploads)
-python-multipart==0.0.9
+python-multipart==0.0.20
 
 # ---- Database drivers
 pyodbc==4.0.39   # ⚠️ Incompatible with Python 3.12, upgrade to >=5.0.0 if moving off 3.11
