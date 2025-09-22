@@ -10,15 +10,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  checks:
+  frontend-checks:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         task: [lint, prettier, type-check, test-unit, playwright-e2e]
     steps:
-      - name: Confirm matrix expansion
-        run: echo "Matrix context: ${{ toJson(matrix) }}"
+      - name: Show matrix task
+        run: echo "🧪 matrix.task = ${{ matrix.task }}"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,14 +49,10 @@ jobs:
           echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
           echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
 
-      - name: Ensure summaries dir always exists
+      - name: Ensure summaries dir exists
         run: mkdir -p summaries/frontend
 
-      - name: Debug: entering playwright-e2e summary creation
-        if: contains(matrix.task, 'playwright')
-        run: echo "✅ Entering playwright-e2e diagnostic summary generation"
-
-      - name: Generate real diagnostics summary for playwright-e2e
+      - name: Generate summary for playwright-e2e
         if: contains(matrix.task, 'playwright')
         env:
           CPU: ${{ steps.envinfo.outputs.cpu_count }}
@@ -92,18 +87,16 @@ jobs:
           printf '    "npm": []\n' >> "$FILE"
           printf '  }\n' >> "$FILE"
           printf '}\n' >> "$FILE"
+          echo "✅ Summary created at $FILE"
+          cat "$FILE"
 
-      - name: Debug: summary file contents
-        if: contains(matrix.task, 'playwright')
-        run: cat summaries/frontend/frontend-playwright-diagnostics.json || echo "❌ File not found"
-
-      - name: Validate summaries before upload
+      - name: Validate and upload summary
         if: always()
         run: |
-          echo "📂 Summaries before upload (${{ matrix.task }}):"
+          echo "📂 Listing summaries:"
           ls -lah summaries/frontend || echo "❌ summaries/frontend not found"
 
-      - name: Upload frontend summaries (unified)
+      - name: Upload frontend summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
