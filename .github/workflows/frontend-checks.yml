@@ -52,13 +52,13 @@ jobs:
 
       - name: Generate real diagnostics summary for playwright-e2e
         if: matrix.task == 'playwright-e2e'
+        env:
+          CPU: ${{ steps.envinfo.outputs.cpu_count }}
+          MEM: ${{ steps.envinfo.outputs.memory_mb }}
+          DISK: ${{ steps.envinfo.outputs.disk_free_mb }}
+          LOCKSHA: ${{ steps.envinfo.outputs.lockfile_sha }}
         run: |
           VERSION=$(pnpm list playwright | grep playwright | awk '{print $2}' || echo "unknown")
-          CPU=${{ steps.envinfo.outputs.cpu_count }}
-          MEM=${{ steps.envinfo.outputs.memory_mb }}
-          DISK=${{ steps.envinfo.outputs.disk_free_mb }}
-          LOCKSHA=${{ steps.envinfo.outputs.lockfile_sha }}
-
           printf '{\n' > summaries/frontend/frontend-playwright-diagnostics.json
           printf '  "job": "frontend-checks/playwright-e2e",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
           printf '  "status": "success",\n' >> summaries/frontend/frontend-playwright-diagnostics.json
@@ -68,8 +68,8 @@ jobs:
           printf '    "version": "%s"\n' "$VERSION" >> summaries/frontend/frontend-playwright-diagnostics.json
           printf '  },\n' >> summaries/frontend/frontend-playwright-diagnostics.json
           printf '  "environment": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "runner": "%s",\n' "${{ runner.name }}" >> summaries/frontend/frontend-playwright-diagnostics.json
-          printf '    "os": "%s",\n' "${{ runner.os }}" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "runner": "%s",\n' "$RUNNER_NAME" >> summaries/frontend/frontend-playwright-diagnostics.json
+          printf '    "os": "%s",\n' "$RUNNER_OS" >> summaries/frontend/frontend-playwright-diagnostics.json
           printf '    "resources": {\n' >> summaries/frontend/frontend-playwright-diagnostics.json
           printf '      "cpu_count": %s,\n' "$CPU" >> summaries/frontend/frontend-playwright-diagnostics.json
           printf '      "memory_mb": %s,\n' "$MEM" >> summaries/frontend/frontend-playwright-diagnostics.json
