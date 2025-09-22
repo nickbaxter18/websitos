@@ -20,8 +20,9 @@ jobs:
       - name: Setup summary folder
         run: mkdir -p summaries/frontend
 
-      - name: Write fixed JSON summary
+      - name: Write fixed JSON summary (with debug)
         run: |
+          set -euxo pipefail
           echo "⚙️ Writing fixed summary"
           FILE=summaries/frontend/frontend-playwright-diagnostics.json
           echo '{' > "$FILE"
