@@ -18,10 +18,11 @@ jobs:
         run: mkdir -p summaries/frontend
         shell: bash
 
-      - name: 🧾 Write summary via static echo
+      - name: 🧾 Write summary with correct filename
         run: |
           set -euxo pipefail
-          cat <<EOF > summaries/frontend/frontend-playwright-diagnostics.json
+          FILE=summaries/frontend/frontend-checks_playwright-e2e.json
+          cat <<EOF > "$FILE"
           {
             "job": "frontend-checks/playwright-e2e",
             "status": "success",
@@ -45,11 +46,7 @@ jobs:
             }
           }
           EOF
-          cat summaries/frontend/frontend-playwright-diagnostics.json
-        shell: bash
-
-      - name: 📂 List summary dir
-        run: ls -lah summaries/frontend
+          cat "$FILE"
         shell: bash
 
       - name: 🚀 Upload frontend summaries
