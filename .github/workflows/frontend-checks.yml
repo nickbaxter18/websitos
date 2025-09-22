@@ -21,7 +21,6 @@ jobs:
       - name: 🧾 Write fixed JSON summary
         run: |
           set -euxo pipefail
-          echo "⚙️ Writing fixed summary"
           FILE=summaries/frontend/frontend-playwright-diagnostics.json
           echo '{' > "$FILE"
           echo '  "job": "frontend-checks/playwright-e2e",' >> "$FILE"
@@ -31,18 +30,21 @@ jobs:
           echo '  "environment": { "runner": "Hosted Agent", "os": "Linux", "resources": { "cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 150000 } },' >> "$FILE"
           echo '  "dependencies": { "lockfile_sha": "abc123", "npm": [] }' >> "$FILE"
           echo '}' >> "$FILE"
-          echo "✅ Summary created at $FILE"
-          cat "$FILE"
         shell: bash
 
       - name: 🔎 Lint summary file
         run: jq . summaries/frontend/frontend-playwright-diagnostics.json
         shell: bash
 
-      - name: 📂 Confirm summary file exists
+      - name: 📂 Confirm summary contents
         run: |
-          echo "📂 Listing summary directory:"
-          ls -lah summaries/frontend || echo "❌ summaries/frontend not found"
+          echo "📂 Listing recursively:"
+          ls -lahR summaries/
+          echo "📏 File size:" && stat summaries/frontend/frontend-playwright-diagnostics.json
+        shell: bash
+
+      - name: 🗜️ Archive to zip (debug only)
+        run: zip -r debug-summaries.zip summaries/
         shell: bash
 
       - name: 🚀 Upload frontend summaries
