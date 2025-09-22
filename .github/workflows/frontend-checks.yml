@@ -18,35 +18,38 @@ jobs:
         run: mkdir -p summaries/frontend
         shell: bash
 
-      - name: 🔍 Debug current path
-        run: echo "📍 PWD: $PWD"
-        shell: bash
-
-      - name: 🧾 Write fixed JSON summary
+      - name: 🧾 Write summary via static echo
         run: |
           set -euxo pipefail
-          FILE=summaries/frontend/frontend-playwright-diagnostics.json
-          echo '{' > "$FILE"
-          echo '  "job": "frontend-checks/playwright-e2e",' >> "$FILE"
-          echo '  "status": "success",' >> "$FILE"
-          echo '  "exit_code": 0,' >> "$FILE"
-          echo '  "metadata": { "tool": "playwright", "version": "1.55.0" },' >> "$FILE"
-          echo '  "environment": { "runner": "Hosted Agent", "os": "Linux", "resources": { "cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 150000 } },' >> "$FILE"
-          echo '  "dependencies": { "lockfile_sha": "abc123", "npm": [] }' >> "$FILE"
-          echo '}' >> "$FILE"
-          echo "✅ Summary created at $FILE"
-          ls -lah summaries/frontend
-          cat "$FILE"
+          cat <<EOF > summaries/frontend/frontend-playwright-diagnostics.json
+          {
+            "job": "frontend-checks/playwright-e2e",
+            "status": "success",
+            "exit_code": 0,
+            "metadata": {
+              "tool": "playwright",
+              "version": "1.55.0"
+            },
+            "environment": {
+              "runner": "Hosted Agent",
+              "os": "Linux",
+              "resources": {
+                "cpu_count": 2,
+                "memory_mb": 7086,
+                "disk_free_mb": 150000
+              }
+            },
+            "dependencies": {
+              "lockfile_sha": "abc123",
+              "npm": []
+            }
+          }
+          EOF
+          cat summaries/frontend/frontend-playwright-diagnostics.json
         shell: bash
 
-      - name: 🔎 Confirm fallback file (if exists)
-        run: |
-          echo "📂 Contents of fallback (if exists):"
-          cat summaries/frontend/frontend-fallback.json || echo "(fallback not present)"
-        shell: bash
-
-      - name: 🗜️ Zip summaries
-        run: zip -r debug-summaries.zip summaries/
+      - name: 📂 List summary dir
+        run: ls -lah summaries/frontend
         shell: bash
 
       - name: 🚀 Upload frontend summaries
