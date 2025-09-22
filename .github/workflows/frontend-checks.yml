@@ -20,7 +20,7 @@ jobs:
         run: echo "github.job=$JOB_ID"
         shell: bash
 
-      - name: 🧾 Write job-aligned JSON
+      - name: 🧾 Write dynamic JSON summary
         run: |
           set -euxo pipefail
           FILE="summaries/frontend/$JOB_ID.json"
@@ -51,6 +51,12 @@ jobs:
           EOF
           echo "✅ JSON written to $FILE"
           cat "$FILE"
+        shell: bash
+
+      - name: 📂 Echo all artifact files
+        run: |
+          echo "📦 Artifact contents:"
+          find summaries/ -type f | sort
         shell: bash
 
       - name: 🚀 Upload for diagnostics
