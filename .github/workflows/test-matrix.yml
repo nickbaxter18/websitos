@@ -1,4 +1,4 @@
-name: Matrix Debug
+name: Test-matrix
 
 on:
   workflow_dispatch:
