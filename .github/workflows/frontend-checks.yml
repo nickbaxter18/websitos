@@ -48,18 +48,18 @@ jobs:
           echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
 
       - name: Ensure summaries dir always exists
-        run: mkdir -p summaries
+        run: mkdir -p summaries/frontend
 
       - name: Generate diagnostic summary for playwright-e2e
         if: matrix.task == 'playwright-e2e'
         run: |
-          echo '{}' > summaries/frontend-playwright-fallback.json
-          cat <<EOF > summaries/frontend-playwright-diagnostics.json
+          echo '{}' > summaries/frontend/frontend-playwright-fallback.json
+          cat <<EOF > summaries/frontend/frontend-playwright-diagnostics.json
           {
             "job": "frontend-checks/playwright-e2e",
             "status": "success",
             "exit_code": 0,
-            "artifacts": ["summaries/frontend-playwright-fallback.json"],
+            "artifacts": ["summaries/frontend/frontend-playwright-fallback.json"],
             "metadata": {
               "tool": "playwright",
               "version": "$(pnpm list playwright | grep playwright | awk '{print $2}')",
@@ -85,7 +85,7 @@ jobs:
         if: always()
         run: |
           echo "📂 Summaries before upload (${{ matrix.task }}):"
-          ls -lah summaries || echo "❌ summaries/ not found"
+          ls -lah summaries/frontend || echo "❌ summaries/frontend not found"
 
       - name: Upload frontend summaries (unified)
         if: always()
