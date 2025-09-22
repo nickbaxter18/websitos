@@ -19,7 +19,7 @@ grpcio==1.62.2
 # grpcio-tools is OMITTED to avoid compiling; add only if you actually need protoc at runtime
 
 # ---- Protobuf
-protobuf==4.25.3
+protobuf==6.32.1
 
 # ---- Vector DB client
 qdrant-client==1.9.1
