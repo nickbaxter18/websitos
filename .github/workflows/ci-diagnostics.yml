@@ -15,23 +15,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download frontend summaries
+      - name: Download diagnostics summaries
         uses: actions/download-artifact@v4
         with:
-          name: frontend-summaries
-          path: ./summaries/frontend
-
-      - name: Download backend summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-summaries
-          path: ./summaries/backend
-
-      - name: Download coverage summaries
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-summaries
-          path: ./summaries/coverage
+          pattern: diagnostics-summary-*
+          path: .
+          merge-multiple: true
 
       - name: Install aggregator dependencies in isolated dir
         shell: bash

@@ -46,12 +46,16 @@ jobs:
       - name: Install dependencies (pnpm)
         run: pnpm install
 
+      - name: Install Playwright browsers
+        if: ${{ matrix.task == 'e2e' }}
+        run: pnpm exec playwright install --with-deps
+
       - name: Install backend test dependencies
         if: ${{ matrix.task == 'backend' }}
         working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          pip install -r $GITHUB_WORKSPACE/requirements.txt
+          pip install -r $GITHUB_WORKSPACE/requirements.txt pytest pytest-cov
 
       - name: Collect environment metadata
         id: envinfo
@@ -67,20 +71,195 @@ jobs:
           echo "memory_mb=$(free -m | awk '/Mem:/ {print $2}')" >> $GITHUB_OUTPUT
           echo "disk_free_mb=$(df -m . | awk 'NR==2 {print $4}')" >> $GITHUB_OUTPUT
 
-      - name: Ensure summaries dir always exists
-        run: mkdir -p summaries
-
-      - name: Validate summaries before upload
-        if: always()
+      - name: Run ${{ matrix.task }} coverage
+        id: run_task
+        continue-on-error: true
+        shell: bash
         run: |
-          echo "📂 Summaries before upload (${{ matrix.task }}):"
-          ls -lah summaries || echo "❌ summaries/ not found"
+          set -o pipefail
+          TASK="${{ matrix.task }}"
+          LOG_DIR="diagnostics/coverage/${TASK}"
+          mkdir -p "$LOG_DIR"
+          LOG_FILE="$LOG_DIR/${TASK}_output.log"
+          RUNNER_INFO="${RUNNER_NAME:-Hosted Agent} (${RUNNER_OS:-ubuntu-latest})"
+          TOOL_VERSION="unknown"
+          COMMAND_DESC=""
+          EXIT_CODE=0
 
-      - name: Upload coverage summaries (unified)
+          case "$TASK" in
+            frontend)
+              COMMAND_DESC="pnpm exec vitest run --coverage --coverage.reporter=lcov --coverage.reporter=text --coverage.reportsDirectory=coverage/frontend"
+              TOOL_VERSION=$(pnpm exec vitest --version 2>/dev/null | head -n 1 || echo "unknown")
+              echo "::group::frontend-coverage"
+              echo "::tool::vitest"
+              echo "::version::${TOOL_VERSION}"
+              echo "::runner::${RUNNER_INFO}"
+              set +e
+              pnpm exec vitest run --coverage --coverage.reporter=lcov --coverage.reporter=text --coverage.reportsDirectory=coverage/frontend 2>&1 | tee "$LOG_FILE"
+              EXIT_CODE=${PIPESTATUS[0]}
+              set -e
+              echo "::exit_code::${EXIT_CODE}"
+              echo "::endgroup::"
+              ;;
+            backend)
+              COMMAND_DESC="pytest --maxfail=20 --tb=short --cov=backend --cov-report=term --cov-report=xml --cov-report=html"
+              TOOL_VERSION=$(pytest --version 2>/dev/null | head -n 1 || echo "unknown")
+              echo "::group::backend-coverage"
+              echo "::tool::pytest"
+              echo "::version::${TOOL_VERSION}"
+              echo "::runner::${RUNNER_INFO}"
+              set +e
+              pytest --maxfail=20 --tb=short --cov=backend --cov-report=term --cov-report=xml --cov-report=html 2>&1 | tee "$LOG_FILE"
+              EXIT_CODE=${PIPESTATUS[0]}
+              set -e
+              echo "::exit_code::${EXIT_CODE}"
+              echo "::endgroup::"
+              ;;
+            backend-node)
+              COMMAND_DESC="pnpm exec jest --config backend/jest.config.cjs --coverage --coverageReporters=lcov --coverageDirectory=coverage/backend-node"
+              TOOL_VERSION=$(pnpm exec jest --version 2>/dev/null | head -n 1 || echo "unknown")
+              echo "::group::backend-node-coverage"
+              echo "::tool::jest"
+              echo "::version::${TOOL_VERSION}"
+              echo "::runner::${RUNNER_INFO}"
+              set +e
+              pnpm exec jest --config backend/jest.config.cjs --coverage --coverageReporters=lcov --coverageDirectory=coverage/backend-node 2>&1 | tee "$LOG_FILE"
+              EXIT_CODE=${PIPESTATUS[0]}
+              set -e
+              echo "::exit_code::${EXIT_CODE}"
+              echo "::endgroup::"
+              ;;
+            e2e)
+              COMMAND_DESC="pnpm exec playwright test --reporter=list --reporter=html"
+              TOOL_VERSION=$(pnpm exec playwright --version 2>/dev/null | head -n 1 || echo "unknown")
+              echo "::group::e2e-coverage"
+              echo "::tool::playwright"
+              echo "::version::${TOOL_VERSION}"
+              echo "::runner::${RUNNER_INFO}"
+              set +e
+              pnpm exec playwright test --reporter=list --reporter=html 2>&1 | tee "$LOG_FILE"
+              EXIT_CODE=${PIPESTATUS[0]}
+              set -e
+              echo "::exit_code::${EXIT_CODE}"
+              echo "::endgroup::"
+              ;;
+            *)
+              echo "Unknown coverage task: $TASK" >&2
+              echo "exit_code=1" >> "$GITHUB_OUTPUT"
+              echo "status=failure" >> "$GITHUB_OUTPUT"
+              exit 1
+              ;;
+          esac
+
+          STATUS="success"
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          printf 'exit_code=%s\n' "$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          printf 'status=%s\n' "$STATUS" >> "$GITHUB_OUTPUT"
+          printf 'tool_version=%s\n' "$TOOL_VERSION" >> "$GITHUB_OUTPUT"
+          printf 'command=%s\n' "$COMMAND_DESC" >> "$GITHUB_OUTPUT"
+          printf 'log_file=%s\n' "$LOG_FILE" >> "$GITHUB_OUTPUT"
+          printf 'log_dir=%s\n' "$LOG_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Upload tool output log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-summaries
+          name: coverage-${{ matrix.task }}-logs
+          path: ${{ steps.run_task.outputs.log_dir }}
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Upload coverage reports
+        if: ${{ always() && matrix.task == 'frontend' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend-html
+          path: coverage/frontend
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Upload backend coverage HTML
+        if: ${{ always() && matrix.task == 'backend' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend-html
+          path: htmlcov
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Upload backend node coverage
+        if: ${{ always() && matrix.task == 'backend-node' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend-node-html
+          path: coverage/backend-node
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Upload e2e coverage report
+        if: ${{ always() && matrix.task == 'e2e' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-e2e-html
+          path: playwright-report
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: 📦 Write diagnostics JSON
+        if: always()
+        shell: bash
+        run: |
+          SCOPE="coverage"
+          JOB_KEY="coverage-checks_${{ matrix.task }}"
+          EXIT_CODE="${{ steps.run_task.outputs.exit_code }}"
+          STATUS="${{ steps.run_task.outputs.status }}"
+          TOOL_VERSION="${{ steps.run_task.outputs.tool_version }}"
+          if [ -z "$EXIT_CODE" ] || ! [[ "$EXIT_CODE" =~ ^-?[0-9]+$ ]]; then EXIT_CODE=1; fi
+          if [ -z "$STATUS" ]; then STATUS="success"; fi
+          if [ "$EXIT_CODE" -ne 0 ]; then STATUS="failure"; fi
+          mkdir -p "summaries/$SCOPE"
+          RUNNER_LABEL="${RUNNER_NAME:-Hosted Agent}"
+          RUNNER_OS_LABEL="${RUNNER_OS:-ubuntu-latest}"
+          export JOB_KEY STATUS EXIT_CODE RUNNER_LABEL RUNNER_OS_LABEL
+          export TOOL_NAME="${{ matrix.task }}"
+          export TOOL_VERSION_VALUE="${TOOL_VERSION:-unknown}"
+          SUMMARY_PATH="summaries/${SCOPE}/${JOB_KEY}.json"
+          python -c "import json, os
+            data = {
+                'job': os.environ['JOB_KEY'],
+                'status': os.environ['STATUS'],
+                'exit_code': int(os.environ.get('EXIT_CODE', '1')),
+                'metadata': {
+                    'tool': os.environ['TOOL_NAME'],
+                    'version': os.environ.get('TOOL_VERSION_VALUE', 'unknown'),
+                },
+                'environment': {
+                    'runner': os.environ.get('RUNNER_LABEL', 'Hosted Agent'),
+                    'os': os.environ.get('RUNNER_OS_LABEL', 'ubuntu-latest'),
+                },
+                'dependencies': {
+                    'npm': [],
+                },
+            }
+
+            print(json.dumps(data, indent=2))
+          " | tee "$SUMMARY_PATH"
+          ls -lah "summaries/$SCOPE"
+          cat "$SUMMARY_PATH"
+          if [ ! -s "$SUMMARY_PATH" ]; then
+            echo "Diagnostics summary missing for ${JOB_KEY}" >&2
+            exit 1
+          fi
+
+      - name: Upload diagnostics summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-summary-coverage-checks_${{ matrix.task }}
           path: summaries/
           retention-days: 2
           if-no-files-found: error
+
+      - name: Fail job if task failed
+        if: ${{ always() && steps.run_task.outputs.exit_code != '0' }}
+        run: exit 1
