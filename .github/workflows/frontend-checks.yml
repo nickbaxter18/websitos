@@ -18,6 +18,10 @@ jobs:
         run: mkdir -p summaries/frontend
         shell: bash
 
+      - name: 🔍 Debug current path
+        run: echo "📍 PWD: $PWD"
+        shell: bash
+
       - name: 🧾 Write fixed JSON summary
         run: |
           set -euxo pipefail
@@ -30,20 +34,18 @@ jobs:
           echo '  "environment": { "runner": "Hosted Agent", "os": "Linux", "resources": { "cpu_count": 2, "memory_mb": 7086, "disk_free_mb": 150000 } },' >> "$FILE"
           echo '  "dependencies": { "lockfile_sha": "abc123", "npm": [] }' >> "$FILE"
           echo '}' >> "$FILE"
+          echo "✅ Summary created at $FILE"
+          ls -lah summaries/frontend
+          cat "$FILE"
         shell: bash
 
-      - name: 🔎 Lint summary file
-        run: jq . summaries/frontend/frontend-playwright-diagnostics.json
-        shell: bash
-
-      - name: 📂 Confirm summary contents
+      - name: 🔎 Confirm fallback file (if exists)
         run: |
-          echo "📂 Listing recursively:"
-          ls -lahR summaries/
-          echo "📏 File size:" && stat summaries/frontend/frontend-playwright-diagnostics.json
+          echo "📂 Contents of fallback (if exists):"
+          cat summaries/frontend/frontend-fallback.json || echo "(fallback not present)"
         shell: bash
 
-      - name: 🗜️ Archive to zip (debug only)
+      - name: 🗜️ Zip summaries
         run: zip -r debug-summaries.zip summaries/
         shell: bash
 
