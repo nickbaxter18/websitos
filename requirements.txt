@@ -28,7 +28,7 @@ qdrant-client==1.9.1
 openai>=1.42.0
 
 # ---- Utilities
-tqdm==4.66.5
+tqdm==4.67.1
 portalocker==2.10.1
 
 # ---- PDF parsing / rendering (wheel available for cp311 manylinux)
