@@ -7,7 +7,7 @@ python-dotenv==1.0.1
 pyyaml==6.0.2
 
 # ---- Data / scientific (wheel for cp311 manylinux)
-numpy==1.26.4
+numpy==2.3.4
 
 # ---- Async & HTTP
 httpx==0.28.1
